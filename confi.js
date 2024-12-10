@@ -14,7 +14,7 @@ setTimeout(() => {
     });
   });
 
-  // Helper function to add/remove a class to a sibling at a given offset
+  // Helper function to add/remove a class to a sibling at a given off-set
   const toggleSiblingClass = (items, index, offset, className, add) => {
     const sibling = items[index + offset];
     if (sibling) {
