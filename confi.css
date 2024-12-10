@@ -1,0 +1,38 @@
+[nav-item]:hover .nav-item__tooltip {
+  opacity: 1 !important;
+  transform: translate(0px, -60%);
+}
+
+[nav-item].selected .nav-item__tooltip .navbar-selected-indicator {
+  display: block;
+}
+
+[nav-item].swatch {
+  display: block;
+}
+
+.color-swatch-wrap.hover .swatch-container {
+  height: 64px;
+  min-width: 64px;
+  padding: 8px;
+}
+.color-swatch-wrap.sibling-close .swatch-container {
+  height: 50px;
+  min-width: 50px;
+  /* padding: 10px; */
+}
+.color-swatch-wrap.sibling-far .swatch-container {
+  height: 46px;
+  min-width: 46px;
+  /* padding: 10px; */
+}
+
+.color-swatch-wrap.hover {
+  width: 10em;
+}
+.color-swatch-wrap.sibling-close {
+  width: 6em;
+}
+.color-swatch-wrap.sibling-far {
+  width: 6em;
+}
