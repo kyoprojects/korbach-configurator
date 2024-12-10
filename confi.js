@@ -1,7 +1,7 @@
 console.log('execute');
 setTimeout(() => {
-  const clickSound = new Audio('https://kyoprojects.github.io/korbach-configurator/370962__cabled_mess__click-01_minimal-ui-sounds.wav');
-  const clickSound2 = new Audio('https://kyoprojects.github.io/korbach-configurator/670810__outervo1d__tsa-2.wav');
+  const clickSound = new Audio('https://kyoprojects.github.io/korbach-conifgurator/370962__cabled_mess__click-01_minimal-ui-sounds.wav');
+  const clickSound2 = new Audio('https://kyoprojects.github.io/korbach-conifgurator/670810__outervo1d__tsa-2.wav');
 
   // Select all .nav-item elements
   const navItems = document.querySelectorAll('[nav-item]');
