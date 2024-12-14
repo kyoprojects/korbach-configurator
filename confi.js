@@ -1,4 +1,3 @@
-console.log('execute');
 setTimeout(() => {
   const clickSound = new Audio('https://kyoprojects.github.io/korbach-conifgurator/370962__cabled_mess__click-01_minimal-ui-sounds.wav');
   const clickSound2 = new Audio('https://kyoprojects.github.io/korbach-conifgurator/670810__outervo1d__tsa-2.wav');
@@ -9,7 +8,6 @@ setTimeout(() => {
 
   navItems.forEach(item => {
     item.addEventListener('click', () => {
-      console.log('click');
       clickSound2.play();
     });
   });
@@ -27,7 +25,6 @@ setTimeout(() => {
   // Event listeners to toggle classes on hover
   navItems.forEach((item, index) => {
     item.addEventListener('mouseenter', () => {
-      console.log('mouseenter');
       item.classList.add('hover'); // Add .hover to current item
       clickSound.play();
 
