@@ -1,8 +1,5 @@
-const clickSound = new Audio('https://kyoprojects.github.io/korbach-conifgurator/370962__cabled_mess__click-01_minimal-ui-sounds.wav');
-const clickSound2 = new Audio('https://kyoprojects.github.io/korbach-conifgurator/670810__outervo1d__tsa-2.wav');
 console.log('startttt');
-
-(async function () {
+(async function initializeData() {
   Wized.requests.execute('get_wheels');
   Wized.requests.execute('get_renders');
   await Wized.requests.waitFor('get_wheels');
@@ -85,7 +82,7 @@ console.log('startttt');
     );
   }
 
-  async function initConfigurator() {
+  (async function initConfigurator() {
     const data = Wized.data.r.get_renders.data;
 
     const imageUrls = data.flatMap(car => [car.thumbnail, ...(car.renders || []).map(render => render.image)]).filter(Boolean); // Remove undefined or null values
@@ -94,26 +91,12 @@ console.log('startttt');
 
     await preloadImages(imageUrls);
     console.log('All images preloaded successfully!');
-  }
-
-  initConfigurator();
+  })();
 
   window.updateAllLayers();
+})();
 
-  // animations
-
-  // magnetic images
-  document.addEventListener('mousemove', e => {
-    gsap.to('#images-wrapper', {
-      x: e.clientX * 0.012,
-      y: e.clientY * 0.012,
-      ease: 'power4.out',
-      duration: 16
-    });
-  });
-
-  // entrance
-
+(async function enterConfig() {
   gsap.set('#images-wrapper', { scale: 1 });
 
   document.getElementById('search-pseudo').addEventListener('click', function () {
@@ -121,7 +104,7 @@ console.log('startttt');
 
     tl.to('#search-modal', {
       opacity: 0,
-      y: 160, // ✅ Remove quotes from numeric values
+      y: 160,
       duration: 0.2,
       scale: 0.6,
       ease: 'power3.out'
@@ -129,14 +112,14 @@ console.log('startttt');
       .to(
         '#start-screen',
         {
-          autoAlpha: 0, // ✅ Handles both opacity & visibility correctly
-          duration: 0.3, // ✅ Ensures it doesn't snap
+          autoAlpha: 0,
+          duration: 0.3,
           ease: 'power4.out'
         },
         '-=0.08'
-      ) // ✅ Overlapping animation slightly to smooth out transition
+      )
       .add(() => {
-        startConfig(); // ✅ Runs after animation completes
+        startConfig();
       });
   });
 
@@ -150,96 +133,179 @@ console.log('startttt');
 
       .fromTo('[overlay="white"]', { autoAlpha: 1 }, { autoAlpha: 0, duration: 1, ease: 'power2.out', onComplete: () => document.querySelector('[overlay="white"]').remove() })
       .to('#images-wrapper', { scale: 1.08, duration: 0.5, ease: 'expo.out' }, '<')
-      .fromTo('[control="bottom"]', { autoAlpha: 0, y: 30, scale: 0.7 }, { autoAlpha: 1, y: 0, scale: 1, duration: 0.8, ease: 'power3.out' }, '-=0.8')
-      .fromTo('.wheel-control-thumbnail', { autoAlpha: 0, y: 40 }, { autoAlpha: 1, y: 0, duration: 2, ease: 'expo.out', stagger: 0.04 }, '-=0.8');
-
-    // apple dock hover animations
-    const navItems = document.querySelectorAll('[nav-item]');
-    console.log(navItems);
-
-    navItems.forEach(item => {
-      item.addEventListener('click', () => {
-        clickSound2.play();
-      });
-    });
-
-    // Helper function to add/remove a class to a sibling at a given off-set
-    const toggleSiblingClass = (items, index, offset, className, add) => {
-      const sibling = items[index + offset];
-      if (sibling) {
-        sibling.classList.toggle(className, add);
-      }
-    };
+      .fromTo('[control="bottom"]', { autoAlpha: 0, y: 30, scale: 0.7 }, { autoAlpha: 1, y: 0, scale: 1, duration: 0.8, ease: 'power3.out' }, '-=0.8');
+    // .fromTo('.wheel-control-thumbnail', { autoAlpha: 0, y: 40 }, { autoAlpha: 1, y: 0, duration: 2, ease: 'expo.out', stagger: 0.04 }, '-=0.8');
 
     //
+  }
+})();
 
-    // Event listeners to toggle classes on hover
-    navItems.forEach((item, index) => {
-      item.addEventListener('mouseenter', () => {
-        item.classList.add('hover'); // Add .hover to current item
-        clickSound.play();
-
-        // Toggle classes for siblings
-        toggleSiblingClass(navItems, index, -1, 'sibling-close', true); // Previous sibling
-        toggleSiblingClass(navItems, index, 1, 'sibling-close', true); // Next sibling
-        toggleSiblingClass(navItems, index, -2, 'sibling-far', true); // Previous-previous sibling
-        toggleSiblingClass(navItems, index, 2, 'sibling-far', true); // Next-next sibling
-      });
-
-      item.addEventListener('mouseleave', () => {
-        item.classList.remove('hover'); // Remove .hover from current item
-
-        // Toggle classes for siblings
-        toggleSiblingClass(navItems, index, -1, 'sibling-close', false); // Previous sibling
-        toggleSiblingClass(navItems, index, 1, 'sibling-close', false); // Next sibling
-        toggleSiblingClass(navItems, index, -2, 'sibling-far', false); // Previous-previous sibling
-        toggleSiblingClass(navItems, index, 2, 'sibling-far', false); // Next-next sibling
-      });
-    });
-
+(async function searchModals() {
+  const modal = document.getElementById('search-modal');
+  function openSearchModal() {
+    console.log('Opening modal...');
     const modal = document.getElementById('search-modal');
-    function openSearchModal() {
-      console.log('Opening modal...');
-      const modal = document.getElementById('search-modal');
 
-      if (!modal) return;
-      modal.style.display = 'flex'; // ✅ Ensure it's visible before animation
+    if (!modal) return;
+    modal.style.display = 'flex';
 
-      gsap.fromTo(
-        modal,
-        { autoAlpha: 0, scale: 0.8, y: 50 }, // ✅ Start faded & slightly below
-        { autoAlpha: 1, scale: 1, y: 0, duration: 0.2, ease: 'power3.out' } // ✅ Smooth transition
-      );
-    }
+    gsap.fromTo(modal, { autoAlpha: 0, scale: 0.8, y: 50 }, { autoAlpha: 1, scale: 1, y: 0, duration: 0.2, ease: 'power3.out' });
+  }
 
-    function closeSearchModal() {
-      const modal = document.getElementById('search-modal');
+  function closeSearchModal() {
+    const modal = document.getElementById('search-modal');
 
-      gsap.to(modal, {
-        scale: 0.8,
-        y: 50,
-        autoAlpha: 0,
-        duration: 0.2,
-        ease: 'power2.in',
-        onComplete: () => {
-          modal.style.display = 'none'; // ✅ Hide only after animation completes
-        }
-      });
-    }
-    // Click event for the search trigger
-    document.querySelector('[el="search-trigger"]').addEventListener('click', function () {
-      openSearchModal();
-    });
-
-    // Keyboard shortcuts
-    document.addEventListener('keydown', e => {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
-        e.preventDefault();
-        openSearchModal();
-      }
-      if (e.key === 'Escape') {
-        closeSearchModal();
+    gsap.to(modal, {
+      scale: 0.8,
+      y: 50,
+      autoAlpha: 0,
+      duration: 0.2,
+      ease: 'power2.in',
+      onComplete: () => {
+        modal.style.display = 'none';
       }
     });
   }
+  document.querySelector('[el="search-trigger"]').addEventListener('click', function () {
+    openSearchModal();
+  });
+
+  document.addEventListener('keydown', e => {
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+      e.preventDefault();
+      openSearchModal();
+    }
+    if (e.key === 'Escape') {
+      closeSearchModal();
+    }
+  });
 })();
+
+function appleDockNav() {
+  const clickSound = new Audio('https://kyoprojects.github.io/korbach-conifgurator/370962__cabled_mess__click-01_minimal-ui-sounds.wav');
+  const clickSound2 = new Audio('https://kyoprojects.github.io/korbach-conifgurator/670810__outervo1d__tsa-2.wav');
+  const navItems = document.querySelectorAll('[nav-item]');
+
+  navItems.forEach(item => {
+    item.addEventListener('click', () => {
+      console.log('clicking');
+      clickSound2.play();
+    });
+  });
+
+  // Helper function to add/remove a class to a sibling at a given off-set
+  const toggleSiblingClass = (items, index, offset, className, add) => {
+    const sibling = items[index + offset];
+    if (sibling) {
+      sibling.classList.toggle(className, add);
+    }
+  };
+
+  //
+
+  // Event listeners to toggle classes on hover
+  navItems.forEach((item, index) => {
+    item.addEventListener('mouseenter', () => {
+      console.log('mouse enter');
+      item.classList.add('hover'); // Add .hover to current item
+      clickSound.play();
+
+      // Toggle classes for siblings
+      toggleSiblingClass(navItems, index, -1, 'sibling-close', true); // Previous sibling
+      toggleSiblingClass(navItems, index, 1, 'sibling-close', true); // Next sibling
+      toggleSiblingClass(navItems, index, -2, 'sibling-far', true); // Previous-previous sibling
+      toggleSiblingClass(navItems, index, 2, 'sibling-far', true); // Next-next sibling
+    });
+
+    item.addEventListener('mouseleave', () => {
+      item.classList.remove('hover'); // Remove .hover from current item
+
+      // Toggle classes for siblings
+      toggleSiblingClass(navItems, index, -1, 'sibling-close', false); // Previous sibling
+      toggleSiblingClass(navItems, index, 1, 'sibling-close', false); // Next sibling
+      toggleSiblingClass(navItems, index, -2, 'sibling-far', false); // Previous-previous sibling
+      toggleSiblingClass(navItems, index, 2, 'sibling-far', false); // Next-next sibling
+    });
+  });
+}
+
+setTimeout(() => {
+  appleDockNav();
+}, 5000);
+
+(async function splineTransitions() {
+  async function animateControlsOut() {
+    document.querySelectorAll('[control]').forEach(el => {
+      const dir = el.getAttribute('control');
+      const props = { duration: 0.3, autoAlpha: 0, scale: 0, ease: 'power2.in' };
+      if (dir === 'left') props.x = '-100%';
+      else if (dir === 'right') props.x = '100%';
+      else if (dir === 'top') props.y = '-100%';
+      else if (dir === 'bottom') props.y = '100%';
+      gsap.to(el, props);
+    });
+  }
+
+  async function animateControlsIn() {
+    document.querySelectorAll('[control]').forEach(el => {
+      const dir = el.getAttribute('control');
+      const props = { duration: 0.3, autoAlpha: 1, scale: 1, ease: 'power2.inOut' };
+      if (dir === 'left' || dir === 'right') props.x = '0%';
+      if (dir === 'top' || dir === 'bottom') props.y = '0%';
+      gsap.to(el, props);
+    });
+  }
+
+  function showSplineAnimation() {
+    gsap.set('#splineOverlay', { display: 'flex', opacity: 0, autoAlpha: 0 });
+    gsap.set('#splineContainer', { display: 'flex', opacity: 0, autoAlpha: 0, y: '100%', scale: 0, width: '10%' });
+    let tl = gsap.timeline();
+    tl.to('#images-wrapper', { scale: 1, duration: 0.3, ease: 'expo.out' }, '<')
+      .to('#splineOverlay', { duration: 0.2, opacity: 1, autoAlpha: 1, ease: 'power2.expo' }, '<')
+      .fromTo('#splineContainer', { y: '100%', scale: 0, autoAlpha: 0 }, { duration: 0.1, y: '0%', scale: 1, autoAlpha: 1, ease: 'power2.inOut' })
+      .fromTo('#splineContainer', { width: '5%' }, { duration: 0.2, width: '100%', ease: 'power2.inOut' })
+      .fromTo('#splineScene', { scale: 0.3, y: 200, autoAlpha: 0 }, { duration: 0.3, scale: 1, y: 0, autoAlpha: 1, ease: 'power2.expo' }, '-=0.2');
+  }
+
+  function hideSplineAnimation() {
+    let tl = gsap.timeline();
+    tl.to('#splineScene', { duration: 0.2, scale: 0.5, y: 50, autoAlpha: 0, ease: 'power2.expo' })
+      .to('#splineContainer', { duration: 0.5, y: '100%', scale: 0, autoAlpha: 0, ease: 'power2.inOut' }, '-=0.8')
+      .to('#splineOverlay', {
+        duration: 0.2,
+        opacity: 0,
+        autoAlpha: 0,
+        ease: 'power2.expo',
+        onComplete: () => {
+          gsap.set('#splineOverlay', { display: 'none' });
+          gsap.set('#splineContainer', { display: 'none' });
+        }
+      })
+      .to('#images-wrapper', { scale: 1.08, duration: 0.2, ease: 'expo.out' }, '<');
+  }
+
+  document.querySelector('#opensplinemodal').addEventListener('click', () => {
+    showSplineAnimation();
+    animateControlsOut();
+  });
+  document.querySelector('#splinePseudo').addEventListener('click', () => {
+    hideSplineAnimation();
+    animateControlsIn();
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      hideSplineAnimation();
+      animateControlsIn();
+    }
+  });
+})();
+
+// magnetic images
+document.addEventListener('mousemove', e => {
+  gsap.to('#images-wrapper', {
+    x: e.clientX * 0.012,
+    y: e.clientY * 0.012,
+    ease: 'power4.out',
+    duration: 16
+  });
+});
