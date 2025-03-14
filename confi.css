@@ -2,6 +2,10 @@
   display: flex;
 }
 
+[hide-on-pageload] {
+  display: none;
+}
+
 [nav-item]:hover .nav-item__tooltip {
   opacity: 1 !important;
   transform: translate(0px, -60%);

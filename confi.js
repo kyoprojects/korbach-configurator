@@ -2,11 +2,12 @@ console.log('startttt');
 (async function initializeData() {
   Wized.requests.execute('get_wheels');
   Wized.requests.execute('get_renders');
+  Wized.requests.execute('get_carcolors');
   await Wized.requests.waitFor('get_wheels');
   console.log('wized request = ', Wized.data.r.get_wheels.data);
   await new Promise(resolve => gsap.delayedCall(1, resolve));
 
-  window.updateAllLayers = function () {
+  window.updateAllLayers = function (transitionType) {
     const clickedConfig = {
       car: Wized.data.v.carModel,
       carColor: Wized.data.v.carColor,
@@ -20,37 +21,36 @@ console.log('startttt');
 
     const wheelOverlay = data.find(item => item.model === Wized.data.v.carModel).renders.find(item => item.view === Wized.data.v.view && item.model === Wized.data.v.wheelModel && item.color === Wized.data.v.wheelColor)?.image;
 
-    const carOverlay = data.find(item => item.model === Wized.data.v.carModel).renders.find(item => item.view === Wized.data.v.view && item.color === Wized.data.v.carColor && item.car_model === Wized.data.v.carModel && item.base === false)?.image;
+    const carOverlay = data.find(item => item.model === Wized.data.v.carModel).renders.find(item => item.view === Wized.data.v.view && item.color === Wized.data.v.carColor && item.car_model === Wized.data.v.carModel)?.image;
 
-    const baseImage = data.find(item => item.model === Wized.data.v.carModel).renders.find(item => item.view === Wized.data.v.view && item.base === true)?.image;
+    // const baseImage = data.find(item => item.model === Wized.data.v.carModel).renders.find(item => item.view === Wized.data.v.view && item.base === true)?.image;
 
     const matchedImages = {
       wheelOverlay,
-      carOverlay,
-      baseImage
+      carOverlay
     };
-    // console.log('Matched Images:', matchedImages);
+    console.log('Matched Images:', matchedImages);
 
     const wheelOverlayPreload = document.querySelector('[w-el="scenery-wheel-overlay-preload"]');
     const carOverlayPreload = document.querySelector('[w-el="scenery-car-overlay-preload"]');
-    const sceneryPreload = document.querySelector('[w-el="scenery-preload"]');
+    // const sceneryPreload = document.querySelector('[w-el="scenery-preload"]');
 
     wheelOverlayPreload.src = wheelOverlay;
     carOverlayPreload.src = carOverlay;
-    sceneryPreload.src = baseImage;
+    // sceneryPreload.src = baseImage;
 
     let imagesLoaded = 0;
 
     function checkAllLoaded() {
       imagesLoaded++;
-      if (imagesLoaded === 3) {
+      if (imagesLoaded === 2) {
         setTimeout(() => {
           document.querySelector('.images-wrapper.preload').classList.add('show');
 
           // Update the regular images with the preloaded images
           document.querySelector('[w-el="scenery-wheel-overlay"]').src = wheelOverlayPreload.src;
           document.querySelector('[w-el="scenery-car-overlay"]').src = carOverlayPreload.src;
-          document.querySelector('[w-el="scenery"]').src = sceneryPreload.src;
+          // document.querySelector('[w-el="scenery"]').src = sceneryPreload.src;
 
           document.querySelector('.images-wrapper.preload').classList.remove('show');
         }, 0);
@@ -58,7 +58,14 @@ console.log('startttt');
     }
     wheelOverlayPreload.onload = checkAllLoaded;
     carOverlayPreload.onload = checkAllLoaded;
-    sceneryPreload.onload = checkAllLoaded;
+    // sceneryPreload.onload = checkAllLoaded;
+    setTimeout(() => {
+      if (transitionType == 'view') {
+        console.log('reshow images');
+        let tl = gsap.timeline();
+        tl.to('[overlay="white"]', { autoAlpha: 0, opacity: 0, duration: 0.3, ease: 'power2.out' }).to('#images-wrapper', { scale: 1.08, duration: 0.3, ease: 'expo.out' }, '-=0.1');
+      }
+    }, 100);
   };
 
   // preload images
@@ -86,6 +93,7 @@ console.log('startttt');
     const imageUrls = data.flatMap(car => [car.thumbnail, ...(car.renders || []).map(render => render.image)]).filter(Boolean); // Remove undefined or null values
 
     // console.log('Image URLs:', imageUrls);
+    console.log('image urls = ', imageUrls);
 
     await preloadImages(imageUrls);
     console.log('All images preloaded successfully!');
@@ -129,7 +137,18 @@ console.log('startttt');
       .set('[control="bottom"]', { autoAlpha: 0, y: 40, scale: 0.9 })
       // .set('.nav-item', { autoAlpha: 0, y: 15 })
 
-      .fromTo('[overlay="white"]', { autoAlpha: 1 }, { autoAlpha: 0, duration: 1, ease: 'power2.out', onComplete: () => document.querySelector('[overlay="white"]').remove() })
+      .fromTo(
+        '[overlay="white"]',
+        { autoAlpha: 1 },
+        {
+          autoAlpha: 0,
+          duration: 1,
+          ease: 'power2.out',
+          onComplete: () => {
+            // document.querySelector('[overlay="white"]').remove();
+          }
+        }
+      )
       .to('#images-wrapper', { scale: 1.08, duration: 0.5, ease: 'expo.out' }, '<')
       .fromTo('[control="bottom"]', { autoAlpha: 0, y: 30, scale: 0.7 }, { autoAlpha: 1, y: 0, scale: 1, duration: 0.8, ease: 'power3.out' }, '-=0.8')
       .fromTo('.wheel-control-thumbnail', { autoAlpha: 0, y: 40 }, { autoAlpha: 1, y: 0, duration: 2, ease: 'expo.out', stagger: 0.04 }, '-=0.8');
@@ -180,6 +199,7 @@ console.log('startttt');
 })();
 
 function appleDockNav() {
+  console.log('define dock nav');
   const clickSound = new Audio('https://kyoprojects.github.io/korbach-conifgurator/370962__cabled_mess__click-01_minimal-ui-sounds.wav');
   const clickSound2 = new Audio('https://kyoprojects.github.io/korbach-conifgurator/670810__outervo1d__tsa-2.wav');
   const navItems = document.querySelectorAll('[nav-item]');
@@ -227,9 +247,12 @@ function appleDockNav() {
   });
 }
 
-setTimeout(() => {
-  appleDockNav();
-}, 5000);
+(async function initDock() {
+  await Wized.requests.waitFor('get_wheels');
+  setTimeout(() => {
+    appleDockNav();
+  }, 200);
+})();
 
 (async function splineTransitions() {
   async function animateControlsOut() {
@@ -298,12 +321,39 @@ setTimeout(() => {
   });
 })();
 
-// magnetic images
-document.addEventListener('mousemove', e => {
-  gsap.to('#images-wrapper', {
-    x: e.clientX * 0.012,
-    y: e.clientY * 0.012,
-    ease: 'power4.out',
-    duration: 16
+// // magnetic images
+// document.addEventListener('mousemove', e => {
+//   gsap.to('#images-wrapper', {
+//     x: e.clientX * 0.012,
+//     y: e.clientY * 0.012,
+//     ease: 'power4.out',
+//     duration: 16
+//   });
+// });
+
+window.changeNavTabs = function (transitionType) {
+  console.log('change nav tabs');
+  if (transitionType == 'view') {
+    let tl = gsap.timeline();
+    tl.to('#images-wrapper', { scale: 1, duration: 0.3, ease: 'expo.out' }).to('[overlay="white"]', { autoAlpha: 1, opacity: 1, duration: 0.3, ease: 'power2.out' }, '-=0.1');
+  }
+  setTimeout(() => {
+    window.updateAllLayers('view');
+  }, 500);
+};
+
+(async function handleSidebar() {
+  const navItems = document.querySelectorAll('[element="sidebar-item"]');
+
+  navItems.forEach((item, index) => {
+    item.addEventListener('mouseenter', () => {
+      console.log('mouse enter');
+      item.classList.add('hovered');
+      clickSound.play();
+    });
+
+    item.addEventListener('mouseleave', () => {
+      item.classList.remove('hovered');
+    });
   });
-});
+})();
