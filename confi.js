@@ -1,4 +1,5 @@
-console.log('startttt');
+let searchModalOpen = false;
+
 (async function initializeData() {
   Wized.requests.execute('get_wheels');
   Wized.requests.execute('get_renders');
@@ -105,7 +106,7 @@ console.log('startttt');
 (async function enterConfig() {
   gsap.set('#images-wrapper', { scale: 1 });
 
-  document.getElementById('search-pseudo').addEventListener('click', function () {
+  window.hideStartScreen = function () {
     let tl = gsap.timeline();
 
     tl.to('#search-modal', {
@@ -127,7 +128,7 @@ console.log('startttt');
       .add(() => {
         startConfig();
       });
-  });
+  };
 
   function startConfig() {
     const tl = gsap.timeline();
@@ -167,9 +168,10 @@ console.log('startttt');
     modal.style.display = 'flex';
 
     gsap.fromTo(modal, { autoAlpha: 0, scale: 0.8, y: 50 }, { autoAlpha: 1, scale: 1, y: 0, duration: 0.2, ease: 'power3.out' });
-  }
 
-  function closeSearchModal() {
+    searchModalOpen = true;
+  }
+  window.closeSearchModal = function () {
     const modal = document.getElementById('search-modal');
 
     gsap.to(modal, {
@@ -182,7 +184,7 @@ console.log('startttt');
         modal.style.display = 'none';
       }
     });
-  }
+  };
   document.querySelector('[el="search-trigger"]').addEventListener('click', function () {
     openSearchModal();
   });
@@ -196,12 +198,19 @@ console.log('startttt');
       closeSearchModal();
     }
   });
+  document.addEventListener('click', function (e) {
+    const isInsideModal = e.target.closest('#search-modal');
+    const isTrigger = e.target.closest('[el="search-trigger"]');
+    if (searchModalOpen && !isInsideModal && !isTrigger) {
+      closeSearchModal();
+    }
+  });
 })();
 
 function appleDockNav() {
   console.log('define dock nav');
-  const clickSound = new Audio('https://kyoprojects.github.io/korbach-conifgurator/370962__cabled_mess__click-01_minimal-ui-sounds.wav');
-  const clickSound2 = new Audio('https://kyoprojects.github.io/korbach-conifgurator/670810__outervo1d__tsa-2.wav');
+  const clickSound = new Audio('https://kyoprojects.github.io/korbach-configurator/370962__cabled_mess__click-01_minimal-ui-sounds.wav');
+  const clickSound2 = new Audio('https://kyoprojects.github.io/korbach-configurator/670810__outervo1d__tsa-2.wav');
   const navItems = document.querySelectorAll('[nav-item]');
 
   navItems.forEach(item => {
@@ -321,15 +330,15 @@ function appleDockNav() {
   });
 })();
 
-// // magnetic images
-// document.addEventListener('mousemove', e => {
-//   gsap.to('#images-wrapper', {
-//     x: e.clientX * 0.012,
-//     y: e.clientY * 0.012,
-//     ease: 'power4.out',
-//     duration: 16
-//   });
-// });
+// magnetic images
+document.addEventListener('mousemove', e => {
+  gsap.to('#images-wrapper', {
+    x: e.clientX * 0.012,
+    y: e.clientY * 0.012,
+    ease: 'power4.out',
+    duration: 16
+  });
+});
 
 window.changeNavTabs = function (transitionType) {
   console.log('change nav tabs');
@@ -355,5 +364,42 @@ window.changeNavTabs = function (transitionType) {
     item.addEventListener('mouseleave', () => {
       item.classList.remove('hovered');
     });
+  });
+})();
+
+function switchCar(model) {
+  console.log('switchcar');
+  closeSearchModal();
+  hideStartScreen();
+
+  Wized.data.v.carModel = model;
+  console.log('carmodel = ', Wized.data.v.carModel);
+
+  const newCarColor = Wized.data.r.get_renders.data.find(item => item.model == Wized.data.v.carModel).renders.find(render => render.model == null).color;
+  Wized.data.v.carColor = newCarColor;
+  console.log('newCarColor = ', Wized.data.v.carColor);
+
+  const newWheelModel = Wized.data.r.get_renders.data.find(item => item.model == Wized.data.v.carModel).renders.find(render => render.model !== null).model;
+  Wized.data.v.wheelModel = newWheelModel;
+  console.log('newWheelModel = ', Wized.data.v.wheelModel);
+
+  window.updateAllLayers();
+}
+
+(async function modalEventListening() {
+  window.addEventListener('message', event => {
+    if (event.origin === 'https://carsearch-magic.lovable.app' || event.origin === 'http://localhost:8080') {
+      console.log('Received message:', event);
+      if (event.data.type === 'selectCar') {
+        const model = event.data.data.model;
+        console.log('model =', model);
+        switchCar(model);
+      } else {
+        console.log('no valid event');
+      }
+    } else {
+      console.log('origin not allowed');
+      console.log(event.origin);
+    }
   });
 })();
