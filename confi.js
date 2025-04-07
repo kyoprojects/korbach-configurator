@@ -1,4 +1,5 @@
 let searchModalOpen = false;
+let firstSearchModalInteraction = true;
 
 (async function initializeData() {
   Wized.requests.execute('get_wheels');
@@ -263,29 +264,29 @@ function appleDockNav() {
   }, 200);
 })();
 
+async function animateControlsOut() {
+  document.querySelectorAll('[control]').forEach(el => {
+    const dir = el.getAttribute('control');
+    const props = { duration: 0.3, autoAlpha: 0, scale: 0, ease: 'power2.in' };
+    if (dir === 'left') props.x = '-100%';
+    else if (dir === 'right') props.x = '100%';
+    else if (dir === 'top') props.y = '-100%';
+    else if (dir === 'bottom') props.y = '100%';
+    gsap.to(el, props);
+  });
+}
+
+async function animateControlsIn() {
+  document.querySelectorAll('[control]').forEach(el => {
+    const dir = el.getAttribute('control');
+    const props = { duration: 0.3, autoAlpha: 1, scale: 1, ease: 'power2.inOut' };
+    if (dir === 'left' || dir === 'right') props.x = '0%';
+    if (dir === 'top' || dir === 'bottom') props.y = '0%';
+    gsap.to(el, props);
+  });
+}
+
 (async function splineTransitions() {
-  async function animateControlsOut() {
-    document.querySelectorAll('[control]').forEach(el => {
-      const dir = el.getAttribute('control');
-      const props = { duration: 0.3, autoAlpha: 0, scale: 0, ease: 'power2.in' };
-      if (dir === 'left') props.x = '-100%';
-      else if (dir === 'right') props.x = '100%';
-      else if (dir === 'top') props.y = '-100%';
-      else if (dir === 'bottom') props.y = '100%';
-      gsap.to(el, props);
-    });
-  }
-
-  async function animateControlsIn() {
-    document.querySelectorAll('[control]').forEach(el => {
-      const dir = el.getAttribute('control');
-      const props = { duration: 0.3, autoAlpha: 1, scale: 1, ease: 'power2.inOut' };
-      if (dir === 'left' || dir === 'right') props.x = '0%';
-      if (dir === 'top' || dir === 'bottom') props.y = '0%';
-      gsap.to(el, props);
-    });
-  }
-
   function showSplineAnimation() {
     gsap.set('#splineOverlay', { display: 'flex', opacity: 0, autoAlpha: 0 });
     gsap.set('#splineContainer', { display: 'flex', opacity: 0, autoAlpha: 0, y: '100%', scale: 0, width: '10%' });
@@ -371,6 +372,12 @@ function switchCar(model) {
   console.log('switchcar');
   closeSearchModal();
   hideStartScreen();
+  if (firstSearchModalInteraction == false) {
+    setTimeout(() => {
+      console.log('hide outttt ✅');
+      animateControlsOut();
+    }, 200);
+  }
 
   Wized.data.v.carModel = model;
   console.log('carmodel = ', Wized.data.v.carModel);
@@ -383,7 +390,13 @@ function switchCar(model) {
   Wized.data.v.wheelModel = newWheelModel;
   console.log('newWheelModel = ', Wized.data.v.wheelModel);
 
-  window.updateAllLayers();
+  // window.updateAllLayers();
+  if (firstSearchModalInteraction == false) {
+    setTimeout(() => {
+      // animateControlsIn();
+    }, 200);
+    firstSearchModalInteraction = false;
+  }
 }
 
 (async function modalEventListening() {
