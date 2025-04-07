@@ -401,7 +401,7 @@ function switchCar(model) {
 
 (async function modalEventListening() {
   window.addEventListener('message', event => {
-    if (event.origin === 'https://carsearch-magic.lovable.app' || event.origin === 'http://localhost:8080') {
+    if (event.origin === 'https://car-search-magic.lovable.app' || event.origin === 'http://localhost:8080') {
       console.log('Received message:', event);
       if (event.data.type === 'selectCar') {
         const model = event.data.data.model;
