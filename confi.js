@@ -390,7 +390,7 @@ function switchCar(model) {
   Wized.data.v.wheelModel = newWheelModel;
   console.log('newWheelModel = ', Wized.data.v.wheelModel);
 
-  // window.updateAllLayers();
+  window.updateAllLayers();
   if (firstSearchModalInteraction == false) {
     setTimeout(() => {
       // animateControlsIn();
@@ -405,14 +405,14 @@ function switchCar(model) {
       console.log('Received message:', event);
       if (event.data.type === 'selectCar') {
         const model = event.data.data.model;
-        console.log('model =', model);
+        console.log('✅✅✅✅✅✅✅model =', model);
         switchCar(model);
       } else {
         console.log('no valid event');
       }
     } else {
       console.log('origin not allowed');
-      console.log(event.origin);
+      console.log(event);
     }
   });
 })();
