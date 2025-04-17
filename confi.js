@@ -6,8 +6,37 @@ let firstSearchModalInteraction = true;
   Wized.requests.execute('get_renders');
   Wized.requests.execute('get_carcolors');
   await Wized.requests.waitFor('get_wheels');
-  console.log('wized request = ', Wized.data.r.get_wheels.data);
+
   await new Promise(resolve => gsap.delayedCall(1, resolve));
+
+  // preload images
+  function preloadImages(imageUrls) {
+    return Promise.allSettled(
+      imageUrls.map(url => {
+        return new Promise(resolve => {
+          if (!url) return resolve(); // Skip invalid or empty URLs
+
+          const img = new Image();
+          img.src = url;
+          img.onload = resolve;
+          img.onerror = () => {
+            // console.error('Error loading:', url);
+            resolve(); // Resolve even on error to continue preloading
+          };
+        });
+      })
+    );
+  }
+
+  (async function initConfigurator() {
+    const data = Wized.data.r.get_renders.data;
+    const imageUrls = data.flatMap(car => [car.thumbnail, ...(car.renders || []).map(render => render.image)]).filter(Boolean); // Remove undefined or null values
+
+    // console.log('image urls = ', imageUrls);
+
+    await preloadImages(imageUrls);
+    console.log('All images preloaded successfully!');
+  })();
 
   window.updateAllLayers = function (transitionType) {
     const clickedConfig = {
@@ -21,9 +50,13 @@ let firstSearchModalInteraction = true;
 
     const data = Wized.data.r.get_renders.data;
 
-    const wheelOverlay = data.find(item => item.model === Wized.data.v.carModel).renders.find(item => item.view === Wized.data.v.view && item.model === Wized.data.v.wheelModel && item.color === Wized.data.v.wheelColor)?.image;
+    const wheelOverlay = data
+      .find(item => item.model === Wized.data.v.carModel)
+      .renders.find(item => item.view === Wized.data.v.view && item.model === Wized.data.v.wheelModel && item.color === Wized.data.v.wheelColor)?.image;
 
-    const carOverlay = data.find(item => item.model === Wized.data.v.carModel).renders.find(item => item.view === Wized.data.v.view && item.color === Wized.data.v.carColor && item.car_model === Wized.data.v.carModel)?.image;
+    const carOverlay = data
+      .find(item => item.model === Wized.data.v.carModel)
+      .renders.find(item => item.view === Wized.data.v.view && item.color === Wized.data.v.carColor && item.car_model === Wized.data.v.carModel)?.image;
 
     // const baseImage = data.find(item => item.model === Wized.data.v.carModel).renders.find(item => item.view === Wized.data.v.view && item.base === true)?.image;
 
@@ -41,73 +74,60 @@ let firstSearchModalInteraction = true;
     carOverlayPreload.src = carOverlay;
     // sceneryPreload.src = baseImage;
 
+    // check if all images are loaded
     let imagesLoaded = 0;
-
     function checkAllLoaded() {
       imagesLoaded++;
       if (imagesLoaded === 2) {
-        setTimeout(() => {
-          document.querySelector('.images-wrapper.preload').classList.add('show');
+        document.querySelector('.images-wrapper.preload').classList.add('show');
 
-          // Update the regular images with the preloaded images
-          document.querySelector('[w-el="scenery-wheel-overlay"]').src = wheelOverlayPreload.src;
-          document.querySelector('[w-el="scenery-car-overlay"]').src = carOverlayPreload.src;
-          // document.querySelector('[w-el="scenery"]').src = sceneryPreload.src;
+        // Update the regular images with the preloaded images
+        document.querySelector('[w-el="scenery-wheel-overlay"]').src = wheelOverlayPreload.src;
+        document.querySelector('[w-el="scenery-car-overlay"]').src = carOverlayPreload.src;
+        // document.querySelector('[w-el="scenery"]').src = sceneryPreload.src;
 
-          document.querySelector('.images-wrapper.preload').classList.remove('show');
-        }, 0);
+        document.querySelector('.images-wrapper.preload').classList.remove('show');
       }
     }
     wheelOverlayPreload.onload = checkAllLoaded;
     carOverlayPreload.onload = checkAllLoaded;
     // sceneryPreload.onload = checkAllLoaded;
-    setTimeout(() => {
+    console.log('images loaded');
+
+    return new Promise(resolve => {
+      // animate images in and wait for it to finish
+      console.log('reshow images');
+      let tl = gsap.timeline({
+        onComplete: function () {
+          console.log('Animation complete, resolving promise');
+          resolve();
+        }
+      });
       if (transitionType == 'view') {
-        console.log('reshow images');
-        let tl = gsap.timeline();
         tl.to('[overlay="white"]', { autoAlpha: 0, opacity: 0, duration: 0.3, ease: 'power2.out' }).to('#images-wrapper', { scale: 1.08, duration: 0.3, ease: 'expo.out' }, '-=0.1');
+      } else if (transitionType == 'car') {
+        console.log('switch car');
+        if (firstSearchModalInteraction == false) {
+          setTimeout(() => {
+            animateControlsIn();
+          }, 100);
+          tl.to('[overlay="white"]', { autoAlpha: 0, opacity: 0, duration: 0.3, ease: 'power2.out' }).to('#images-wrapper', { scale: 1.08, duration: 0.3, ease: 'expo.out' }, '-=0.1');
+        }
+      } else {
+        resolve();
       }
-    }, 100);
+    });
   };
 
-  // preload images
-  function preloadImages(imageUrls) {
-    return Promise.allSettled(
-      imageUrls.map(url => {
-        return new Promise(resolve => {
-          if (!url) return resolve(); // Skip invalid or empty URLs
-
-          const img = new Image();
-          img.src = url;
-          img.onload = resolve;
-          img.onerror = () => {
-            console.error('Error loading:', url);
-            resolve(); // Resolve even on error to continue preloading
-          };
-        });
-      })
-    );
-  }
-
-  (async function initConfigurator() {
-    const data = Wized.data.r.get_renders.data;
-
-    const imageUrls = data.flatMap(car => [car.thumbnail, ...(car.renders || []).map(render => render.image)]).filter(Boolean); // Remove undefined or null values
-
-    // console.log('Image URLs:', imageUrls);
-    console.log('image urls = ', imageUrls);
-
-    await preloadImages(imageUrls);
-    console.log('All images preloaded successfully!');
-  })();
-
+  // we can remove this , only load after first click
   window.updateAllLayers();
 })();
 
-(async function enterConfig() {
+(async function defineEnterFunctions() {
   gsap.set('#images-wrapper', { scale: 1 });
 
   window.hideStartScreen = function () {
+    console.log('hideStartScreen');
     let tl = gsap.timeline();
 
     tl.to('#search-modal', {
@@ -127,7 +147,9 @@ let firstSearchModalInteraction = true;
         '-=0.08'
       )
       .add(() => {
-        startConfig();
+        startConfig().then(() => {
+          resolve();
+        });
       });
   };
 
@@ -147,6 +169,7 @@ let firstSearchModalInteraction = true;
           duration: 1,
           ease: 'power2.out',
           onComplete: () => {
+            resolve();
             // document.querySelector('[overlay="white"]').remove();
           }
         }
@@ -208,15 +231,14 @@ let firstSearchModalInteraction = true;
   });
 })();
 
+const clickSound = new Audio('https://kyoprojects.github.io/korbach-configurator/370962__cabled_mess__click-01_minimal-ui-sounds.wav');
+const clickSound2 = new Audio('https://kyoprojects.github.io/korbach-configurator/670810__outervo1d__tsa-2.wav');
+
 function appleDockNav() {
-  console.log('define dock nav');
-  const clickSound = new Audio('https://kyoprojects.github.io/korbach-configurator/370962__cabled_mess__click-01_minimal-ui-sounds.wav');
-  const clickSound2 = new Audio('https://kyoprojects.github.io/korbach-configurator/670810__outervo1d__tsa-2.wav');
   const navItems = document.querySelectorAll('[nav-item]');
 
   navItems.forEach(item => {
     item.addEventListener('click', () => {
-      console.log('clicking');
       clickSound2.play();
     });
   });
@@ -234,7 +256,6 @@ function appleDockNav() {
   // Event listeners to toggle classes on hover
   navItems.forEach((item, index) => {
     item.addEventListener('mouseenter', () => {
-      console.log('mouse enter');
       item.classList.add('hover'); // Add .hover to current item
       clickSound.play();
 
@@ -257,6 +278,21 @@ function appleDockNav() {
   });
 }
 
+(async function handleSidebarSfx() {
+  const navItems = document.querySelectorAll('[element="sidebar-item"]');
+
+  navItems.forEach((item, index) => {
+    item.addEventListener('mouseenter', () => {
+      item.classList.add('hovered');
+      clickSound.play();
+    });
+
+    item.addEventListener('mouseleave', () => {
+      item.classList.remove('hovered');
+    });
+  });
+})();
+
 (async function initDock() {
   await Wized.requests.waitFor('get_wheels');
   setTimeout(() => {
@@ -265,7 +301,9 @@ function appleDockNav() {
 })();
 
 async function animateControlsOut() {
+  console.log('🚀animateControlsOut');
   document.querySelectorAll('[control]').forEach(el => {
+    // console.log('🚀el = ', el);
     const dir = el.getAttribute('control');
     const props = { duration: 0.3, autoAlpha: 0, scale: 0, ease: 'power2.in' };
     if (dir === 'left') props.x = '-100%';
@@ -277,6 +315,7 @@ async function animateControlsOut() {
 }
 
 async function animateControlsIn() {
+  console.log('🚀animateControlsIn');
   document.querySelectorAll('[control]').forEach(el => {
     const dir = el.getAttribute('control');
     const props = { duration: 0.3, autoAlpha: 1, scale: 1, ease: 'power2.inOut' };
@@ -331,11 +370,18 @@ async function animateControlsIn() {
   });
 })();
 
-// magnetic images
 document.addEventListener('mousemove', e => {
+  // Calculate center point of window
+  const centerX = window.innerWidth / 2;
+  const centerY = window.innerHeight / 2;
+
+  // Calculate offset from center (negative values when left/up of center)
+  const offsetX = (e.clientX - centerX) * 0.012;
+  const offsetY = (e.clientY - centerY) * 0.012;
+
   gsap.to('#images-wrapper', {
-    x: e.clientX * 0.012,
-    y: e.clientY * 0.012,
+    x: offsetX,
+    y: offsetY,
     ease: 'power4.out',
     duration: 16
   });
@@ -343,76 +389,76 @@ document.addEventListener('mousemove', e => {
 
 window.changeNavTabs = function (transitionType) {
   console.log('change nav tabs');
-  if (transitionType == 'view') {
-    let tl = gsap.timeline();
-    tl.to('#images-wrapper', { scale: 1, duration: 0.3, ease: 'expo.out' }).to('[overlay="white"]', { autoAlpha: 1, opacity: 1, duration: 0.3, ease: 'power2.out' }, '-=0.1');
-  }
-  setTimeout(() => {
-    window.updateAllLayers('view');
-  }, 500);
+
+  return new Promise(resolve => {
+    if (transitionType == 'view' || transitionType == 'car') {
+      let tl = gsap.timeline({
+        onComplete: function () {
+          console.log('Resolve changeNavTabs done, now calling updateAllLayers');
+          window.updateAllLayers(transitionType).then(() => {
+            console.log('updateAllLayers done');
+            resolve();
+          });
+        }
+      });
+      tl.to('#images-wrapper', { scale: 1, duration: 0.3, ease: 'expo.out' }).to('[overlay="white"]', { autoAlpha: 1, opacity: 1, duration: 0.3, ease: 'power2.out' }, '-=0.1');
+    } else {
+      resolve();
+      window.updateAllLayers(transitionType);
+    }
+  });
 };
 
-(async function handleSidebar() {
-  const navItems = document.querySelectorAll('[element="sidebar-item"]');
-
-  navItems.forEach((item, index) => {
-    item.addEventListener('mouseenter', () => {
-      console.log('mouse enter');
-      item.classList.add('hovered');
-      clickSound.play();
-    });
-
-    item.addEventListener('mouseleave', () => {
-      item.classList.remove('hovered');
-    });
-  });
-})();
-
-function switchCar(model) {
-  console.log('switchcar');
+async function switchCar(model) {
   closeSearchModal();
-  hideStartScreen();
+
   if (firstSearchModalInteraction == false) {
-    setTimeout(() => {
-      console.log('hide outttt ✅');
-      animateControlsOut();
-    }, 200);
+    // hide out side & bottom controls before switching car
+    animateControlsOut();
   }
 
-  Wized.data.v.carModel = model;
-  console.log('carmodel = ', Wized.data.v.carModel);
+  // fetch new cars here later
 
+  // update variables
+  Wized.data.v.carModel = model;
   const newCarColor = Wized.data.r.get_renders.data.find(item => item.model == Wized.data.v.carModel).renders.find(render => render.model == null).color;
   Wized.data.v.carColor = newCarColor;
-  console.log('newCarColor = ', Wized.data.v.carColor);
-
   const newWheelModel = Wized.data.r.get_renders.data.find(item => item.model == Wized.data.v.carModel).renders.find(render => render.model !== null).model;
   Wized.data.v.wheelModel = newWheelModel;
-  console.log('newWheelModel = ', Wized.data.v.wheelModel);
 
-  window.updateAllLayers();
-  if (firstSearchModalInteraction == false) {
-    setTimeout(() => {
-      // animateControlsIn();
-    }, 200);
-    firstSearchModalInteraction = false;
+  console.log({
+    newCarModel: Wized.data.v.carModel,
+    newCarColor: Wized.data.v.carColor,
+    newWheelModel: Wized.data.v.wheelModel
+  });
+
+  // window.updateAllLayers();
+  await changeNavTabs('car');
+
+  if (firstSearchModalInteraction == true) {
+    await hideStartScreen();
+  } else if (firstSearchModalInteraction == false) {
+    // we do this in the changeNavTabs function now
+    // await animateControlsIn();
   }
+
+  // set flag to false after first time
+  if (firstSearchModalInteraction == true) firstSearchModalInteraction = false;
 }
 
 (async function modalEventListening() {
   window.addEventListener('message', event => {
     if (event.origin === 'https://car-search-magic.lovable.app' || event.origin === 'http://localhost:8080') {
-      console.log('Received message:', event);
-      if (event.data.type === 'selectCar') {
-        const model = event.data.data.model;
-        console.log('✅✅✅✅✅✅✅model =', model);
-        switchCar(model);
-      } else {
-        console.log('no valid event');
+      if (event.data.type == 'selectCar') {
+        // console.log('Received message:', event);
+        if (event.data.type === 'selectCar') {
+          const model = event.data.data.model;
+          console.log('✅✅✅✅✅✅✅model =', model);
+          switchCar(model);
+        } else {
+          console.log('no valid event');
+        }
       }
-    } else {
-      console.log('origin not allowed');
-      console.log(event);
     }
   });
 })();
