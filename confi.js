@@ -38,7 +38,7 @@ let firstSearchModalInteraction = true;
     console.log('All images preloaded successfully!');
   })();
 
-  window.updateAllLayers = function (transitionType) {
+  window.updateAllLayers = async function (transitionType) {
     const clickedConfig = {
       car: Wized.data.v.carModel,
       carColor: Wized.data.v.carColor,
@@ -120,14 +120,13 @@ let firstSearchModalInteraction = true;
   };
 
   // we can remove this , only load after first click
-  window.updateAllLayers();
+  // window.updateAllLayers();
 })();
 
 (async function defineEnterFunctions() {
   gsap.set('#images-wrapper', { scale: 1 });
 
   window.hideStartScreen = function () {
-    console.log('hideStartScreen');
     let tl = gsap.timeline();
 
     tl.to('#search-modal', {
@@ -375,7 +374,6 @@ document.addEventListener('mousemove', e => {
   const centerX = window.innerWidth / 2;
   const centerY = window.innerHeight / 2;
 
-  // Calculate offset from center (negative values when left/up of center)
   const offsetX = (e.clientX - centerX) * 0.012;
   const offsetY = (e.clientY - centerY) * 0.012;
 
@@ -387,14 +385,15 @@ document.addEventListener('mousemove', e => {
   });
 });
 
-window.changeNavTabs = function (transitionType) {
-  console.log('change nav tabs');
-
+window.changeNavTabs = async function (transitionType) {
   return new Promise(resolve => {
     if (transitionType == 'view' || transitionType == 'car') {
       let tl = gsap.timeline({
         onComplete: function () {
           console.log('Resolve changeNavTabs done, now calling updateAllLayers');
+          if (transitionType == 'car') {
+            Wized.requests.execute('get_renders');
+          }
           window.updateAllLayers(transitionType).then(() => {
             console.log('updateAllLayers done');
             resolve();
@@ -417,8 +416,6 @@ async function switchCar(model) {
     animateControlsOut();
   }
 
-  // fetch new cars here later
-
   // update variables
   Wized.data.v.carModel = model;
   const newCarColor = Wized.data.r.get_renders.data.find(item => item.model == Wized.data.v.carModel).renders.find(render => render.model == null).color;
@@ -429,10 +426,10 @@ async function switchCar(model) {
   console.log({
     newCarModel: Wized.data.v.carModel,
     newCarColor: Wized.data.v.carColor,
-    newWheelModel: Wized.data.v.wheelModel
+    newWheelModel: Wized.data.v.wheelModels
   });
 
-  // window.updateAllLayers();
+  await Wized.requests.waitFor('get_renders');
   await changeNavTabs('car');
 
   if (firstSearchModalInteraction == true) {
@@ -461,4 +458,163 @@ async function switchCar(model) {
       }
     }
   });
+})();
+
+(async function viewControlsAnimation() {
+  // Get elements
+  const viewControls = document.querySelector('[show-view-controls]');
+  const navContainer = document.querySelector('[nav-views-container]');
+
+  if (viewControls && navContainer) {
+    // Initial state - hide view controls
+    gsap.set('.div-block-95', {
+      opacity: 0,
+      y: 10,
+      scale: 0.8,
+      transformOrigin: 'top center',
+      pointerEvents: 'none'
+    });
+
+    // Hide individual view buttons initially
+    gsap.set('.div-block-97', {
+      opacity: 0,
+      y: 5,
+      scale: 0.6,
+      transformOrigin: 'center'
+    });
+
+    // Hide arrows initially
+    gsap.set('.nav-view-arrow', {
+      opacity: 0,
+      y: 3
+    });
+
+    // Create a reusable timeline that we can play forward or reverse
+    const controlsTimeline = gsap.timeline({ paused: true });
+
+    // Sequence for the animation
+    controlsTimeline
+      // First animate the container
+      .to('.div-block-95', {
+        opacity: 1,
+        y: 0,
+        scale: 1,
+        pointerEvents: 'auto',
+        duration: 0.35,
+        ease: 'back.out(1.7)'
+      })
+
+      // Then stagger the buttons
+      .to(
+        '.div-block-97',
+        {
+          opacity: 1,
+          y: 0,
+          scale: 1,
+          duration: 0.3,
+          stagger: 0.06,
+          ease: 'back.out(1.7)'
+        },
+        '-=0.2'
+      ) // Start slightly before first animation finishes
+
+      // Finally stagger the arrows
+      .to(
+        '.nav-view-arrow',
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.2,
+          stagger: 0.04,
+          ease: 'power2.out'
+        },
+        '-=0.15'
+      );
+
+    // Flag to track if the animation is currently running
+    let isAnimating = false;
+
+    // Function to show the controls
+    function showControls() {
+      // if (isAnimating) return;
+      // isAnimating = true;
+
+      // Play the timeline forward
+      controlsTimeline
+        .timeScale(1)
+        .play()
+        .then(() => {
+          isAnimating = false;
+        });
+
+      // Ensure pointer events are enabled
+      gsap.set('.div-block-95', { pointerEvents: 'auto' });
+    }
+
+    // Function to hide the controls
+    function hideControls() {
+      // if (isAnimating || viewControls.matches(':hover')) return;
+      // isAnimating = true;
+
+      // Play the timeline in reverse
+      controlsTimeline
+        .timeScale(1.2)
+        .reverse()
+        .then(() => {
+          isAnimating = false;
+          // Ensure pointer events are disabled when fully hidden
+          gsap.set('.div-block-95', { pointerEvents: 'none' });
+        });
+    }
+
+    // Event listeners
+    viewControls.addEventListener('mouseenter', showControls);
+    navContainer.addEventListener('mouseenter', showControls);
+    navContainer.addEventListener('mouseleave', hideControls);
+
+    // Individual view button hover effects (opacity only)
+    document.querySelectorAll('.div-block-97').forEach(button => {
+      button.addEventListener('mouseenter', () => {
+        // Dim all other buttons
+        document.querySelectorAll('.div-block-97').forEach(otherButton => {
+          if (otherButton !== button) {
+            gsap.to(otherButton, {
+              opacity: 0.3,
+              duration: 0.2,
+              ease: 'power2.out'
+            });
+          }
+        });
+
+        // // Arrow animation
+        // const arrow = button.querySelector('.nav-view-arrow');
+        // if (arrow) {
+        //   if (arrow.classList.contains('l')) {
+        //     gsap.to(arrow, { x: -3, duration: 0.2, ease: 'power2.out' });
+        //   } else if (arrow.classList.contains('r')) {
+        //     gsap.to(arrow, { x: 3, duration: 0.2, ease: 'power2.out' });
+        //   } else {
+        //     gsap.to(arrow, { y: 3, duration: 0.2, ease: 'power2.out' });
+        //   }
+        // }
+      });
+
+      button.addEventListener('mouseleave', () => {
+        // Restore opacity of all buttons
+        document.querySelectorAll('.div-block-97').forEach(otherButton => {
+          gsap.to(otherButton, {
+            opacity: 1,
+            duration: 0.2,
+            ease: 'power2.out'
+          });
+        });
+
+        // Reset arrow position
+        const arrow = button.querySelector('.nav-view-arrow');
+        if (arrow) {
+          gsap.to(arrow, { x: 0, y: 0, duration: 0.2 });
+        }
+      });
+    });
+  }
 })();
