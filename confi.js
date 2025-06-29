@@ -3,7 +3,7 @@ let firstSearchModalInteraction = true;
 
 (async function initializeData() {
   Wized.requests.execute('get_wheels');
-  Wized.requests.execute('get_renders');
+  // Wized.requests.execute('get_renders');
   Wized.requests.execute('get_carcolors');
   await Wized.requests.waitFor('get_wheels');
 
@@ -28,7 +28,21 @@ let firstSearchModalInteraction = true;
     );
   }
 
-  (async function initConfigurator() {
+  window.initConfigurator = async function () {
+    // Wized.requests.execute('get_renders');
+    // await Wized.requests.waitFor('get_renders');
+
+    const newCarColor = Wized.data.r.get_renders.data.find(item => item.model == Wized.data.v.carModel).renders.find(render => render.model == null).color;
+    Wized.data.v.carColor = newCarColor;
+    const newWheelModel = Wized.data.r.get_renders.data.find(item => item.model == Wized.data.v.carModel).renders.find(render => render.model !== null).model;
+    Wized.data.v.wheelModel = newWheelModel;
+
+    console.log({
+      newCarModel: Wized.data.v.carModel,
+      newCarColor: Wized.data.v.carColor,
+      newWheelModel: Wized.data.v.wheelModels
+    });
+
     const data = Wized.data.r.get_renders.data;
     const imageUrls = data.flatMap(car => [car.thumbnail, ...(car.renders || []).map(render => render.image)]).filter(Boolean); // Remove undefined or null values
 
@@ -36,7 +50,9 @@ let firstSearchModalInteraction = true;
 
     await preloadImages(imageUrls);
     console.log('All images preloaded successfully!');
-  })();
+
+    initDock();
+  };
 
   window.updateAllLayers = async function (transitionType) {
     const clickedConfig = {
@@ -292,12 +308,12 @@ function appleDockNav() {
   });
 })();
 
-(async function initDock() {
+async function initDock() {
   await Wized.requests.waitFor('get_wheels');
   setTimeout(() => {
     appleDockNav();
   }, 200);
-})();
+}
 
 async function animateControlsOut() {
   console.log('🚀animateControlsOut');
@@ -369,6 +385,45 @@ async function animateControlsIn() {
   });
 })();
 
+(async function quoteFormTransitions() {
+  function showQuoteForm() {
+    gsap.set('#quoteOverlay', { display: 'flex', opacity: 0, autoAlpha: 0 });
+    let tl = gsap.timeline();
+    tl.to('#images-wrapper', { scale: 1, duration: 0.3, ease: 'expo.out' }, '<')
+      .to('#quoteOverlay', { duration: 0.2, opacity: 1, autoAlpha: 1, ease: 'power2.expo' }, '<')
+      .call(() => window.initializeQuoteFormSlider());
+  }
+
+  function hideQuoteForm() {
+    let tl = gsap.timeline();
+    tl.to('#quoteOverlay', {
+      duration: 0.2,
+      opacity: 0,
+      autoAlpha: 0,
+      ease: 'power2.expo',
+      onComplete: () => {
+        gsap.set('#quoteOverlay', { display: 'none' });
+        window.destroyQuoteFormSlider && window.destroyQuoteFormSlider();
+      }
+    }).to('#images-wrapper', { scale: 1.08, duration: 0.2, ease: 'expo.out' }, '<');
+  }
+
+  document.querySelector('#openQuoteForm').addEventListener('click', () => {
+    showQuoteForm();
+    animateControlsOut();
+  });
+  document.querySelector('#quotePseudo').addEventListener('click', () => {
+    hideQuoteForm();
+    animateControlsIn();
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      hideQuoteForm();
+      animateControlsIn();
+    }
+  });
+})();
+
 document.addEventListener('mousemove', e => {
   // Calculate center point of window
   const centerX = window.innerWidth / 2;
@@ -389,15 +444,29 @@ window.changeNavTabs = async function (transitionType) {
   return new Promise(resolve => {
     if (transitionType == 'view' || transitionType == 'car') {
       let tl = gsap.timeline({
-        onComplete: function () {
+        onComplete: async function () {
           console.log('Resolve changeNavTabs done, now calling updateAllLayers');
           if (transitionType == 'car') {
             Wized.requests.execute('get_renders');
+            // Use Promise chaining instead of await
+            Wized.requests
+              .waitFor('get_renders')
+              .then(() => {
+                return initConfigurator(); // Return the promise from initConfigurator
+              })
+              .then(() => {
+                return window.updateAllLayers(transitionType);
+              })
+              .then(() => {
+                console.log('updateAllLayers done');
+                resolve();
+              });
+          } else {
+            window.updateAllLayers(transitionType).then(() => {
+              console.log('updateAllLayers done');
+              resolve();
+            });
           }
-          window.updateAllLayers(transitionType).then(() => {
-            console.log('updateAllLayers done');
-            resolve();
-          });
         }
       });
       tl.to('#images-wrapper', { scale: 1, duration: 0.3, ease: 'expo.out' }).to('[overlay="white"]', { autoAlpha: 1, opacity: 1, duration: 0.3, ease: 'power2.out' }, '-=0.1');
@@ -418,18 +487,8 @@ async function switchCar(model) {
 
   // update variables
   Wized.data.v.carModel = model;
-  const newCarColor = Wized.data.r.get_renders.data.find(item => item.model == Wized.data.v.carModel).renders.find(render => render.model == null).color;
-  Wized.data.v.carColor = newCarColor;
-  const newWheelModel = Wized.data.r.get_renders.data.find(item => item.model == Wized.data.v.carModel).renders.find(render => render.model !== null).model;
-  Wized.data.v.wheelModel = newWheelModel;
 
-  console.log({
-    newCarModel: Wized.data.v.carModel,
-    newCarColor: Wized.data.v.carColor,
-    newWheelModel: Wized.data.v.wheelModels
-  });
-
-  await Wized.requests.waitFor('get_renders');
+  // await Wized.requests.waitFor('get_renders');
   await changeNavTabs('car');
 
   if (firstSearchModalInteraction == true) {
