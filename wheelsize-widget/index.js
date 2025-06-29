@@ -237,7 +237,7 @@ class VehicleSelectorWidget {
             display: 'flex',
             opacity: 1,
             y: 0,
-            duration: 0.4,
+            duration: 0.2,
             stagger: 0.1,
             ease: 'power2.out',
             clearProps: 'y'
@@ -258,7 +258,7 @@ class VehicleSelectorWidget {
 
           // Hide form inputs with animation
           const formInputs = this.container.querySelectorAll('.selector-group, .form-buttons');
-          gsap.set(formInputs, { display: 'none', opacity: 0, y: 20 });
+          gsap.set(formInputs, { display: 'none', opacity: 0, y: 2 });
         };
       } else {
         // In development, initialize immediately
