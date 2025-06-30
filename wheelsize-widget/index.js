@@ -91,8 +91,8 @@ class VehicleSelectorWidget {
               <div class="custom-select" id="color-select">
                 <div class="select-header">
                   <span class="color-option">
-                    <span class="color-dot" style="background-color: #1A1A1A"></span>
-                    Satin Black
+                    <span class="color-dot" style="background-color: #000000"></span>
+                    Gloss Black
                   </span>
                 </div>
                 <div class="select-options">
@@ -111,7 +111,7 @@ class VehicleSelectorWidget {
                 <div class="select-header">
                   <span>Make</span>
                 </div>
-                <div class="select-options">
+                <div class="select-options extra-width select-make">
                   <div class="search-container">
                     <input type="text" class="search-input" placeholder="Search make..." />
                   </div>
@@ -125,7 +125,7 @@ class VehicleSelectorWidget {
                 <div class="select-header">
                   <span>Model</span>
                 </div>
-                <div class="select-options">
+                <div class="select-options extra-width select-model">
                   <div class="search-container">
                     <input type="text" class="search-input" placeholder="Search model..." />
                   </div>
@@ -139,7 +139,7 @@ class VehicleSelectorWidget {
                 <div class="select-header">
                   <span>Year</span>
                 </div>
-                <div class="select-options">
+                <div class="select-options extra-width select-year">
                   <div class="options-container"></div>
                 </div>
               </div>
@@ -479,7 +479,7 @@ class VehicleSelectorWidget {
     const wheelColorOptions = this.config.wheelColors
       .map(
         color => `
-        <div class="option-item${color.id === 'satin_black' ? ' selected' : ''}" data-value="${color.id}">
+        <div class="option-item${color.id === 'gloss_black' ? ' selected' : ''}" data-value="${color.id}">
           <span class="color-option">
             <span class="color-dot" style="background-color: ${color.color}"></span>
             ${color.name}
@@ -713,6 +713,28 @@ class VehicleSelectorWidget {
     }
   }
 
+  attachOptionClickHandlers(select, callback) {
+    select.querySelectorAll('.option-item').forEach(option => {
+      option.addEventListener('click', () => {
+        const value = option.dataset.value;
+        const name = option.querySelector('span').textContent;
+        const image = option.querySelector('img')?.src;
+
+        // Update selected state
+        select.querySelectorAll('.option-item').forEach(opt => opt.classList.remove('selected'));
+        option.classList.add('selected');
+
+        // Close dropdown
+        const options = select.querySelector('.select-options');
+        options.classList.remove('active');
+        options.style.display = 'none';
+
+        // Execute callback if provided
+        if (callback) callback(value, name, image);
+      });
+    });
+  }
+
   updateMakesDropdown() {
     const optionsContainer = this.makeSelect.querySelector('.options-container');
     optionsContainer.innerHTML = this.makes
@@ -818,6 +840,36 @@ class VehicleSelectorWidget {
         }, 100);
       });
     });
+  }
+
+  async fetchYears() {
+    try {
+      console.log('Fetching years for make:', this.selectedMake, 'model:', this.selectedModel);
+      const response = await fetch(`${this.BASE_URL}/years/?make=${this.selectedMake}&model=${this.selectedModel}&user_key=${this.API_KEY}`);
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      console.log('Years API response:', result);
+
+      if (result && result.data && Array.isArray(result.data)) {
+        // Extract just the year values and sort them in descending order
+        // Using the name property instead of year since that's how the API returns it
+        this.years = result.data.map(yearObj => yearObj.name).sort((a, b) => b - a);
+        console.log('Processed years:', this.years);
+        this.updateYearsDropdown();
+      } else {
+        console.error('Invalid years data format:', result);
+        this.years = [];
+        this.updateYearsDropdown();
+      }
+    } catch (error) {
+      console.error('Error fetching years:', error);
+      this.years = [];
+      this.updateYearsDropdown();
+    }
   }
 
   updateYearsDropdown() {
