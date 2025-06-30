@@ -139,7 +139,7 @@ class VehicleSelectorWidget {
                 <div class="select-header">
                   <span>Year</span>
                 </div>
-                <div class="select-options extra-width select-year">
+                <div class="select-options extra-width select-year" style="right: 0; left: auto;">
                   <div class="options-container"></div>
                 </div>
               </div>
@@ -213,11 +213,6 @@ class VehicleSelectorWidget {
       console.log('Setting up basic event listeners');
       this.setupBasicEventListeners();
 
-      // Fetch and populate makes data
-      console.log('Fetching makes data');
-      await this.fetchMakes();
-      console.log('Makes data fetched and populated');
-
       // Setup form navigation last
       console.log('Setting up form navigation');
       this.setupFormNavigation();
@@ -228,9 +223,11 @@ class VehicleSelectorWidget {
         const formInputs = this.container.querySelectorAll('.selector-group, .form-buttons');
         gsap.set(formInputs, { display: 'none', opacity: 0, y: 20 });
 
-        window.initializeQuoteFormSlider = () => {
+        window.initializeQuoteFormSlider = async () => {
           console.log('Initializing wheel slider');
           this.initializeWheelSlider();
+          // Fetch makes data when the form is opened
+          await this.fetchMakes();
           // Animate form inputs in
           const formInputs = this.container.querySelectorAll('.selector-group, .form-buttons');
           gsap.to(formInputs, {
@@ -263,6 +260,7 @@ class VehicleSelectorWidget {
       } else {
         // In development, initialize immediately
         this.initializeWheelSlider();
+        await this.fetchMakes();
       }
 
       console.log('Widget initialization completed successfully');
