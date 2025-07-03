@@ -1,4 +1,3 @@
-console.log('VehicleSelectorWidget');
 class VehicleSelectorWidget {
   constructor(containerId, apiKey) {
     this.container = document.getElementById(containerId);
@@ -649,13 +648,19 @@ class VehicleSelectorWidget {
     form.addEventListener('submit', async e => {
       e.preventDefault();
       const formData = new FormData(form);
+
+      // Get the selected wheel model from the active swiper slide
+      const activeSlide = this.wheelSwiper.slides[this.wheelSwiper.activeIndex];
+      const selectedWheelModel = activeSlide.getAttribute('data-model');
+
       const data = {
         vehicle: {
           make: this.selectedMake || 'Sample Make',
           model: this.selectedModel || 'Sample Model',
           year: this.selectedYear || '2024',
           inchSize: this.inchSelect.querySelector('.selected').dataset.value,
-          wheelColor: this.colorSelect.querySelector('.selected').dataset.value
+          wheelColor: this.colorSelect.querySelector('.selected').dataset.value,
+          wheelModel: selectedWheelModel // Add the selected wheel model
         },
         personal: {
           firstName: formData.get('first_name'),
