@@ -130,41 +130,56 @@ window.createHotspots = function () {
     );
   }
 
-  window.initConfigurator = async function () {
-    // Wized.requests.execute('get_renders');
-    // await Wized.requests.waitFor('get_renders');
+  async function lazyLoadImages() {
+    // Start loading all other images in the background
+    const data = Wized.data.r.get_renders.data;
+    const allImageUrls = data.flatMap(car => [car.thumbnail, ...(car.renders || []).map(render => render.image)]).filter(Boolean);
 
-    const newCarColor = Wized.data.r.get_renders.data.find(item => item.model == Wized.data.v.carModel).renders.find(render => render.model == null).color;
+    // Remove already loaded images from background loading
+    const backgroundImages = allImageUrls.filter(url => !criticalImages.includes(url));
+
+    // Load rest in background - don't await
+    preloadImages(backgroundImages).then(() => {
+      console.log('Background images loaded');
+    });
+  }
+
+  window.initConfigurator = async function () {
+    const carData = Wized.data.r.get_renders.data.find(item => item.model == Wized.data.v.carModel);
+
+    // Set initial colors/models
+    const newCarColor = carData.renders.find(render => render.model == null).color;
     Wized.data.v.carColor = newCarColor;
-    const newWheelModel = Wized.data.r.get_renders.data.find(item => item.model == Wized.data.v.carModel).renders.find(render => render.model !== null).model;
+    const newWheelModel = carData.renders.find(render => render.model !== null).model;
     Wized.data.v.wheelModel = newWheelModel;
 
-    console.log({
-      newCarModel: Wized.data.v.carModel,
-      newCarColor: Wized.data.v.carColor,
-      newWheelModel: Wized.data.v.wheelModels
-    });
+    // Get only the critical images we need right now
+    const criticalImages = [
+      // Current car render
+      carData.renders.find(render => render.view === Wized.data.v.view && render.color === newCarColor && render.car_model === Wized.data.v.carModel)?.image,
+      // Current wheel render
+      carData.renders.find(render => render.view === Wized.data.v.view && render.model === newWheelModel)?.image
+    ].filter(Boolean);
 
-    const data = Wized.data.r.get_renders.data;
-    const imageUrls = data.flatMap(car => [car.thumbnail, ...(car.renders || []).map(render => render.image)]).filter(Boolean); // Remove undefined or null values
+    // Preload only critical images
+    await preloadImages(criticalImages);
+    console.log('Critical images preloaded');
 
-    // console.log('image urls = ', imageUrls);
-
-    await preloadImages(imageUrls);
-    console.log('All images preloaded successfully!');
+    lazyLoadImages();
 
     initDock();
   };
 
   window.updateAllLayers = async function (transitionType) {
-    const clickedConfig = {
-      car: Wized.data.v.carModel,
-      carColor: Wized.data.v.carColor,
-      wheel: Wized.data.v.wheelModel,
-      wheelColor: Wized.data.v.wheelColor,
-      view: Wized.data.v.view
-    };
-    console.log('Clicked Config:', clickedConfig);
+    console.log('✅✅✅updateAllLayers');
+    // const clickedConfig = {
+    //   car: Wized.data.v.carModel,
+    //   carColor: Wized.data.v.carColor,
+    //   wheel: Wized.data.v.wheelModel,
+    //   wheelColor: Wized.data.v.wheelColor,
+    //   view: Wized.data.v.view
+    // };
+    // console.log('Clicked Config:', clickedConfig);
 
     console.log('🔥🔥🔥');
     window.initCloseUpSlider();
@@ -546,13 +561,18 @@ document.addEventListener('mousemove', e => {
 });
 
 window.changeNavTabs = async function (transitionType) {
+  if (transitionType === 'car') {
+    // Start request immediately
+    Wized.requests.execute('get_renders');
+  }
+
   return new Promise(resolve => {
     if (transitionType == 'view' || transitionType == 'car') {
       let tl = gsap.timeline({
         onComplete: async function () {
           console.log('Resolve changeNavTabs done, now calling updateAllLayers');
           if (transitionType == 'car') {
-            Wized.requests.execute('get_renders');
+            // Wized.requests.execute('get_renders');
             // Use Promise chaining instead of await
             Wized.requests
               .waitFor('get_renders')
@@ -589,7 +609,6 @@ async function switchCar(model) {
     // hide out side & bottom controls before switching car
     animateControlsOut();
   }
-
   // update variables
   Wized.data.v.carModel = model;
 
