@@ -1,6 +1,48 @@
 let searchModalOpen = false;
 let firstSearchModalInteraction = true;
 
+// Define createHotspots in the global scope at the very top
+window.createHotspots = function () {
+  // Only create hotspots if we have closeups
+  if (!Wized.data.v.closeUps || Wized.data.v.closeUps.length === 0) {
+    // Remove any existing hotspots if no closeups exist
+    const existingHotspots = document.querySelectorAll('.wheel-hotspot');
+    existingHotspots.forEach(hotspot => hotspot.remove());
+    return;
+  }
+
+  // Remove any existing hotspots
+  const existingHotspots = document.querySelectorAll('.wheel-hotspot');
+  existingHotspots.forEach(hotspot => hotspot.remove());
+
+  // Create hotspot container
+  const hotspotsContainer = document.createElement('div');
+  hotspotsContainer.className = 'hotspots-container';
+
+  // Create wheel hotspot
+  const wheelHotspot = document.createElement('div');
+  wheelHotspot.className = 'wheel-hotspot';
+  wheelHotspot.innerHTML = `
+    <div class="hotspot-pulse"></div>
+    <div class="hotspot-icon">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      </svg>
+    </div>
+    <div class="hotspot-label">View close-ups</div>
+  `;
+
+  // Add click handler
+  wheelHotspot.addEventListener('click', () => {
+    animateControlsOut();
+    window.showCloseUpView();
+  });
+
+  hotspotsContainer.appendChild(wheelHotspot);
+  document.querySelector('#images-wrapper').appendChild(hotspotsContainer);
+};
+
 (async function initializeData() {
   Wized.requests.execute('get_wheels');
   // Wized.requests.execute('get_renders');
@@ -8,6 +50,66 @@ let firstSearchModalInteraction = true;
   await Wized.requests.waitFor('get_wheels');
 
   await new Promise(resolve => gsap.delayedCall(1, resolve));
+
+  // Add function to update tooltips
+  window.updateControlTooltips = function () {
+    // Remove any existing tooltips
+    document.querySelectorAll('.control-tooltip').forEach(tooltip => tooltip.remove());
+
+    // Create tooltips
+    const tooltips = [
+      {
+        step: 'car-model',
+        label: 'car',
+        value: Wized.data.v.carModel || 'Not selected'
+      },
+      {
+        step: 'car-color',
+        label: 'car color',
+        value: Wized.data.v.carColor || 'Not selected'
+      },
+      {
+        step: 'wheel-model',
+        label: 'wheel model',
+        value: Wized.data.v.wheelModel || 'Not selected'
+      },
+      {
+        step: 'wheel-color',
+        label: 'wheel color',
+        value: Wized.data.v.wheelColor || 'Not selected'
+      }
+    ];
+
+    tooltips.forEach(({ step, label, value }) => {
+      const menuItem = document.querySelector(`[element="sidebar-item"][step="${step}"]`);
+      if (!menuItem) return;
+
+      const tooltip = document.createElement('div');
+      tooltip.className = 'control-tooltip';
+
+      const labelSpan = document.createElement('span');
+      labelSpan.style.opacity = '0.5';
+      labelSpan.textContent = label;
+
+      const valueSpan = document.createElement('span');
+      valueSpan.textContent = value;
+
+      tooltip.appendChild(labelSpan);
+      tooltip.appendChild(valueSpan);
+
+      menuItem.appendChild(tooltip);
+    });
+  };
+
+  // Call updateControlTooltips initially
+  updateControlTooltips();
+
+  // Update tooltips when Wized data changes
+  Wized.on('requestend', result => {
+    if (result.name == 'get_renders') {
+      updateControlTooltips();
+    }
+  });
 
   // preload images
   function preloadImages(imageUrls) {
@@ -63,6 +165,9 @@ let firstSearchModalInteraction = true;
       view: Wized.data.v.view
     };
     console.log('Clicked Config:', clickedConfig);
+
+    console.log('🔥🔥🔥');
+    window.initCloseUpSlider();
 
     const data = Wized.data.r.get_renders.data;
 
@@ -676,4 +781,399 @@ async function switchCar(model) {
       });
     });
   }
+})();
+
+(async function closeUpTransitions() {
+  function showCloseUpAnimation() {
+    // Only show if we have closeup renders
+    if (!Wized.data.v.closeUps || Wized.data.v.closeUps.length === 0) return;
+
+    gsap.set('#closeupOverlay', { display: 'flex', opacity: 0, autoAlpha: 0 });
+    gsap.set('#closeupContainer', { display: 'flex', opacity: 0, autoAlpha: 0, width: '5%' });
+    gsap.set('#closeupContentWrap', { display: 'flex', opacity: 0, autoAlpha: 0, scale: 0.3 });
+
+    let tl = gsap.timeline();
+    tl.to('#images-wrapper', { scale: 1, duration: 0.3, ease: 'expo.out' }, '<')
+      .to('#closeupOverlay', { duration: 0.2, opacity: 1, autoAlpha: 1, ease: 'power2.expo' }, '<')
+      .fromTo('#closeupContainer', { width: '5%' }, { duration: 0.2, width: '100%', ease: 'power2.inOut' })
+      .fromTo('#closeupContentWrap', { scale: 0.3, autoAlpha: 0 }, { duration: 0.3, scale: 1, autoAlpha: 1, ease: 'power4.out' }, '-=0.3');
+
+    // Initialize slider with closeup images
+    initializeCloseUpSlider();
+  }
+
+  function hideCloseUpAnimation() {
+    let tl = gsap.timeline();
+    tl.to('#closeupContentWrap', { duration: 0.2, scale: 0.5, autoAlpha: 0, ease: 'power2.expo' })
+      .to('#closeupContainer', { duration: 0.5, scale: 0, autoAlpha: 0, ease: 'power2.inOut' }, '-=0.8')
+      .to('#closeupOverlay', {
+        duration: 0.2,
+        opacity: 0,
+        autoAlpha: 0,
+        ease: 'power2.expo',
+        onComplete: () => {
+          gsap.set('#closeupOverlay', { display: 'none' });
+          gsap.set('#closeupContainer', { display: 'none' });
+          // Cleanup slider if needed
+          destroyCloseUpSlider();
+        }
+      })
+      .to('#images-wrapper', { scale: 1.08, duration: 0.2, ease: 'expo.out' }, '<');
+  }
+
+  // Function to initialize the slider with closeup images
+  function initializeCloseUpSlider() {
+    const closeupContainer = document.querySelector('#closeupContentWrap');
+    closeupContainer.innerHTML = ''; // Clear existing content
+
+    // Create slider container
+    const sliderContainer = document.createElement('div');
+    sliderContainer.className = 'closeup-slider';
+
+    // Create navigation arrows
+    const prevArrow = document.createElement('div');
+    prevArrow.className = 'closeup-nav prev';
+    prevArrow.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+      <path d="M15 18L9 12L15 6" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>`;
+
+    const nextArrow = document.createElement('div');
+    nextArrow.className = 'closeup-nav next';
+    nextArrow.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+      <path d="M9 18L15 12L9 6" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>`;
+
+    // Create slides container
+    const slidesContainer = document.createElement('div');
+    slidesContainer.className = 'closeup-slides';
+
+    let currentSlide = 0;
+    const slides = Wized.data.v.closeUps;
+    let isZoomed = false;
+    let startX = 0,
+      startY = 0;
+    let translateX = 0,
+      translateY = 0;
+
+    function updateSlides() {
+      slidesContainer.innerHTML = '';
+      slides.forEach((closeup, index) => {
+        const slide = document.createElement('div');
+        slide.className = `closeup-slide ${index === currentSlide ? 'active' : ''}`;
+        const img = document.createElement('img');
+        img.src = closeup.image;
+        img.alt = 'Close-up view';
+        img.draggable = false;
+
+        // Add zoom button
+        const zoomButton = document.createElement('div');
+        zoomButton.className = 'zoom-button';
+        zoomButton.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          <line x1="11" y1="8" x2="11" y2="14"></line>
+          <line x1="8" y1="11" x2="14" y2="11"></line>
+        </svg>`;
+
+        function handleZoom(e) {
+          e.stopPropagation(); // Prevent event from bubbling to img click handler
+          if (!isZoomed) {
+            slide.classList.add('zoomed');
+            isZoomed = true;
+            // Hide navigation arrows when zoomed
+            prevArrow.style.display = 'none';
+            nextArrow.style.display = 'none';
+            // Update zoom button icon
+            zoomButton.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              <line x1="8" y1="11" x2="14" y2="11"></line>
+            </svg>`;
+
+            // Center the zoom
+            img.style.transformOrigin = '50% 50%';
+            translateX = 0;
+            translateY = 0;
+            updateImagePosition();
+          } else {
+            resetZoom(slide);
+            // Reset zoom button icon
+            zoomButton.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              <line x1="11" y1="8" x2="11" y2="14"></line>
+              <line x1="8" y1="11" x2="14" y2="11"></line>
+            </svg>`;
+          }
+        }
+
+        // Add scroll handling for panning
+        function handleScroll(e) {
+          if (!isZoomed) return;
+          e.preventDefault();
+
+          const scrollSpeed = 15;
+          // Shift + scroll for horizontal movement
+          if (e.shiftKey) {
+            translateX -= e.deltaY / scrollSpeed;
+          } else {
+            translateY -= e.deltaY / scrollSpeed;
+          }
+
+          // Limit the pan range (assuming 2x zoom)
+          const maxTranslate = img.width / 2;
+          translateX = Math.min(Math.max(translateX, -maxTranslate), maxTranslate);
+          translateY = Math.min(Math.max(translateY, -maxTranslate), maxTranslate);
+
+          updateImagePosition();
+        }
+
+        function updateImagePosition() {
+          img.style.transform = `scale(2) translate(${translateX}px, ${translateY}px)`;
+        }
+
+        // Add pan functionality
+        slide.addEventListener('mousedown', e => {
+          if (!isZoomed) return;
+          e.preventDefault();
+          startX = e.clientX - translateX;
+          startY = e.clientY - translateY;
+          slide.classList.add('panning');
+
+          function onMouseMove(e) {
+            if (!isZoomed) return;
+            translateX = e.clientX - startX;
+            translateY = e.clientY - startY;
+
+            // Limit the pan range (assuming 2x zoom)
+            const maxTranslate = img.width / 2;
+            translateX = Math.min(Math.max(translateX, -maxTranslate), maxTranslate);
+            translateY = Math.min(Math.max(translateY, -maxTranslate), maxTranslate);
+
+            updateImagePosition();
+          }
+
+          function onMouseUp() {
+            slide.classList.remove('panning');
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+          }
+
+          document.addEventListener('mousemove', onMouseMove);
+          document.addEventListener('mouseup', onMouseUp);
+        });
+
+        slide.addEventListener('wheel', handleScroll, { passive: false });
+        zoomButton.addEventListener('click', handleZoom);
+        img.addEventListener('click', handleZoom);
+
+        slide.appendChild(img);
+        slide.appendChild(zoomButton);
+        slidesContainer.appendChild(slide);
+      });
+
+      // Update arrow visibility
+      prevArrow.style.opacity = currentSlide === 0 ? '0.3' : '1';
+      nextArrow.style.opacity = currentSlide === slides.length - 1 ? '0.3' : '1';
+    }
+
+    function resetZoom(slide) {
+      slide.classList.remove('zoomed');
+      const img = slide.querySelector('img');
+      img.style.transform = '';
+      img.style.transformOrigin = '';
+      translateX = 0;
+      translateY = 0;
+      isZoomed = false;
+      // Show navigation arrows again
+      prevArrow.style.display = '';
+      nextArrow.style.display = '';
+    }
+
+    function nextSlide() {
+      if (isZoomed) return; // Prevent slide change while zoomed
+      if (currentSlide < slides.length - 1) {
+        currentSlide++;
+        updateSlides();
+      }
+    }
+
+    function prevSlide() {
+      if (isZoomed) return; // Prevent slide change while zoomed
+      if (currentSlide > 0) {
+        currentSlide--;
+        updateSlides();
+      }
+    }
+
+    // Add event listeners
+    nextArrow.addEventListener('click', nextSlide);
+    prevArrow.addEventListener('click', prevSlide);
+
+    // Add keyboard navigation
+    document.addEventListener('keydown', e => {
+      if (document.querySelector('#closeupOverlay').style.display === 'flex') {
+        if (e.key === 'ArrowRight' && !isZoomed) nextSlide();
+        if (e.key === 'ArrowLeft' && !isZoomed) prevSlide();
+        if (e.key === 'Escape' && isZoomed) {
+          const activeSlide = document.querySelector('.closeup-slide.active');
+          if (activeSlide) resetZoom(activeSlide);
+        }
+      }
+    });
+
+    // Append everything to the container
+    sliderContainer.appendChild(prevArrow);
+    sliderContainer.appendChild(slidesContainer);
+    sliderContainer.appendChild(nextArrow);
+    closeupContainer.appendChild(sliderContainer);
+
+    // Initialize first slide
+    updateSlides();
+
+    // Add styles
+    const style = document.createElement('style');
+    style.textContent = `
+      .closeup-slider {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        background: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .closeup-slides {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .closeup-slide {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .closeup-slide.zoomed {
+        cursor: zoom-out;
+      }
+      .closeup-slide.panning {
+        cursor: move;
+      }
+      .closeup-slide.active {
+        opacity: 1;
+      }
+      .closeup-slide img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+      }
+      .closeup-slide.zoomed img {
+        transform: scale(2);
+      }
+      .zoom-button {
+        position: absolute;
+        bottom: 20px;
+        right: 20px;
+        width: 44px;
+        height: 44px;
+        background: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        z-index: 10;
+        transition: all 0.2s ease;
+        color: #000;
+      }
+      .zoom-button:hover {
+        transform: scale(1.1);
+        background: #f5f5f5;
+      }
+      .closeup-nav {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 48px;
+        height: 48px;
+        background: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        z-index: 10;
+        transition: all 0.2s ease;
+      }
+      .closeup-nav:hover {
+        background: #f5f5f5;
+        transform: translateY(-50%) scale(1.1);
+      }
+      .closeup-nav.prev {
+        left: 40px;
+      }
+      .closeup-nav.next {
+        right: 40px;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  function destroyCloseUpSlider() {
+    const closeupContainer = document.querySelector('#closeupContentWrap');
+    if (closeupContainer) {
+      closeupContainer.innerHTML = '';
+    }
+    // Remove keyboard event listeners
+    document.removeEventListener('keydown', e => {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+        e.stopPropagation();
+      }
+    });
+  }
+
+  // Event listeners
+  window.showCloseUpView = showCloseUpAnimation; // Expose to window for external use
+
+  document.querySelector('#closeupPseudo').addEventListener('click', () => {
+    hideCloseUpAnimation();
+    animateControlsIn();
+  });
+
+  // Close on escape key
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && document.querySelector('#closeupOverlay').style.display === 'flex') {
+      hideCloseUpAnimation();
+      animateControlsIn();
+    }
+  });
+})();
+
+(window.closeUpSlider = function () {
+  Wized.on('requestend', result => {
+    if (result.name == 'get_renders') {
+      console.log('wized = ', Wized.data);
+    }
+  });
+  (window.initCloseUpSlider = function () {
+    // Update closeups data
+    Wized.data.v.closeUps = Wized.data.r.get_renders.data
+      .find(item => item.model == Wized.data.v.carModel)
+      .renders.filter(render => render.model == Wized.data.v.wheelModel && render.color == Wized.data.v.wheelColor && render.view == 'closeup');
+    console.log('closeUps = ', Wized.data.v.closeUps);
+
+    // Create/update hotspots after setting closeups data
+    window.createHotspots();
+  })();
 })();
