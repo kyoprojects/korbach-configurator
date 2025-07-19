@@ -56,27 +56,40 @@ window.createHotspots = function () {
     // Remove any existing tooltips
     document.querySelectorAll('.control-tooltip').forEach(tooltip => tooltip.remove());
 
+    // Get wheel color display name from widget config
+    const wheelColors = {
+      gloss_black: 'Gloss Black',
+      gloss_bronze: 'Gloss Bronze',
+      gloss_titanium: 'Gloss Titanium',
+      satin_black: 'Satin Black',
+      satin_bronze: 'Satin Bronze',
+      satin_grey: 'Satin Grey'
+    };
+
+    const currentCar = Wized.data.r.get_renders.data[0];
+    const prettyCarName = `${currentCar.brand} ${currentCar.name}`;
+
     // Create tooltips
     const tooltips = [
       {
         step: 'car-model',
-        label: 'car',
-        value: Wized.data.v.carModel || 'Not selected'
+        label: 'Car',
+        value: prettyCarName || 'Not selected'
       },
       {
         step: 'car-color',
-        label: 'car color',
+        label: 'Car Color',
         value: Wized.data.v.carColor || 'Not selected'
       },
       {
         step: 'wheel-model',
-        label: 'wheel model',
-        value: Wized.data.v.wheelModel || 'Not selected'
+        label: 'Wheel Model',
+        value: (Wized.data.v.wheelModel || 'Not selected').toUpperCase()
       },
       {
         step: 'wheel-color',
-        label: 'wheel color',
-        value: Wized.data.v.wheelColor || 'Not selected'
+        label: 'Wheel Color',
+        value: wheelColors[Wized.data.v.wheelColor] || Wized.data.v.wheelColor || 'Not selected'
       }
     ];
 
@@ -101,8 +114,7 @@ window.createHotspots = function () {
     });
   };
 
-  // Call updateControlTooltips initially
-  updateControlTooltips();
+  // updateControlTooltips();
 
   // Update tooltips when Wized data changes
   Wized.on('requestend', result => {
@@ -181,7 +193,6 @@ window.createHotspots = function () {
     // };
     // console.log('Clicked Config:', clickedConfig);
 
-    console.log('🔥🔥🔥');
     window.initCloseUpSlider();
 
     const data = Wized.data.r.get_renders.data;
@@ -1208,12 +1219,11 @@ async function switchCar(model) {
 })();
 
 (window.closeUpSlider = function () {
-  Wized.on('requestend', result => {
-    if (result.name == 'get_renders') {
-      console.log('wized = ', Wized.data);
-      o;
-    }
-  });
+  // Wized.on('requestend', result => {
+  //   if (result.name == 'get_renders') {
+  //     console.log('wized = ', Wized.data);
+  //   }
+  // });
   window.initCloseUpSlider = function () {
     // Update closeups data
     Wized.data.v.closeUps = Wized.data.r.get_renders.data
