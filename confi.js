@@ -130,7 +130,7 @@ window.createHotspots = function () {
     );
   }
 
-  async function lazyLoadImages() {
+  async function lazyLoadImages(criticalImages) {
     // Start loading all other images in the background
     const data = Wized.data.r.get_renders.data;
     const allImageUrls = data.flatMap(car => [car.thumbnail, ...(car.renders || []).map(render => render.image)]).filter(Boolean);
@@ -165,7 +165,7 @@ window.createHotspots = function () {
     await preloadImages(criticalImages);
     console.log('Critical images preloaded');
 
-    lazyLoadImages();
+    lazyLoadImages(criticalImages);
 
     initDock();
   };
@@ -320,7 +320,6 @@ window.createHotspots = function () {
 (async function searchModals() {
   const modal = document.getElementById('search-modal');
   function openSearchModal() {
-    console.log('Opening modal...');
     const modal = document.getElementById('search-modal');
 
     if (!modal) return;
@@ -341,11 +340,17 @@ window.createHotspots = function () {
       ease: 'power2.in',
       onComplete: () => {
         modal.style.display = 'none';
+        searchModalOpen = false; // Add this line to update the state
       }
     });
   };
   document.querySelector('[el="search-trigger"]').addEventListener('click', function () {
-    openSearchModal();
+    // if modal is already opened, close it
+    if (searchModalOpen) {
+      closeSearchModal();
+    } else {
+      openSearchModal();
+    }
   });
 
   document.addEventListener('keydown', e => {
@@ -374,7 +379,7 @@ function appleDockNav() {
 
   navItems.forEach(item => {
     item.addEventListener('click', () => {
-      clickSound2.play();
+      if (Wized.data.v.soundEnabled) clickSound2.play();
     });
   });
 
@@ -392,7 +397,7 @@ function appleDockNav() {
   navItems.forEach((item, index) => {
     item.addEventListener('mouseenter', () => {
       item.classList.add('hover'); // Add .hover to current item
-      clickSound.play();
+      if (Wized.data.v.soundEnabled) clickSound.play();
 
       // Toggle classes for siblings
       toggleSiblingClass(navItems, index, -1, 'sibling-close', true); // Previous sibling
@@ -419,7 +424,7 @@ function appleDockNav() {
   navItems.forEach((item, index) => {
     item.addEventListener('mouseenter', () => {
       item.classList.add('hovered');
-      clickSound.play();
+      if (Wized.data.v.soundEnabled) clickSound.play();
     });
 
     item.addEventListener('mouseleave', () => {
@@ -628,7 +633,7 @@ async function switchCar(model) {
 
 (async function modalEventListening() {
   window.addEventListener('message', event => {
-    if (event.origin === 'https://car-search-magic.lovable.app' || event.origin === 'http://localhost:8080') {
+    if (event.origin === 'https://prismatic-phoenix-e7fbdb.netlify.app/' || event.origin === 'http://localhost:8080') {
       if (event.data.type == 'selectCar') {
         // console.log('Received message:', event);
         if (event.data.type === 'selectCar') {
@@ -1183,9 +1188,10 @@ async function switchCar(model) {
   Wized.on('requestend', result => {
     if (result.name == 'get_renders') {
       console.log('wized = ', Wized.data);
+      o;
     }
   });
-  (window.initCloseUpSlider = function () {
+  window.initCloseUpSlider = function () {
     // Update closeups data
     Wized.data.v.closeUps = Wized.data.r.get_renders.data
       .find(item => item.model == Wized.data.v.carModel)
@@ -1194,5 +1200,19 @@ async function switchCar(model) {
 
     // Create/update hotspots after setting closeups data
     window.createHotspots();
-  })();
+  };
+})();
+
+(async function toggleSound() {
+  const soundButton = document.querySelector('#toggleSound');
+  const soundIcon = document.querySelector('#soundIcon');
+  soundButton.addEventListener('click', () => {
+    Wized.data.v.soundEnabled = !Wized.data.v.soundEnabled;
+    if (Wized.data.v.soundEnabled) clickSound2.play();
+    if (Wized.data.v.soundEnabled) {
+      soundIcon.src = 'https://cdn.prod.website-files.com/675364fc6bb8d63cafd2bf42/6844a787dfe4e67d0ed427e5_Volume%20High%20Stroke%20Sharp.svg';
+    } else {
+      soundIcon.src = 'https://cdn.prod.website-files.com/675364fc6bb8d63cafd2bf42/6844a787fdc8e2cfeee3e484_Volume%20Mute%20Icon.svg';
+    }
+  });
 })();
