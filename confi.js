@@ -212,46 +212,69 @@ window.createHotspots = function () {
 
     // check if all images are loaded
     let imagesLoaded = 0;
+    let animationPromiseResolve;
+    const animationPromise = new Promise(resolve => {
+      animationPromiseResolve = resolve;
+    });
+
     function checkAllLoaded() {
       imagesLoaded++;
       if (imagesLoaded === 2) {
+        console.log('🥶 Image diagnostics:', {
+          wheel: {
+            complete: wheelOverlayPreload.complete,
+            naturalWidth: wheelOverlayPreload.naturalWidth,
+            naturalHeight: wheelOverlayPreload.naturalHeight
+          },
+          car: {
+            complete: carOverlayPreload.complete,
+            naturalWidth: carOverlayPreload.naturalWidth,
+            naturalHeight: carOverlayPreload.naturalHeight
+          }
+        });
+
         document.querySelector('.images-wrapper.preload').classList.add('show');
 
         // Update the regular images with the preloaded images
         document.querySelector('[w-el="scenery-wheel-overlay"]').src = wheelOverlayPreload.src;
         document.querySelector('[w-el="scenery-car-overlay"]').src = carOverlayPreload.src;
-        // document.querySelector('[w-el="scenery"]').src = sceneryPreload.src;
 
         document.querySelector('.images-wrapper.preload').classList.remove('show');
+        console.log('images loaded');
+
+        // Now trigger the animation
+        animationPromiseResolve();
       }
     }
+
     wheelOverlayPreload.onload = checkAllLoaded;
     carOverlayPreload.onload = checkAllLoaded;
-    // sceneryPreload.onload = checkAllLoaded;
-    console.log('images loaded');
+    console.log('🥶 6. Image load listeners attached');
 
-    return new Promise(resolve => {
-      // animate images in and wait for it to finish
+    return animationPromise.then(() => {
       console.log('reshow images');
-      let tl = gsap.timeline({
-        onComplete: function () {
-          console.log('Animation complete, resolving promise');
+      return new Promise(resolve => {
+        let tl = gsap.timeline({
+          onComplete: function () {
+            console.log('🥶 8. Animation complete');
+            resolve();
+          }
+        });
+        if (transitionType == 'view') {
+          tl.to('[overlay="white"]', { autoAlpha: 0, opacity: 0, duration: 0.3, ease: 'power2.out' }).to('#images-wrapper', { scale: 1.08, duration: 0.3, ease: 'expo.out' }, '-=0.1');
+        } else if (transitionType == 'car') {
+          console.log('🥶 9. Switching car');
+          if (firstSearchModalInteraction == false) {
+            setTimeout(() => {
+              console.log('🥶 10. Animating controls in');
+              animateControlsIn();
+            }, 100);
+            tl.to('[overlay="white"]', { autoAlpha: 0, opacity: 0, duration: 0.3, ease: 'power2.out' }).to('#images-wrapper', { scale: 1.08, duration: 0.3, ease: 'expo.out' }, '-=0.1');
+          }
+        } else {
           resolve();
         }
       });
-      if (transitionType == 'view') {
-        tl.to('[overlay="white"]', { autoAlpha: 0, opacity: 0, duration: 0.3, ease: 'power2.out' }).to('#images-wrapper', { scale: 1.08, duration: 0.3, ease: 'expo.out' }, '-=0.1');
-      } else if (transitionType == 'car') {
-        console.log('switch car');
-        if (firstSearchModalInteraction == false) {
-          setTimeout(() => {
-            animateControlsIn();
-          }, 100);
-          tl.to('[overlay="white"]', { autoAlpha: 0, opacity: 0, duration: 0.3, ease: 'power2.out' }).to('#images-wrapper', { scale: 1.08, duration: 0.3, ease: 'expo.out' }, '-=0.1');
-        }
-      } else {
-        resolve();
-      }
     });
   };
 
@@ -638,7 +661,7 @@ async function switchCar(model) {
         // console.log('Received message:', event);
         if (event.data.type === 'selectCar') {
           const model = event.data.data.model;
-          console.log('✅✅✅✅✅✅✅model =', model);
+          // console.log('✅✅✅✅✅✅✅model =', model);
           switchCar(model);
         } else {
           console.log('no valid event');
