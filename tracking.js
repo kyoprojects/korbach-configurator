@@ -47,6 +47,6 @@
   // Handle all Typeform links
   document.querySelectorAll('a[href*="typeform.com"]').forEach(link => {
     link.href = updateTypeformUrl(link.href);
-    console.log(link);
+    console.log('llinkk = ', link);
   });
 })();
