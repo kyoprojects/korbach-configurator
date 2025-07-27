@@ -1,0 +1,14 @@
+renders.csv
+newcarcolors.csv
+renders/porsche/cayenne-turbo-gt/wheels/ps99/front/cayenne-turbo-gt_front_satin_black_ps99.webp
+records_generator/renders.csv
+renders/porsche/ferr-puronod/wheels/ps99/front/ferr-puronod_front_satin_black_ps99.webp
+newcarcolors.csv
+newcarcolors.csv
+records_generator/renders.csv
+newcarcolors.csv
+records_generator/generate_newbatch.js
+records_generator/add_new_config.js
+records_generator/*
+node_modules/*
+node_modules

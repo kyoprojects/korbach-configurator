@@ -191,10 +191,10 @@ class VehicleSelectorWidget {
   }
 
   async init() {
-    console.log('Starting widget initialization');
+    // console.log('Starting widget initialization');
     try {
       // First create the form structure
-      console.log('Creating form structure');
+      // console.log('Creating form structure');
       this.createFormStructure();
 
       // Hide form inputs initially in production
@@ -205,15 +205,15 @@ class VehicleSelectorWidget {
       }
 
       // Initialize all selector references
-      console.log('Initializing selectors');
+      // console.log('Initializing selectors');
       this.initializeSelectors();
 
       // Setup basic event listeners that don't depend on API data
-      console.log('Setting up basic event listeners');
+      // console.log('Setting up basic event listeners');
       this.setupBasicEventListeners();
 
       // Setup form navigation last
-      console.log('Setting up form navigation');
+      // console.log('Setting up form navigation');
       this.setupFormNavigation();
 
       // Add window helpers for slider initialization (only in production)
@@ -223,10 +223,17 @@ class VehicleSelectorWidget {
         gsap.set(formInputs, { display: 'none', opacity: 0, y: 20 });
 
         window.initializeQuoteFormSlider = async () => {
-          console.log('Initializing wheel slider');
-          this.initializeWheelSlider();
-          // Fetch makes data when the form is opened
-          await this.fetchMakes();
+          // console.log('Initializing wheel slider');
+          // Only initialize the slider if we're on step 1 and it doesn't exist
+          const step1 = document.querySelector('.form-step[data-step="1"]');
+          if (step1.classList.contains('active') && !this.wheelSwiper) {
+            this.initializeWheelSlider();
+          }
+          // Fetch makes data when the form is opened (if not already fetched)
+          if (!this.makesDataFetched) {
+            await this.fetchMakes();
+            this.makesDataFetched = true;
+          }
           // Animate form inputs in
           const formInputs = this.container.querySelectorAll('.selector-group, .form-buttons');
           gsap.to(formInputs, {
@@ -241,20 +248,16 @@ class VehicleSelectorWidget {
         };
 
         window.destroyQuoteFormSlider = () => {
-          console.log('Destroying wheel slider');
-          if (this.wheelSwiper) {
-            this.wheelSwiper.destroy();
-            this.wheelSwiper = null;
-          }
-          // Remove slider elements
-          const sliderWrapper = this.container.querySelector('.swiper-wrapper');
-          const activeTooltip = this.container.querySelector('.active-tooltip');
-          if (sliderWrapper) sliderWrapper.innerHTML = '';
-          if (activeTooltip) activeTooltip.remove();
+          // Don't destroy the slider when just hiding the form
+          // We'll handle slider destruction in the step navigation
 
-          // Hide form inputs with animation
+          // Just ensure form inputs remain visible
           const formInputs = this.container.querySelectorAll('.selector-group, .form-buttons');
-          gsap.set(formInputs, { display: 'none', opacity: 0, y: 2 });
+          formInputs.forEach(el => {
+            if (getComputedStyle(el).display === 'none') {
+              el.style.display = 'flex';
+            }
+          });
         };
       } else {
         // In development, initialize immediately
@@ -262,7 +265,7 @@ class VehicleSelectorWidget {
         await this.fetchMakes();
       }
 
-      console.log('Widget initialization completed successfully');
+      // console.log('Widget initialization completed successfully');
     } catch (error) {
       console.error('Error during widget initialization:', error);
       throw error;
@@ -635,7 +638,63 @@ class VehicleSelectorWidget {
     const steps = form.querySelectorAll('.form-step');
     const successMessage = form.querySelector('.success-message');
 
+    // Helper function to show validation message
+    const showValidationMessage = (element, message) => {
+      // Remove any existing validation message
+      const existingMessage = element.parentElement.querySelector('.validation-message');
+      if (existingMessage) {
+        existingMessage.remove();
+      }
+
+      // Add new validation message
+      const validationMessage = document.createElement('div');
+      validationMessage.className = 'validation-message';
+      validationMessage.innerHTML = `<span class="validation-icon">!</span> ${message}`;
+      element.parentElement.appendChild(validationMessage);
+    };
+
+    // Helper function to remove validation message
+    const removeValidationMessage = element => {
+      const validationMessage = element.parentElement.querySelector('.validation-message');
+      if (validationMessage) {
+        validationMessage.remove();
+      }
+    };
+
     nextBtn.addEventListener('click', () => {
+      // Clear any existing validation messages first
+      const selectors = [this.makeSelect, this.modelSelect, this.yearSelect];
+      selectors.forEach(select => removeValidationMessage(select));
+
+      // Check each field and show validation message if needed
+      let isValid = true;
+
+      if (!this.selectedMake) {
+        showValidationMessage(this.makeSelect, 'Field required');
+        isValid = false;
+      }
+      if (!this.selectedModel) {
+        showValidationMessage(this.modelSelect, 'Field required.');
+        isValid = false;
+      }
+      if (!this.selectedYear) {
+        showValidationMessage(this.yearSelect, 'Field required.');
+        isValid = false;
+      }
+
+      if (!isValid) {
+        return;
+      }
+
+      // When moving to step 2, we can destroy the slider since it's not needed
+      if (this.wheelSwiper) {
+        this.wheelSwiper.destroy();
+        this.wheelSwiper = null;
+        const sliderWrapper = this.container.querySelector('.swiper-wrapper');
+        const activeTooltip = this.container.querySelector('.active-tooltip');
+        if (sliderWrapper) sliderWrapper.innerHTML = '';
+        if (activeTooltip) activeTooltip.remove();
+      }
       steps[0].classList.remove('active');
       steps[1].classList.add('active');
     });
@@ -643,6 +702,10 @@ class VehicleSelectorWidget {
     prevBtn.addEventListener('click', () => {
       steps[1].classList.remove('active');
       steps[0].classList.add('active');
+      // When returning to step 1, reinitialize the slider if needed
+      if (!this.wheelSwiper) {
+        this.initializeWheelSlider();
+      }
     });
 
     form.addEventListener('submit', async e => {
@@ -847,7 +910,7 @@ class VehicleSelectorWidget {
 
   async fetchYears() {
     try {
-      console.log('Fetching years for make:', this.selectedMake, 'model:', this.selectedModel);
+      // console.log('Fetching years for make:', this.selectedMake, 'model:', this.selectedModel);
       const response = await fetch(`${this.BASE_URL}/years/?make=${this.selectedMake}&model=${this.selectedModel}&user_key=${this.API_KEY}`);
 
       if (!response.ok) {
@@ -855,13 +918,13 @@ class VehicleSelectorWidget {
       }
 
       const result = await response.json();
-      console.log('Years API response:', result);
+      // console.log('Years API response:', result);
 
       if (result && result.data && Array.isArray(result.data)) {
         // Extract just the year values and sort them in descending order
         // Using the name property instead of year since that's how the API returns it
         this.years = result.data.map(yearObj => yearObj.name).sort((a, b) => b - a);
-        console.log('Processed years:', this.years);
+        // console.log('Processed years:', this.years);
         this.updateYearsDropdown();
       } else {
         console.error('Invalid years data format:', result);
@@ -895,10 +958,10 @@ class VehicleSelectorWidget {
 }
 
 // Initialize the widget when the DOM is loaded
-console.log('DOM Content Loaded - Initializing VehicleSelectorWidget');
+// console.log('DOM Content Loaded - Initializing VehicleSelectorWidget');
 
 const container = document.getElementById('multistep-form');
-console.log('Container element found:', container);
+// console.log('Container element found:', container);
 
 if (!container) {
   console.error('Failed to initialize widget: Could not find element with ID "multistep-form"');
@@ -908,11 +971,11 @@ if (!container) {
 function initializeWidget() {
   try {
     const widget = new VehicleSelectorWidget('multistep-form', 'ac48b4044e72f0cdd6ba0ab955047049');
-    console.log('Widget instance created successfully');
+    // console.log('Widget instance created successfully');
 
     // Example of listening to form submission
     document.getElementById('multistep-form').addEventListener('form-submitted', e => {
-      console.log('Form submitted:', e.detail);
+      // console.log('Form submitted:', e.detail);
     });
   } catch (error) {
     console.error('Error initializing widget:', error);
@@ -929,7 +992,7 @@ if (isDevelopment) {
   // In production, wait for Wized
   window.Wized = window.Wized || [];
   window.Wized.push(async Wized => {
-    console.log('Wized initialized, waiting for wheel data...');
+    // console.log('Wized initialized, waiting for wheel data...');
     try {
       // Execute the get_wheels request if not already done
       if (!Wized.data.r.get_wheels) {
@@ -937,7 +1000,7 @@ if (isDevelopment) {
       }
       // Wait for the data
       await Wized.requests.waitFor('get_wheels');
-      console.log('Wheel data loaded, initializing widget...');
+      // console.log('Wheel data loaded, initializing widget...');
       initializeWidget();
     } catch (error) {
       console.error('Error waiting for Wized data:', error);

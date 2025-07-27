@@ -1,3 +1,11 @@
+@font-face {
+  font-family: 'Plain Regular';
+  src: url('/Plain Regular.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 [show-on-pageload] {
   display: flex;
 }
@@ -442,4 +450,547 @@
     transform: translate(-50%, -50%) scale(0.95);
     opacity: 0.7; /* Increased from 0.6 */
   }
+}
+
+/* ======================
+   Closeup Slider Styles
+   ====================== */
+
+/* Main slider container */
+.closeup-slider {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Container for all slides */
+.closeup-slides {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Individual slide styling */
+.closeup-slide {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Cursor states for different interactions */
+.closeup-slide.zoomed {
+  cursor: zoom-out;
+}
+
+.closeup-slide.panning {
+  cursor: move;
+}
+
+/* Active slide state */
+.closeup-slide.active {
+  opacity: 1;
+}
+
+/* Image within slides */
+.closeup-slide img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+/* Zoomed state for images */
+.closeup-slide.zoomed img {
+  transform: scale(2);
+}
+
+/* Zoom control button */
+.zoom-button {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  width: 44px;
+  height: 44px;
+  background: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+  transition: all 0.2s ease;
+  color: #000;
+}
+
+.zoom-button:hover {
+  transform: scale(1.1);
+  background: #f5f5f5;
+}
+
+/* Navigation arrows */
+.closeup-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 48px;
+  height: 48px;
+  background: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+  transition: all 0.2s ease;
+}
+
+/* Navigation arrow hover state */
+.closeup-nav:hover {
+  background: #f5f5f5;
+  transform: translateY(-50%) scale(1.1);
+}
+
+/* Position for previous/next arrows */
+.closeup-nav.prev {
+  left: 40px;
+}
+
+.closeup-nav.next {
+  right: 40px;
+}
+
+/* ======================
+   End Overlay Styles
+   ====================== */
+.end-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: #111;
+  z-index: 10000000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.5s cubic-bezier(0.77, 0, 0.175, 1);
+}
+
+.end-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.end-overlay-content {
+  text-align: center;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  animation: overlayIn 0.7s cubic-bezier(0.77, 0, 0.175, 1);
+}
+
+.end-overlay-btn {
+  font-family: 'Plain Regular', sans-serif;
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 1.05rem;
+  font-weight: 400;
+  letter-spacing: 1px;
+  cursor: pointer;
+  outline: none;
+  padding: 0.3em 0.8em;
+  border-radius: 0;
+  margin-bottom: 0.2em;
+  position: relative;
+  box-shadow: none;
+}
+
+.end-overlay-btn:hover {
+  background: #181818;
+  color: #f5f5f5;
+}
+
+.end-overlay-btn .dot {
+  color: #fff;
+  font-size: 1em;
+  margin-left: 0.18em;
+  vertical-align: middle;
+  animation: blink 1.2s infinite alternate;
+}
+
+.end-overlay-subtext {
+  font-family: 'Plain Regular', sans-serif;
+  font-size: 0.85rem;
+  color: #bbb;
+  opacity: 0.7;
+  font-weight: 300;
+  letter-spacing: 0.2px;
+}
+
+@keyframes overlayIn {
+  0% {
+    transform: scale(0.95) translateY(40px);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes blink {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.3;
+  }
+}
+
+/* ======================
+   Glitch Transition Styles
+   ====================== */
+.glitch-transition {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: transparent;
+  z-index: 99999999;
+  pointer-events: none;
+  opacity: 1;
+  overflow: hidden;
+  display: none;
+}
+
+.glitch-block {
+  position: absolute;
+  background: #1a1a1a !important;
+  opacity: 0;
+  will-change: opacity;
+  pointer-events: none;
+  visibility: hidden;
+}
+
+/* Different shades of anthracite for variety */
+.glitch-block:nth-child(3n) {
+  background: #1c1c1c !important;
+}
+
+.glitch-block:nth-child(4n) {
+  background: #181818 !important;
+}
+
+.glitch-block:nth-child(7n) {
+  background: #191919 !important;
+}
+
+/* ======================
+   Preloader Styles
+   ====================== */
+#preloader-wrap {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 9999999;
+}
+
+.preloader {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  /* background: #000; */
+  overflow: hidden;
+}
+
+.smoke-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 10000001;
+  opacity: 0;
+  mix-blend-mode: screen;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.smoke-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.smoke-video {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scale(1.1);
+}
+
+.smoke-video.reverse {
+  opacity: 0;
+  transform: scale(1.1) scaleX(-1);
+}
+
+.scene {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  visibility: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #111;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.scene.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.black-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  /* background: #000; */
+}
+
+.logo-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 2;
+}
+
+.logo-container {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10;
+  pointer-events: none;
+}
+
+.logo-image {
+  max-width: 60px;
+  opacity: 0;
+  visibility: hidden;
+  display: block;
+}
+
+.text-overlay {
+  font-family: 'Plain Regular', sans-serif;
+  font-size: 42px;
+  font-weight: 300;
+  letter-spacing: 4px;
+  color: #fff;
+  position: relative;
+  z-index: 10;
+  display: flex;
+  gap: 15px;
+}
+
+.text-word {
+  opacity: 0;
+  filter: blur(10px);
+  transform: scale(0.8);
+  display: inline-block;
+}
+
+.video-placeholder {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.placeholder-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transform: scale(1.1);
+}
+
+.car-video {
+  position: absolute;
+  right: 0;
+  left: auto;
+  top: 50%;
+  width: 130vw;
+  height: 100vh;
+  object-fit: cover;
+  opacity: 0;
+  transform: translateY(-50%) scale(1.1);
+  z-index: 1;
+}
+
+.intro-text {
+  font-size: 52px;
+  font-weight: 700;
+  letter-spacing: 2px;
+}
+
+.tooltip {
+  position: fixed;
+  z-index: 9999;
+  pointer-events: none;
+  transition: all 0.2s ease;
+  transform: translateY(4px);
+  opacity: 0;
+  visibility: hidden; /* Ensure tooltips are hidden by default */
+}
+
+.tooltip-content {
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  line-height: 1.4;
+  white-space: nowrap;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Tooltip positions */
+.tooltip-top .tooltip-content::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 4px solid rgba(0, 0, 0, 0.8);
+}
+
+.tooltip-bottom .tooltip-content::after {
+  content: '';
+  position: absolute;
+  top: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-bottom: 4px solid rgba(0, 0, 0, 0.8);
+}
+
+.tooltip-left .tooltip-content::after {
+  content: '';
+  position: absolute;
+  right: -4px;
+  top: 50%;
+  transform: translateY(-50%);
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
+  border-left: 4px solid rgba(0, 0, 0, 0.8);
+}
+
+.tooltip-right .tooltip-content::after {
+  content: '';
+  position: absolute;
+  left: -4px;
+  top: 50%;
+  transform: translateY(-50%);
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
+  border-right: 4px solid rgba(0, 0, 0, 0.8);
+}
+
+/* Special positioning for right-aligned bottom tooltips */
+.tooltip-bottom-right {
+  transform-origin: top right;
+}
+
+.tooltip-bottom-right .tooltip-content {
+  position: relative;
+  display: flex;
+  justify-content: flex-end;
+  right: 0;
+}
+
+.tooltip-bottom-right .tooltip-content::after {
+  content: '';
+  position: absolute;
+  top: -4px;
+  left: auto;
+  /* Position the arrow relative to the button, not the tooltip content */
+  right: 16px; /* Half of the button width (32px) */
+  transform: translateX(50%);
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-bottom: 4px solid rgba(0, 0, 0, 0.8);
+}
+
+/* Ensure the tooltip text is properly aligned */
+.tooltip-bottom-right .tooltip-text {
+  text-align: right;
+}
+
+/* Special positioning for left-aligned bottom tooltips */
+.tooltip-bottom-left {
+  transform-origin: top left;
+}
+
+.tooltip-bottom-left .tooltip-content {
+  position: relative;
+  display: flex;
+  justify-content: flex-start;
+  left: 0;
+}
+
+.tooltip-bottom-left .tooltip-content::after {
+  content: '';
+  position: absolute;
+  top: -4px;
+  right: auto;
+  /* Position the arrow relative to the button, not the tooltip content */
+  left: 16px; /* Half of the button width (32px) */
+  transform: translateX(-50%);
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-bottom: 4px solid rgba(0, 0, 0, 0.8);
+}
+
+/* Ensure the tooltip text is properly aligned */
+.tooltip-bottom-left .tooltip-text {
+  text-align: left;
 }

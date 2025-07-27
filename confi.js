@@ -1,5 +1,800 @@
+function preloader() {
+  const audioUrl = new Audio('https://zneejoqfgrqzvutkituy.supabase.co/storage/v1/object/public/Video/preloader/Tension%20Background%20Music%20Compilation.mp3');
+  let videoPlayed = false;
+  document.addEventListener('click', function () {
+    if (videoPlayed) {
+      return;
+    }
+    audioUrl.volume = 0.08; // Very soft
+    audioUrl.play();
+    videoPlayed = true;
+    // close evt listener
+  });
+
+  // Create preloader HTML structure directly
+  const preloaderHTML = `
+        <!-- Preloader Container -->
+        <div class="smoke-overlay">
+            <video 
+                id="smoke-video"
+                src="https://zneejoqfgrqzvutkituy.supabase.co/storage/v1/object/public/Video//Creativity%20Video.webm"
+                autoplay
+                loop
+                muted
+                playsinline
+                class="smoke-video"
+            ></video>
+        </div>
+        <div id="preloader" class="preloader">
+            <!-- Initial Text Scene -->
+            <div id="intro-text" class="scene">
+                <div class="text-overlay intro-text">Performance Redefined</div>
+            </div>
+
+            <!-- Initial Black Scene -->
+            <div id="black-scene" class="scene active">
+                <div class="black-overlay"></div>
+                <canvas id="logo-canvas" class="logo-canvas"></canvas>
+                <div class="logo-container">
+                    <img src="https://zneejoqfgrqzvutkituy.supabase.co/storage/v1/object/public/Video/preloader/logo.png" 
+                        alt="Korbach Logo" 
+                        class="logo-image"
+                        crossorigin="anonymous">
+                </div>
+            </div>
+
+            <!-- First Text Scene -->
+            <div id="text-scene-1" class="scene">
+                <div class="text-overlay">Forge your vision</div>
+            </div>
+
+            <!-- Video Scene -->
+            <div id="video-scene-1" class="scene">
+                <div class="video-placeholder">
+                    <video 
+                        src="https://zneejoqfgrqzvutkituy.supabase.co/storage/v1/object/public/Video/preloader/porsche_video.mp4"
+                        playsinline
+                        class="car-video"
+                    ></video>
+                </div>
+            </div>
+
+            <!-- Final Text Scene -->
+            <div id="text-scene-2" class="scene">
+                <div class="text-overlay">A Korbach Forged Experience</div>
+            </div>
+        </div>
+    `;
+
+  // 1. Add End Overlay HTML to preloaderHTML
+  const endOverlayHTML = `
+    <div id="end-overlay" class="end-overlay">
+      <div class="end-overlay-content">
+        <button id="end-overlay-btn" class="end-overlay-btn">
+          Enter the configurator <span class="dot">•</span>
+        </button>
+        <div class="end-overlay-subtext">A Korbach Forged Experience</div>
+      </div>
+    </div>
+  `;
+
+  // 1. Update Glitch Overlay HTML to use a grid of blocks (8 rows x 16 columns)
+  // Create glitch overlay first, before preloader
+  // Increase number of blocks for better coverage
+  const glitchRows = 12,
+    glitchCols = 24; // More columns for better coverage
+  const glitchBlocks = Array.from({ length: glitchRows * glitchCols })
+    .map((_, i) => {
+      const row = Math.floor(i / glitchCols);
+      const col = i % glitchCols;
+      // Add 1px overlap to prevent gaps
+      return `<div class="glitch-block" style="top:${(row * 100) / glitchRows}vh; left:${(col * 100) / glitchCols}vw; width:${100 / glitchCols + 0.1}vw; height:${100 / glitchRows + 0.1}vh;"></div>`;
+    })
+    .join('');
+  const glitchOverlayHTML = `
+    <div id="glitch-transition" class="glitch-transition">
+      ${glitchBlocks}
+    </div>
+  `;
+  const preloaderHTMLWithGlitch = preloaderHTML + endOverlayHTML + glitchOverlayHTML;
+
+  // Insert endOverlayHTML just after preloaderHTML
+  const preloaderHTMLWithEnd = preloaderHTML + endOverlayHTML;
+
+  // Find preloader wrapper and inject preloader
+  const preloaderWrap = document.querySelector('#preloader-wrap');
+  if (preloaderWrap) {
+    preloaderWrap.innerHTML = preloaderHTMLWithEnd;
+  } else {
+    console.error('Preloader wrapper (#preloader-wrap) not found');
+    return;
+  }
+
+  // Add glitch overlay to body
+  document.body.insertAdjacentHTML('beforeend', glitchOverlayHTML);
+
+  // Particle effect class
+  class LogoParticles {
+    constructor(canvas, logoElement) {
+      this.canvas = canvas;
+      this.ctx = canvas.getContext('2d');
+      this.logoElement = logoElement;
+      this.particles = [];
+      this.particleSettings = {
+        color: '#fff',
+        baseRadius: 1,
+        addedRadius: 1,
+        baseSpeed: 3,
+        addedSpeed: 2,
+        density: 2
+      };
+
+      this.resize();
+      window.addEventListener('resize', () => this.resize());
+    }
+
+    resize() {
+      this.canvas.width = window.innerWidth * devicePixelRatio;
+      this.canvas.height = window.innerHeight * devicePixelRatio;
+      this.canvas.style.width = window.innerWidth + 'px';
+      this.canvas.style.height = window.innerHeight + 'px';
+      this.ctx.scale(devicePixelRatio, devicePixelRatio);
+    }
+
+    async getParticlesFromImage() {
+      return new Promise(resolve => {
+        const img = this.logoElement;
+        const { ctx, canvas, particleSettings } = this;
+        const { density } = particleSettings;
+
+        // Calculate centered position for the logo
+        const logoWidth = 60;
+        const logoHeight = (logoWidth / img.naturalWidth) * img.naturalHeight;
+        const x = Math.floor((canvas.width / devicePixelRatio - logoWidth) / 2);
+        const y = Math.floor((canvas.height / devicePixelRatio - logoHeight) / 2);
+
+        // Draw the logo to canvas to get pixel data
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, x, y, logoWidth, logoHeight);
+
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const pixels = imageData.data;
+
+        this.particles = [];
+
+        // Adjust density based on logo size
+        const particleDensity = 1; // Smaller number = more particles
+
+        for (let y = 0; y < canvas.height; y += particleDensity) {
+          for (let x = 0; x < canvas.width; x += particleDensity) {
+            const index = (Math.floor(y) * canvas.width + Math.floor(x)) * 4;
+            const alpha = pixels[index + 3];
+
+            if (alpha > 128) {
+              const particle = {
+                x: x / devicePixelRatio,
+                y: y / devicePixelRatio,
+                originX: x / devicePixelRatio,
+                originY: y / devicePixelRatio,
+                color: 'rgba(255, 255, 255, 0)',
+                radius: 0.5, // Smaller, consistent radius
+                speed: particleSettings.baseSpeed,
+                angle: Math.random() * Math.PI * 2,
+                opacity: 0
+              };
+
+              this.particles.push(particle);
+            }
+          }
+        }
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        resolve();
+      });
+    }
+
+    animate(progress) {
+      const { ctx, canvas, particles } = this;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      particles.forEach(particle => {
+        let particleOpacity;
+        const animateInDuration = 0.2; // Increased to 0.2 (400ms for in)
+        const animateOutStart = 0.8; // Start dispersing at 80% (400ms for out)
+
+        if (progress < animateInDuration) {
+          const normalizedProgress = progress / animateInDuration;
+          const easeProgress = this.easeOutQuint(normalizedProgress);
+          const distance = 50 * (1 - easeProgress);
+          particle.x = particle.originX + Math.cos(particle.angle) * distance;
+          particle.y = particle.originY + Math.sin(particle.angle) * distance;
+          particleOpacity = easeProgress;
+        } else if (progress > animateOutStart) {
+          const normalizedProgress = (progress - animateOutStart) / (1 - animateOutStart);
+          const easeProgress = this.easeInQuint(normalizedProgress);
+          const distance = 50 * easeProgress;
+          particle.x = particle.originX + Math.cos(particle.angle) * distance;
+          particle.y = particle.originY + Math.sin(particle.angle) * distance;
+          particleOpacity = 1 - easeProgress;
+        } else {
+          particle.x = particle.originX;
+          particle.y = particle.originY;
+          particleOpacity = 1;
+        }
+
+        ctx.beginPath();
+        ctx.arc(particle.x, particle.y, particle.radius, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255, 255, 255, ${particleOpacity})`;
+        ctx.fill();
+      });
+    }
+
+    // Easing functions for smoother animation
+    easeOutQuint(x) {
+      return 1 - Math.pow(1 - x, 5);
+    }
+
+    easeInQuint(x) {
+      return x * x * x * x * x;
+    }
+  }
+
+  // Initialize the preloader controller
+  class PreloaderController {
+    constructor() {
+      this.timeline = gsap.timeline();
+      this.init();
+    }
+
+    init() {
+      this.startSequence();
+    }
+
+    async startSequence() {
+      // Start smoke effect immediately but very subtle
+      const smokeOverlay = document.querySelector('.smoke-overlay');
+      const smokeVideo = document.getElementById('smoke-video');
+      if (smokeVideo) {
+        smokeVideo.playbackRate = 0.5;
+      }
+      gsap.to(smokeOverlay, {
+        opacity: 0.1,
+        duration: 0.2,
+        ease: 'power2.out'
+      });
+
+      // Minimal initial black screen
+      await new Promise(resolve => setTimeout(resolve, 50));
+
+      // Start logo animation immediately
+      await this.animateLogoParticles();
+
+      // Rest of the sequence - no delays between
+      await this.showIntroText();
+      await this.showFirstText();
+      await this.showVideoScene1();
+      await this.showBrandText();
+
+      // Animate the smoke overlay out slower and smoother
+      gsap.to(smokeOverlay, {
+        opacity: 0,
+        duration: 1,
+        ease: 'expo.inOut'
+      });
+
+      // Quicker cleanup
+      setTimeout(() => {
+        // Show the end overlay
+        const endOverlay = document.getElementById('end-overlay');
+        endOverlay.classList.add('active');
+        // Animate overlay in (already handled by CSS animation)
+
+        // Only allow one click
+        let overlayClicked = false;
+        const btn = document.getElementById('end-overlay-btn');
+        btn.focus();
+        btn.addEventListener('click', () => {
+          if (overlayClicked) return;
+          overlayClicked = true;
+          clickSound2.play(); // Play click sound on button click
+
+          const glitch = document.getElementById('glitch-transition');
+          const blocks = glitch.querySelectorAll('.glitch-block');
+
+          // 1. Make sure all blocks are initially invisible
+          gsap.set(blocks, { opacity: 0, visibility: 'visible' });
+          glitch.style.display = 'block';
+
+          // Track completion of block animations
+          let completedBlocks = 0;
+          const totalBlocks = blocks.length;
+
+          // 2. Stagger IN the grid
+          gsap.to(blocks, {
+            opacity: 1,
+            duration: 0.2,
+            stagger: {
+              amount: 0.3,
+              from: 'random',
+              grid: [glitchRows, glitchCols]
+            },
+            ease: 'power1.in',
+            onComplete: () => {
+              console.log('All blocks animated in');
+
+              // Remove preloader after blocks are in
+              const preloader = document.querySelector('#preloader');
+              if (preloader) {
+                preloader.remove();
+                console.log('Preloader removed');
+              }
+              const endOverlay = document.getElementById('end-overlay');
+              if (endOverlay) {
+                endOverlay.remove();
+                console.log('End overlay removed');
+              }
+
+              gsap.to('#search-modal', {
+                opacity: 0,
+                y: 160,
+                duration: 0.2,
+                scale: 0.6,
+                ease: 'power3.out'
+              });
+
+              gsap.delayedCall(0.2, () => {
+                // 3. Stagger OUT the grid
+                gsap.to(blocks, {
+                  opacity: 0,
+                  duration: 0.2,
+                  stagger: {
+                    amount: 0.3,
+                    from: 'random',
+                    grid: [glitchRows, glitchCols]
+                  },
+                  ease: 'power1.out',
+                  onComplete: () => {
+                    // 4. Wait for ALL blocks to finish their stagger
+                    const totalDuration = 0.2 + 0.3; // duration + stagger amount
+                    gsap.delayedCall(totalDuration, () => {
+                      // Only remove glitch overlay after all animations are done
+                      const glitchStyles = document.getElementById('glitch-styles');
+                      if (glitchStyles) glitchStyles.remove();
+                      if (glitch) glitch.remove();
+
+                      // Fade out audio
+                      gsap.to(audioUrl, {
+                        volume: 0,
+                        duration: 8,
+                        onComplete: () => {
+                          audioUrl.pause();
+                        }
+                      });
+                    });
+
+                    // cleanup wrap
+                    const preloaderWrap = document.querySelector('#preloader-wrap');
+                    if (preloaderWrap) {
+                      preloaderWrap.remove();
+                    }
+
+                    // cleanup preloader
+                    const preloader = document.querySelector('#preloader');
+                    if (preloader) {
+                      preloader.remove();
+                    }
+
+                    // start configurator
+                    window.initializeData();
+                    window.defineEnterFunctions();
+                    // open search modal
+                    if (!hasQueryParams) {
+                      window.openSearchModal();
+                    }
+                  }
+                });
+              });
+            }
+          });
+        });
+      }, 500);
+    }
+
+    async animateLogoParticles() {
+      return new Promise(resolve => {
+        const canvas = document.querySelector('#logo-canvas');
+        const logoImg = document.querySelector('.logo-image');
+
+        // Start animation as soon as logo is loaded
+        if (logoImg.complete) {
+          this.startLogoAnimation(canvas, logoImg, resolve);
+        } else {
+          logoImg.onload = () => {
+            this.startLogoAnimation(canvas, logoImg, resolve);
+          };
+        }
+      });
+    }
+
+    async startLogoAnimation(canvas, logoImg, resolve) {
+      const logoEffect = new LogoParticles(canvas, logoImg);
+      await logoEffect.getParticlesFromImage();
+
+      // We'll use a GSAP timeline to allow a callback after vaporize-in
+      let vaporizeInComplete = false;
+      const timeline = gsap.timeline({
+        onUpdate: function () {
+          // progress: 0 to 1
+          const progress = this.progress();
+          logoEffect.animate(progress);
+          // Vaporize-in is first 0.2 (0.4s of 2s in/out+hold)
+          if (!vaporizeInComplete && progress >= 0.2) {
+            vaporizeInComplete = true;
+            // Start the next step (text) as soon as logo is fully formed
+            resolve();
+          }
+        },
+        onComplete: function () {
+          // Do nothing, cleanup handled elsewhere
+        },
+        duration: 3
+      });
+      // Animate from 0 to 1 over 3s
+      timeline.to({}, { duration: 3 });
+    }
+
+    async showIntroText() {
+      return new Promise(resolve => {
+        const scene = document.querySelector('#intro-text');
+        const text = scene.querySelector('.text-overlay');
+
+        scene.classList.add('active');
+
+        const words = text.textContent.split(' ');
+        text.innerHTML = words.map(word => `<span class="text-word">${word}</span>`).join(' ');
+
+        const tl = gsap.timeline({
+          onComplete: () => {
+            setTimeout(() => {
+              gsap.to(text.querySelectorAll('.text-word'), {
+                opacity: 0,
+                scale: 0.8,
+                filter: 'blur(10px)',
+                duration: 0.3,
+                stagger: {
+                  each: 0.08,
+                  from: 'start'
+                },
+                ease: 'power2.in',
+                onComplete: () => {
+                  scene.classList.remove('active');
+                  resolve();
+                }
+              });
+            }, 1000); // Reduced hold time
+          }
+        });
+
+        tl.to(text.querySelectorAll('.text-word'), {
+          opacity: 1,
+          scale: 1,
+          filter: 'blur(0px)',
+          duration: 0.3,
+          stagger: {
+            each: 0.08,
+            from: 'start'
+          },
+          ease: 'power2.out'
+        });
+      });
+    }
+
+    async showFirstText() {
+      return new Promise(resolve => {
+        const scene = document.querySelector('#text-scene-1');
+        const text = scene.querySelector('.text-overlay');
+
+        scene.classList.add('active');
+
+        const words = text.textContent.split(' ');
+        text.innerHTML = words.map(word => `<span class="text-word">${word}</span>`).join(' ');
+
+        const tl = gsap.timeline({
+          onComplete: () => {
+            setTimeout(() => {
+              gsap.to(text.querySelectorAll('.text-word'), {
+                opacity: 0,
+                scale: 0.8,
+                filter: 'blur(10px)',
+                duration: 0.3,
+                stagger: {
+                  each: 0.08,
+                  from: 'start'
+                },
+                ease: 'power2.in',
+                onComplete: () => {
+                  scene.classList.remove('active');
+                  resolve();
+                }
+              });
+            }, 1000);
+          }
+        });
+
+        tl.to(text.querySelectorAll('.text-word'), {
+          opacity: 1,
+          scale: 1,
+          filter: 'blur(0px)',
+          duration: 0.3,
+          stagger: {
+            each: 0.08,
+            from: 'start'
+          },
+          ease: 'power2.out'
+        });
+      });
+    }
+
+    async showBrandText() {
+      return new Promise(resolve => {
+        const scene = document.querySelector('#text-scene-2');
+        const text = scene.querySelector('.text-overlay');
+
+        scene.classList.add('active');
+
+        const words = text.textContent.split(' ');
+        text.innerHTML = words.map(word => `<span class="text-word">${word}</span>`).join(' ');
+
+        const tl = gsap.timeline({
+          onComplete: () => {
+            setTimeout(() => {
+              gsap.to(text.querySelectorAll('.text-word'), {
+                opacity: 0,
+                scale: 0.8,
+                filter: 'blur(10px)',
+                duration: 0.3,
+                stagger: {
+                  each: 0.08,
+                  from: 'start'
+                },
+                ease: 'power2.in',
+                onComplete: () => {
+                  scene.classList.remove('active');
+                  resolve();
+                }
+              });
+            }, 1000);
+          }
+        });
+
+        tl.to(text.querySelectorAll('.text-word'), {
+          opacity: 1,
+          scale: 1,
+          filter: 'blur(0px)',
+          duration: 0.3,
+          stagger: {
+            each: 0.08,
+            from: 'start'
+          },
+          ease: 'power2.out'
+        });
+      });
+    }
+
+    async showVideoScene1() {
+      return new Promise(resolve => {
+        const scene = document.querySelector('#video-scene-1');
+        const video = scene.querySelector('.car-video');
+
+        scene.classList.add('active');
+
+        video.playbackRate = 2.0;
+        video.volume = 0;
+
+        let exitStarted = false;
+
+        // Function to handle sound fadeout separately
+        const handleSoundFadeout = () => {
+          // Wait 2 seconds before starting sound fadeout
+          gsap.delayedCall(2, () => {
+            // Fade out sound over 5 seconds
+            gsap.to(video, {
+              volume: 0,
+              duration: 5,
+              ease: 'power2.inOut',
+              onComplete: () => {
+                // Only stop the video after sound has faded
+                video.pause();
+                video.currentTime = 0;
+              }
+            });
+          });
+        };
+
+        // Function to trigger exit animation
+        const triggerExit = () => {
+          if (exitStarted) return;
+          exitStarted = true;
+          video.removeEventListener('timeupdate', onTimeUpdate);
+
+          // First fade out the video visually
+          gsap.to(video, {
+            opacity: 0,
+            scale: 1.08,
+            duration: 0.5,
+            ease: 'power2.inOut',
+            onComplete: () => {
+              // Hide the video but don't stop it yet
+              video.style.visibility = 'hidden';
+              scene.classList.remove('active');
+
+              // Handle sound fadeout asynchronously
+              handleSoundFadeout();
+
+              // Resolve immediately to continue with next animation
+              resolve();
+            }
+          });
+        };
+
+        // Listen for timeupdate to crop 2.2s off the end
+        const onTimeUpdate = () => {
+          if (video.duration && video.currentTime >= video.duration - 2.2 && !exitStarted) {
+            exitStarted = true;
+            video.removeEventListener('timeupdate', onTimeUpdate);
+
+            // First fade out the video visually
+            gsap.to(video, {
+              opacity: 0,
+              scale: 1.05,
+              duration: 0.5,
+              ease: 'power2.inOut',
+              onComplete: () => {
+                // Hide the video but don't stop it yet
+                video.style.visibility = 'hidden';
+                scene.classList.remove('active');
+
+                // Handle sound fadeout asynchronously
+                handleSoundFadeout();
+
+                // Resolve immediately to continue with next animation
+                resolve();
+              }
+            });
+          }
+        };
+        video.addEventListener('timeupdate', onTimeUpdate);
+
+        video.play();
+
+        const tl = gsap.timeline({
+          onComplete: () => {
+            // If not already triggered by timeupdate, trigger after 1s hold
+            setTimeout(() => {
+              triggerExit();
+            }, 1000);
+          }
+        });
+
+        tl.to(video, {
+          opacity: 1,
+          scale: 1,
+          width: '100vw',
+          duration: 0.8,
+          ease: 'power2.out',
+          onComplete: () => {
+            video.style.left = '0';
+            video.style.right = 'auto';
+          }
+        }).to(
+          video,
+          {
+            volume: 0.7,
+            duration: 0.8,
+            ease: 'power2.out'
+          },
+          '<'
+        );
+      });
+    }
+
+    async showVideoScene2() {
+      return new Promise(resolve => {
+        const scene = document.querySelector('#video-scene-2');
+        const video = scene.querySelector('.car-video');
+
+        scene.classList.add('active');
+
+        // Set playback speed
+        video.playbackRate = 2.0;
+
+        // Set initial volume to 0
+        video.volume = 0;
+
+        // Start video and fade in
+        video.play();
+
+        // Create timeline for coordinated video and audio fade
+        const tl = gsap.timeline({
+          onComplete: () => {
+            setTimeout(() => {
+              // Create timeline for fade out
+              const fadeOutTl = gsap.timeline({
+                onComplete: () => {
+                  video.pause();
+                  video.currentTime = 0;
+                  scene.classList.remove('active');
+                  resolve();
+                }
+              });
+
+              // Fade out video and audio together
+              fadeOutTl
+                .to(video, {
+                  opacity: 0,
+                  scale: 1.1,
+                  duration: 0.8,
+                  ease: 'power2.inOut'
+                })
+                .to(
+                  video,
+                  {
+                    volume: 0,
+                    duration: 0.8,
+                    ease: 'power2.inOut'
+                  },
+                  '<'
+                ); // Start at same time as opacity animation
+            }, 1500);
+          }
+        });
+
+        // Fade in video and audio together
+        tl.to(video, {
+          opacity: 1,
+          scale: 1,
+          duration: 1.5,
+          ease: 'power2.out'
+        }).to(
+          video,
+          {
+            volume: 0.7, // Don't go to full volume
+            duration: 1.5,
+            ease: 'power2.out'
+          },
+          '<'
+        ); // Start at same time as opacity animation
+      });
+    }
+  }
+
+  // Start the preloader
+  new PreloaderController();
+}
+
 let searchModalOpen = false;
 let firstSearchModalInteraction = true;
+let hasQueryParams;
+
+// Add at the top with other window functions
+window.updateUrlParams = async function () {
+  // Use requestAnimationFrame to ensure this runs after other UI updates
+  requestAnimationFrame(() => {
+    const params = new URLSearchParams(window.location.search);
+
+    // Update params only if values exist
+    if (Wized.data.v.carModel) params.set('car-model', Wized.data.v.carModel);
+    if (Wized.data.v.wheelModel) params.set('wheel-model', Wized.data.v.wheelModel);
+    if (Wized.data.v.wheelColor) params.set('wheel-color', Wized.data.v.wheelColor);
+    if (Wized.data.v.carColor) params.set('car-color', Wized.data.v.carColor);
+    if (Wized.data.v.view) params.set('view', Wized.data.v.view);
+
+    console.log('params', JSON.stringify(params, null, 2));
+
+    // Update URL without reloading the page
+    window.history.replaceState({}, '', `${window.location.pathname}?${params.toString()}`);
+  });
+};
 
 // Define createHotspots in the global scope at the very top
 window.createHotspots = function () {
@@ -43,7 +838,7 @@ window.createHotspots = function () {
   document.querySelector('#images-wrapper').appendChild(hotspotsContainer);
 };
 
-(async function initializeData() {
+window.initializeData = async function () {
   Wized.requests.execute('get_wheels');
   // Wized.requests.execute('get_renders');
   Wized.requests.execute('get_carcolors');
@@ -152,7 +947,7 @@ window.createHotspots = function () {
 
     // Load rest in background - don't await
     preloadImages(backgroundImages).then(() => {
-      console.log('Background images loaded');
+      // console.log('Background images loaded');
     });
   }
 
@@ -175,7 +970,6 @@ window.createHotspots = function () {
 
     // Preload only critical images
     await preloadImages(criticalImages);
-    console.log('Critical images preloaded');
 
     lazyLoadImages(criticalImages);
 
@@ -183,7 +977,6 @@ window.createHotspots = function () {
   };
 
   window.updateAllLayers = async function (transitionType) {
-    console.log('✅✅✅updateAllLayers');
     // const clickedConfig = {
     //   car: Wized.data.v.carModel,
     //   carColor: Wized.data.v.carColor,
@@ -231,19 +1024,6 @@ window.createHotspots = function () {
     function checkAllLoaded() {
       imagesLoaded++;
       if (imagesLoaded === 2) {
-        console.log('🥶 Image diagnostics:', {
-          wheel: {
-            complete: wheelOverlayPreload.complete,
-            naturalWidth: wheelOverlayPreload.naturalWidth,
-            naturalHeight: wheelOverlayPreload.naturalHeight
-          },
-          car: {
-            complete: carOverlayPreload.complete,
-            naturalWidth: carOverlayPreload.naturalWidth,
-            naturalHeight: carOverlayPreload.naturalHeight
-          }
-        });
-
         document.querySelector('.images-wrapper.preload').classList.add('show');
 
         // Update the regular images with the preloaded images
@@ -251,7 +1031,6 @@ window.createHotspots = function () {
         document.querySelector('[w-el="scenery-car-overlay"]').src = carOverlayPreload.src;
 
         document.querySelector('.images-wrapper.preload').classList.remove('show');
-        console.log('images loaded');
 
         // Now trigger the animation
         animationPromiseResolve();
@@ -260,24 +1039,19 @@ window.createHotspots = function () {
 
     wheelOverlayPreload.onload = checkAllLoaded;
     carOverlayPreload.onload = checkAllLoaded;
-    console.log('🥶 6. Image load listeners attached');
 
     return animationPromise.then(() => {
-      console.log('reshow images');
       return new Promise(resolve => {
         let tl = gsap.timeline({
           onComplete: function () {
-            console.log('🥶 8. Animation complete');
             resolve();
           }
         });
         if (transitionType == 'view') {
           tl.to('[overlay="white"]', { autoAlpha: 0, opacity: 0, duration: 0.3, ease: 'power2.out' }).to('#images-wrapper', { scale: 1.08, duration: 0.3, ease: 'expo.out' }, '-=0.1');
         } else if (transitionType == 'car') {
-          console.log('🥶 9. Switching car');
           if (firstSearchModalInteraction == false) {
             setTimeout(() => {
-              console.log('🥶 10. Animating controls in');
               animateControlsIn();
             }, 100);
             tl.to('[overlay="white"]', { autoAlpha: 0, opacity: 0, duration: 0.3, ease: 'power2.out' }).to('#images-wrapper', { scale: 1.08, duration: 0.3, ease: 'expo.out' }, '-=0.1');
@@ -288,72 +1062,66 @@ window.createHotspots = function () {
       });
     });
   };
+};
 
-  // we can remove this , only load after first click
-  // window.updateAllLayers();
-})();
-
-(async function defineEnterFunctions() {
+window.defineEnterFunctions = async function () {
   gsap.set('#images-wrapper', { scale: 1 });
 
   window.hideStartScreen = function () {
-    let tl = gsap.timeline();
+    return new Promise(resolve => {
+      let tl = gsap.timeline();
 
-    tl.to('#search-modal', {
-      opacity: 0,
-      y: 160,
-      duration: 0.2,
-      scale: 0.6,
-      ease: 'power3.out'
-    })
-      .to(
-        '#start-screen',
-        {
-          autoAlpha: 0,
-          duration: 0.3,
-          ease: 'power4.out'
-        },
-        '-=0.08'
-      )
-      .add(() => {
-        startConfig().then(() => {
-          resolve();
+      tl.to('#search-modal', {
+        opacity: 0,
+        y: 160,
+        duration: 0.2,
+        scale: 0.6,
+        ease: 'power3.out'
+      })
+        .to(
+          '#start-screen',
+          {
+            autoAlpha: 0,
+            duration: 0.3,
+            ease: 'power4.out'
+          },
+          '-=0.08'
+        )
+        .add(() => {
+          startConfig().then(() => {
+            resolve();
+          });
         });
-      });
+    });
   };
 
   function startConfig() {
-    const tl = gsap.timeline();
-
-    gsap
-      .timeline()
-      .set('[control="bottom"]', { autoAlpha: 0, y: 40, scale: 0.9 })
-      // .set('.nav-item', { autoAlpha: 0, y: 15 })
-
-      .fromTo(
-        '[overlay="white"]',
-        { autoAlpha: 1 },
-        {
-          autoAlpha: 0,
-          duration: 1,
-          ease: 'power2.out',
-          onComplete: () => {
-            resolve();
-            // document.querySelector('[overlay="white"]').remove();
+    return new Promise(resolve => {
+      // const tl = gsap.timeline();
+      gsap
+        .timeline()
+        .set('[control="bottom"]', { autoAlpha: 0, y: 40, scale: 0.9 })
+        .fromTo(
+          '[overlay="white"]',
+          { autoAlpha: 1 },
+          {
+            autoAlpha: 0,
+            duration: 1,
+            ease: 'power2.out',
+            onComplete: () => {
+              resolve();
+            }
           }
-        }
-      )
-      .to('#images-wrapper', { scale: 1.08, duration: 0.5, ease: 'expo.out' }, '<')
-      .fromTo('[control="bottom"]', { autoAlpha: 0, y: 30, scale: 0.7 }, { autoAlpha: 1, y: 0, scale: 1, duration: 0.8, ease: 'power3.out' }, '-=0.8')
-      .fromTo('.wheel-control-thumbnail', { autoAlpha: 0, y: 40 }, { autoAlpha: 1, y: 0, duration: 2, ease: 'expo.out', stagger: 0.04 }, '-=0.8');
-
-    //
+        )
+        .to('#images-wrapper', { scale: 1.08, duration: 0.5, ease: 'expo.out' }, '<')
+        .fromTo('[control="bottom"]', { autoAlpha: 0, y: 30, scale: 0.7 }, { autoAlpha: 1, y: 0, scale: 1, duration: 0.8, ease: 'power3.out' }, '-=0.8')
+        .fromTo('.wheel-control-thumbnail', { autoAlpha: 0, y: 40 }, { autoAlpha: 1, y: 0, duration: 2, ease: 'expo.out', stagger: 0.04 }, '-=0.8');
+    });
   }
-})();
+};
 
-(async function searchModals() {
-  const modal = document.getElementById('search-modal');
-  function openSearchModal() {
+(function searchModals() {
+  window.openSearchModal = function () {
     const modal = document.getElementById('search-modal');
 
     if (!modal) return;
@@ -362,7 +1130,7 @@ window.createHotspots = function () {
     gsap.fromTo(modal, { autoAlpha: 0, scale: 0.8, y: 50 }, { autoAlpha: 1, scale: 1, y: 0, duration: 0.2, ease: 'power3.out' });
 
     searchModalOpen = true;
-  }
+  };
   window.closeSearchModal = function () {
     const modal = document.getElementById('search-modal');
 
@@ -374,12 +1142,11 @@ window.createHotspots = function () {
       ease: 'power2.in',
       onComplete: () => {
         modal.style.display = 'none';
-        searchModalOpen = false; // Add this line to update the state
+        searchModalOpen = false;
       }
     });
   };
   document.querySelector('[el="search-trigger"]').addEventListener('click', function () {
-    // if modal is already opened, close it
     if (searchModalOpen) {
       closeSearchModal();
     } else {
@@ -399,7 +1166,8 @@ window.createHotspots = function () {
   document.addEventListener('click', function (e) {
     const isInsideModal = e.target.closest('#search-modal');
     const isTrigger = e.target.closest('[el="search-trigger"]');
-    if (searchModalOpen && !isInsideModal && !isTrigger) {
+    // Only close if we're not in the initial state (firstSearchModalInteraction is false)
+    if (searchModalOpen && !isInsideModal && !isTrigger && !firstSearchModalInteraction) {
       closeSearchModal();
     }
   });
@@ -408,7 +1176,9 @@ window.createHotspots = function () {
 const clickSound = new Audio('https://kyoprojects.github.io/korbach-configurator/370962__cabled_mess__click-01_minimal-ui-sounds.wav');
 const clickSound2 = new Audio('https://kyoprojects.github.io/korbach-configurator/670810__outervo1d__tsa-2.wav');
 
-function appleDockNav() {
+async function appleDockNav() {
+  await Wized.requests.waitFor('get_wheels');
+
   const navItems = document.querySelectorAll('[nav-item]');
 
   navItems.forEach(item => {
@@ -425,34 +1195,34 @@ function appleDockNav() {
     }
   };
 
-  //
-
-  // Event listeners to toggle classes on hover
   navItems.forEach((item, index) => {
     item.addEventListener('mouseenter', () => {
-      item.classList.add('hover'); // Add .hover to current item
+      item.classList.add('hover');
       if (Wized.data.v.soundEnabled) clickSound.play();
-
-      // Toggle classes for siblings
-      toggleSiblingClass(navItems, index, -1, 'sibling-close', true); // Previous sibling
-      toggleSiblingClass(navItems, index, 1, 'sibling-close', true); // Next sibling
-      toggleSiblingClass(navItems, index, -2, 'sibling-far', true); // Previous-previous sibling
-      toggleSiblingClass(navItems, index, 2, 'sibling-far', true); // Next-next sibling
+      toggleSiblingClass(navItems, index, -1, 'sibling-close', true);
+      toggleSiblingClass(navItems, index, 1, 'sibling-close', true);
+      toggleSiblingClass(navItems, index, -2, 'sibling-far', true);
+      toggleSiblingClass(navItems, index, 2, 'sibling-far', true);
     });
 
     item.addEventListener('mouseleave', () => {
-      item.classList.remove('hover'); // Remove .hover from current item
-
-      // Toggle classes for siblings
-      toggleSiblingClass(navItems, index, -1, 'sibling-close', false); // Previous sibling
-      toggleSiblingClass(navItems, index, 1, 'sibling-close', false); // Next sibling
-      toggleSiblingClass(navItems, index, -2, 'sibling-far', false); // Previous-previous sibling
-      toggleSiblingClass(navItems, index, 2, 'sibling-far', false); // Next-next sibling
+      item.classList.remove('hover');
+      toggleSiblingClass(navItems, index, -1, 'sibling-close', false);
+      toggleSiblingClass(navItems, index, 1, 'sibling-close', false);
+      toggleSiblingClass(navItems, index, -2, 'sibling-far', false);
+      toggleSiblingClass(navItems, index, 2, 'sibling-far', false);
     });
   });
 }
 
-(async function handleSidebarSfx() {
+async function initDock() {
+  await Wized.requests.waitFor('get_wheels');
+  setTimeout(() => {
+    appleDockNav();
+  }, 200);
+}
+
+async function handleSidebarSfx() {
   const navItems = document.querySelectorAll('[element="sidebar-item"]');
 
   navItems.forEach((item, index) => {
@@ -465,19 +1235,10 @@ function appleDockNav() {
       item.classList.remove('hovered');
     });
   });
-})();
-
-async function initDock() {
-  await Wized.requests.waitFor('get_wheels');
-  setTimeout(() => {
-    appleDockNav();
-  }, 200);
 }
 
 async function animateControlsOut() {
-  console.log('🚀animateControlsOut');
   document.querySelectorAll('[control]').forEach(el => {
-    // console.log('🚀el = ', el);
     const dir = el.getAttribute('control');
     const props = { duration: 0.3, autoAlpha: 0, scale: 0, ease: 'power2.in' };
     if (dir === 'left') props.x = '-100%';
@@ -489,7 +1250,6 @@ async function animateControlsOut() {
 }
 
 async function animateControlsIn() {
-  console.log('🚀animateControlsIn');
   document.querySelectorAll('[control]').forEach(el => {
     const dir = el.getAttribute('control');
     const props = { duration: 0.3, autoAlpha: 1, scale: 1, ease: 'power2.inOut' };
@@ -584,7 +1344,6 @@ async function animateControlsIn() {
 })();
 
 document.addEventListener('mousemove', e => {
-  // Calculate center point of window
   const centerX = window.innerWidth / 2;
   const centerY = window.innerHeight / 2;
 
@@ -609,9 +1368,7 @@ window.changeNavTabs = async function (transitionType) {
     if (transitionType == 'view' || transitionType == 'car') {
       let tl = gsap.timeline({
         onComplete: async function () {
-          console.log('Resolve changeNavTabs done, now calling updateAllLayers');
           if (transitionType == 'car') {
-            // Wized.requests.execute('get_renders');
             // Use Promise chaining instead of await
             Wized.requests
               .waitFor('get_renders')
@@ -622,12 +1379,10 @@ window.changeNavTabs = async function (transitionType) {
                 return window.updateAllLayers(transitionType);
               })
               .then(() => {
-                console.log('updateAllLayers done');
                 resolve();
               });
           } else {
             window.updateAllLayers(transitionType).then(() => {
-              console.log('updateAllLayers done');
               resolve();
             });
           }
@@ -642,24 +1397,18 @@ window.changeNavTabs = async function (transitionType) {
 };
 
 async function switchCar(model) {
+  if (Wized.data.v.soundEnabled) clickSound2.play();
+
   closeSearchModal();
 
-  if (firstSearchModalInteraction == false) {
-    // hide out side & bottom controls before switching car
-    animateControlsOut();
-  }
-  // update variables
-  Wized.data.v.carModel = model;
+  if (firstSearchModalInteraction == false) animateControlsOut();
 
-  // await Wized.requests.waitFor('get_renders');
+  Wized.data.v.carModel = model;
   await changeNavTabs('car');
 
-  if (firstSearchModalInteraction == true) {
-    await hideStartScreen();
-  } else if (firstSearchModalInteraction == false) {
-    // we do this in the changeNavTabs function now
-    // await animateControlsIn();
-  }
+  updateUrlParams();
+
+  if (firstSearchModalInteraction == true) await hideStartScreen();
 
   // set flag to false after first time
   if (firstSearchModalInteraction == true) firstSearchModalInteraction = false;
@@ -672,10 +1421,7 @@ async function switchCar(model) {
         // console.log('Received message:', event);
         if (event.data.type === 'selectCar') {
           const model = event.data.data.model;
-          // console.log('✅✅✅✅✅✅✅model =', model);
           switchCar(model);
-        } else {
-          console.log('no valid event');
         }
       }
     }
@@ -775,7 +1521,7 @@ async function switchCar(model) {
 
     // Function to hide the controls
     function hideControls() {
-      // if (isAnimating || viewControls.matches(':hover')) return;
+      // if (isAnimating) return;
       // isAnimating = true;
 
       // Play the timeline in reverse
@@ -1057,18 +1803,16 @@ async function switchCar(model) {
     }
 
     function prevSlide() {
-      if (isZoomed) return; // Prevent slide change while zoomed
+      if (isZoomed) return;
       if (currentSlide > 0) {
         currentSlide--;
         updateSlides();
       }
     }
 
-    // Add event listeners
     nextArrow.addEventListener('click', nextSlide);
     prevArrow.addEventListener('click', prevSlide);
 
-    // Add keyboard navigation
     document.addEventListener('keydown', e => {
       if (document.querySelector('#closeupOverlay').style.display === 'flex') {
         if (e.key === 'ArrowRight' && !isZoomed) nextSlide();
@@ -1080,112 +1824,12 @@ async function switchCar(model) {
       }
     });
 
-    // Append everything to the container
     sliderContainer.appendChild(prevArrow);
     sliderContainer.appendChild(slidesContainer);
     sliderContainer.appendChild(nextArrow);
     closeupContainer.appendChild(sliderContainer);
 
-    // Initialize first slide
     updateSlides();
-
-    // Add styles
-    const style = document.createElement('style');
-    style.textContent = `
-      .closeup-slider {
-        position: relative;
-        width: 100%;
-        height: 100%;
-        background: white;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-      .closeup-slides {
-        position: relative;
-        width: 100%;
-        height: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-      .closeup-slide {
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        opacity: 0;
-        transition: opacity 0.3s ease;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-      .closeup-slide.zoomed {
-        cursor: zoom-out;
-      }
-      .closeup-slide.panning {
-        cursor: move;
-      }
-      .closeup-slide.active {
-        opacity: 1;
-      }
-      .closeup-slide img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        transition: transform 0.3s ease;
-      }
-      .closeup-slide.zoomed img {
-        transform: scale(2);
-      }
-      .zoom-button {
-        position: absolute;
-        bottom: 20px;
-        right: 20px;
-        width: 44px;
-        height: 44px;
-        background: white;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        z-index: 10;
-        transition: all 0.2s ease;
-        color: #000;
-      }
-      .zoom-button:hover {
-        transform: scale(1.1);
-        background: #f5f5f5;
-      }
-      .closeup-nav {
-        position: absolute;
-        top: 50%;
-        transform: translateY(-50%);
-        width: 48px;
-        height: 48px;
-        background: white;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        z-index: 10;
-        transition: all 0.2s ease;
-      }
-      .closeup-nav:hover {
-        background: #f5f5f5;
-        transform: translateY(-50%) scale(1.1);
-      }
-      .closeup-nav.prev {
-        left: 40px;
-      }
-      .closeup-nav.next {
-        right: 40px;
-      }
-    `;
-    document.head.appendChild(style);
   }
 
   function destroyCloseUpSlider() {
@@ -1202,14 +1846,13 @@ async function switchCar(model) {
   }
 
   // Event listeners
-  window.showCloseUpView = showCloseUpAnimation; // Expose to window for external use
+  window.showCloseUpView = showCloseUpAnimation;
 
   document.querySelector('#closeupPseudo').addEventListener('click', () => {
     hideCloseUpAnimation();
     animateControlsIn();
   });
 
-  // Close on escape key
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape' && document.querySelector('#closeupOverlay').style.display === 'flex') {
       hideCloseUpAnimation();
@@ -1219,19 +1862,12 @@ async function switchCar(model) {
 })();
 
 (window.closeUpSlider = function () {
-  // Wized.on('requestend', result => {
-  //   if (result.name == 'get_renders') {
-  //     console.log('wized = ', Wized.data);
-  //   }
-  // });
   window.initCloseUpSlider = function () {
-    // Update closeups data
     Wized.data.v.closeUps = Wized.data.r.get_renders.data
       .find(item => item.model == Wized.data.v.carModel)
       .renders.filter(render => render.model == Wized.data.v.wheelModel && render.color == Wized.data.v.wheelColor && render.view == 'closeup');
-    console.log('closeUps = ', Wized.data.v.closeUps);
+    console.log('closeUps = ', JSON.stringify(Wized.data.v.closeUps, null, 2));
 
-    // Create/update hotspots after setting closeups data
     window.createHotspots();
   };
 })();
@@ -1249,3 +1885,206 @@ async function switchCar(model) {
     }
   });
 })();
+
+(function initModularTooltips() {
+  class TooltipManager {
+    constructor() {
+      this.tooltips = new Map();
+      this.tooltipTemplate = `
+      <div class="tooltip-content">
+        <div class="tooltip-text"></div>
+      </div>
+    `;
+    }
+
+    create(element, text, position = 'top') {
+      // Remove any existing tooltip for this element
+      this.remove(element);
+
+      // Create tooltip element
+      const tooltip = document.createElement('div');
+      tooltip.className = `tooltip tooltip-${position}`;
+      tooltip.innerHTML = this.tooltipTemplate;
+      tooltip.querySelector('.tooltip-text').textContent = text;
+
+      // Ensure initial state is hidden
+      tooltip.style.opacity = '0';
+      tooltip.style.visibility = 'hidden';
+      tooltip.style.transform = 'translateY(4px)';
+
+      // Add tooltip to DOM
+      document.body.appendChild(tooltip);
+
+      // Store reference
+      this.tooltips.set(element, tooltip);
+
+      // Add event listeners
+      element.addEventListener('mouseenter', () => this.show(element));
+      element.addEventListener('mouseleave', () => this.hide(element));
+      element.addEventListener('focus', () => this.show(element));
+      element.addEventListener('blur', () => this.hide(element));
+    }
+
+    show(element) {
+      const tooltip = this.tooltips.get(element);
+      if (!tooltip) return;
+
+      // Position the tooltip
+      const rect = element.getBoundingClientRect();
+      const tooltipRect = tooltip.getBoundingClientRect();
+
+      let top, left;
+
+      switch (tooltip.className.split('tooltip-')[1]) {
+        case 'top':
+          top = rect.top - tooltipRect.height - 8;
+          left = rect.left + (rect.width - tooltipRect.width) / 2;
+          break;
+        case 'bottom':
+          top = rect.bottom + 8;
+          left = rect.left + (rect.width - tooltipRect.width) / 2;
+          break;
+        case 'bottom-right':
+          top = rect.bottom + 8;
+          // Align to the right edge of the button
+          left = rect.right - tooltipRect.width;
+          break;
+        case 'bottom-left':
+          top = rect.bottom + 8;
+          // Align to the left edge of the button
+          left = rect.left;
+          break;
+        case 'left':
+          top = rect.top + (rect.height - tooltipRect.height) / 2;
+          left = rect.left - tooltipRect.width - 8;
+          break;
+        case 'right':
+          top = rect.top + (rect.height - tooltipRect.height) / 2;
+          left = rect.right + 8;
+          break;
+      }
+
+      // Apply position
+      tooltip.style.top = `${top}px`;
+      tooltip.style.left = `${left}px`;
+
+      // Show with animation
+      tooltip.style.opacity = '0';
+      tooltip.style.visibility = 'visible';
+      requestAnimationFrame(() => {
+        tooltip.style.opacity = '1';
+        tooltip.style.transform = 'translateY(0)';
+      });
+    }
+
+    hide(element) {
+      const tooltip = this.tooltips.get(element);
+      if (!tooltip) return;
+
+      tooltip.style.opacity = '0';
+      tooltip.style.transform = 'translateY(4px)';
+      setTimeout(() => {
+        tooltip.style.visibility = 'hidden';
+      }, 200);
+    }
+
+    remove(element) {
+      const tooltip = this.tooltips.get(element);
+      if (tooltip) {
+        tooltip.remove();
+        this.tooltips.delete(element);
+      }
+    }
+  }
+
+  // Initialize tooltip manager
+  const tooltipManager = new TooltipManager();
+
+  // Right top controls tooltips
+  const openQuoteForm = document.getElementById('openQuoteForm');
+  const toggleSound = document.getElementById('toggleSound');
+  const shareButton = openQuoteForm?.nextElementSibling;
+  const splineModal = document.getElementById('opensplinemodal');
+
+  if (openQuoteForm) {
+    tooltipManager.create(openQuoteForm, 'Request Quote', 'bottom-right');
+  }
+  if (shareButton) {
+    tooltipManager.create(shareButton, 'Share', 'bottom-right');
+  }
+  if (toggleSound) {
+    tooltipManager.create(toggleSound, 'Toggle Sound', 'bottom-right');
+  }
+  if (splineModal) {
+    tooltipManager.create(splineModal, '3D View', 'bottom-left');
+  }
+
+  // Keep existing wheel tooltips functionality but position them at the bottom
+  const wheelTooltips = document.querySelectorAll('[data-wheel-tooltip]');
+  wheelTooltips.forEach(element => {
+    const tooltipText = element.getAttribute('data-wheel-tooltip');
+    tooltipManager.create(element, tooltipText, 'bottom');
+  });
+})();
+
+(async function getUrlParams() {
+  const hasPreloaderQueryParam = window.location.search.includes('?preloader=true');
+  const params = new URLSearchParams(window.location.search);
+
+  const hasCarQueryParam = params.get('car-model');
+  const hasWheelQueryParam = params.get('wheel-model');
+  const hasWheelColorQueryParam = params.get('wheel-color');
+  const hasCarColorQueryParam = params.get('car-color');
+  const hasViewQueryParam = params.get('view');
+
+  hasQueryParams = hasCarQueryParam && hasWheelQueryParam && hasWheelColorQueryParam && hasCarColorQueryParam && hasViewQueryParam;
+
+  console.log('hasPreloaderQueryParam', hasPreloaderQueryParam);
+
+  if (hasPreloaderQueryParam) {
+    preloader();
+  } else {
+    // remove preloader
+    const preloader = document.querySelector('#preloader-wrap');
+    if (preloader) {
+      preloader.remove();
+    }
+    // trigger normal configurator
+
+    // open search modal
+    if (!hasQueryParams) {
+      await window.initializeData();
+      await window.defineEnterFunctions();
+      // window.openSearchModal();
+    } else {
+      gsap.set('#search-modal', { display: 'none' });
+
+      await window.initializeData();
+      await window.defineEnterFunctions();
+      // set all variables from url params
+      Wized.data.v.carModel = hasCarQueryParam;
+      Wized.data.v.wheelModel = hasWheelQueryParam;
+      Wized.data.v.wheelColor = hasWheelColorQueryParam;
+      Wized.data.v.carColor = hasCarColorQueryParam;
+      Wized.data.v.view = hasViewQueryParam;
+
+      switchCar(Wized.data.v.carModel);
+    }
+  }
+})();
+
+// // Add observer to watch for configuration changes
+// const observer = new MutationObserver(mutations => {
+//   for (const mutation of mutations) {
+//     if (mutation.type === 'attributes' && mutation.attributeName === 'data-w-id') {
+//       window.updateUrlParams();
+//       break;
+//     }
+//   }
+// });
+
+// // Start observing Wized data changes
+// observer.observe(document.body, {
+//   attributes: true,
+//   attributeFilter: ['data-w-id']
+// });
