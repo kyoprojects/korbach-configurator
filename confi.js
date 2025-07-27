@@ -2088,3 +2088,19 @@ async function switchCar(model) {
 //   attributes: true,
 //   attributeFilter: ['data-w-id']
 // });
+
+document.querySelectorAll('[w-el="control-view"]').forEach(control => {
+  control.addEventListener('click', event => {
+    const controlValue = event.currentTarget.getAttribute('view');
+    Wized.data.v.view = controlValue;
+
+    window.changeNavTabs('view');
+  });
+});
+
+document.querySelectorAll('[w-el="control-navigation-step"]').forEach(control => {
+  control.addEventListener('click', event => {
+    const controlValue = event.currentTarget.getAttribute('step');
+    v.navigationStep = controlValue;
+  });
+});
