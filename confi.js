@@ -2039,8 +2039,6 @@ async function switchCar(model) {
 
   hasQueryParams = hasCarQueryParam && hasWheelQueryParam && hasWheelColorQueryParam && hasCarColorQueryParam && hasViewQueryParam;
 
-  console.log('hasPreloaderQueryParam', hasPreloaderQueryParam);
-
   if (hasPreloaderQueryParam) {
     preloader();
   } else {
@@ -2049,19 +2047,16 @@ async function switchCar(model) {
     if (preloader) {
       preloader.remove();
     }
-    // trigger normal configurator
 
-    // open search modal
     if (!hasQueryParams) {
       await window.initializeData();
       await window.defineEnterFunctions();
-      // window.openSearchModal();
     } else {
       gsap.set('#search-modal', { display: 'none' });
 
       await window.initializeData();
       await window.defineEnterFunctions();
-      // set all variables from url params
+
       Wized.data.v.carModel = hasCarQueryParam;
       Wized.data.v.wheelModel = hasWheelQueryParam;
       Wized.data.v.wheelColor = hasWheelColorQueryParam;
@@ -2072,22 +2067,6 @@ async function switchCar(model) {
     }
   }
 })();
-
-// // Add observer to watch for configuration changes
-// const observer = new MutationObserver(mutations => {
-//   for (const mutation of mutations) {
-//     if (mutation.type === 'attributes' && mutation.attributeName === 'data-w-id') {
-//       window.updateUrlParams();
-//       break;
-//     }
-//   }
-// });
-
-// // Start observing Wized data changes
-// observer.observe(document.body, {
-//   attributes: true,
-//   attributeFilter: ['data-w-id']
-// });
 
 document.querySelectorAll('[w-el="control-view"]').forEach(control => {
   control.addEventListener('click', event => {
@@ -2101,6 +2080,6 @@ document.querySelectorAll('[w-el="control-view"]').forEach(control => {
 document.querySelectorAll('[w-el="control-navigation-step"]').forEach(control => {
   control.addEventListener('click', event => {
     const controlValue = event.currentTarget.getAttribute('step');
-    v.navigationStep = controlValue;
+    Wized.data.v.navigationStep = controlValue;
   });
 });
