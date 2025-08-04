@@ -1260,7 +1260,51 @@ async function animateControlsIn() {
 }
 
 (async function splineTransitions() {
+  (function splineVisibility() {
+    // Wait for initial data and handle visibility
+    window.Wized = window.Wized || [];
+    window.Wized.push(async Wized => {
+      // Wait for get_wheels request to finish
+      await Wized.requests.waitFor('get_wheels');
+
+      // Initial check
+      updateSplineButtonVisibility();
+
+      // Listen for car model changes using reactivity
+      Wized.reactivity.watch(
+        () => Wized.data.v.wheelModel,
+        () => {
+          updateSplineButtonVisibility();
+        }
+      );
+    });
+
+    function updateSplineButtonVisibility() {
+      console.log('updateSplineButtonVisibility');
+      const splineButton = document.getElementById('splinebuttoncontainer');
+      if (!splineButton) return;
+
+      const currentWheel = Wized.data.r.get_wheels.data.find(w => w.model === Wized.data.v.wheelModel);
+
+      if (currentWheel?.spline) {
+        splineButton.style.display = 'flex';
+      } else {
+        splineButton.style.display = 'none';
+      }
+    }
+  })();
+
   function showSplineAnimation() {
+    const iframe = document.getElementById('wheelFrame');
+    if (iframe) {
+      iframe.contentWindow.postMessage(
+        {
+          type: 'CHANGE_SCENE',
+          url: Wized.data.r.get_wheels.data.find(w => w.model == Wized.data.v.wheelModel).spline
+        },
+        '*'
+      );
+    }
     gsap.set('#splineOverlay', { display: 'flex', opacity: 0, autoAlpha: 0 });
     gsap.set('#splineContainer', { display: 'flex', opacity: 0, autoAlpha: 0, y: '100%', scale: 0, width: '10%' });
     let tl = gsap.timeline();
