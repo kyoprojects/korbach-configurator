@@ -42,6 +42,7 @@
     params.forEach(param => {
       const value = currentUrl.searchParams.get(param) || getCookie(param);
       if (value) typeformUrl.searchParams.set(param, value);
+      console.log(param, value);
     });
 
     return typeformUrl.toString();
