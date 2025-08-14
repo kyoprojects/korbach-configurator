@@ -1,5 +1,5 @@
 (function setCookies() {
-  const params = ['utm_source', 'utm_medium', 'utm_campaign', 'gclid', 'gad_source', 'gbraid', 'wbraid', 'fbc'];
+  const params = ['utm_source', 'utm_medium', 'utm_campaign', 'gclid', 'fbclid', 'gad_source', 'gbraid', 'wbraid', 'fbc'];
 
   function setCookie(key, value) {
     if (value) {
@@ -36,7 +36,7 @@
   function updateTypeformUrl(url) {
     const typeformUrl = new URL(url);
     const currentUrl = new URL(window.location.href);
-    const params = ['utm_source', 'utm_medium', 'utm_campaign', 'gclid', 'gad_source', 'gbraid', 'wbraid', 'fbc', 'referrer'];
+    const params = ['utm_source', 'utm_medium', 'utm_campaign', 'gclid', 'fbclid', 'gad_source', 'gbraid', 'wbraid', 'fbc', 'referrer'];
 
     // Handle parameters from both query and fragment
     params.forEach(param => {
