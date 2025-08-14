@@ -16,7 +16,8 @@
 
   // Set URL parameters
   params.forEach(param => {
-    const value = url.searchParams.get(param) || fragmentParams.get(param);
+    const underscored = `_${param}`;
+    const value = url.searchParams.get(param) || url.searchParams.get(underscored) || fragmentParams.get(param) || fragmentParams.get(underscored);
     if (value) setCookie(param, value);
   });
 
@@ -40,7 +41,8 @@
 
     // Handle parameters from both query and fragment
     params.forEach(param => {
-      const value = currentUrl.searchParams.get(param) || getCookie(param);
+      const underscored = `_${param}`;
+      const value = currentUrl.searchParams.get(param) || currentUrl.searchParams.get(underscored) || getCookie(param);
       if (value) typeformUrl.searchParams.set(param, value);
       console.log(param, value);
     });
