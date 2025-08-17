@@ -820,13 +820,31 @@ window.createHotspots = function () {
   wheelHotspot.innerHTML = `
     <div class="hotspot-pulse"></div>
     <div class="hotspot-icon">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <circle cx="11" cy="11" r="8"></circle>
         <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
       </svg>
     </div>
     <div class="hotspot-label">View close-ups</div>
   `;
+
+  // Set dynamic hotspot position from car data
+  const currentCar = Wized.data.r.get_renders.data.find(item => item.model === Wized.data.v.carModel);
+  if (currentCar && currentCar.cu_hotspot_offset) {
+    try {
+      // Parse the offset if it's a string, or use directly if it's already an object
+      const offset = typeof currentCar.cu_hotspot_offset === 'string' ? JSON.parse(currentCar.cu_hotspot_offset) : currentCar.cu_hotspot_offset;
+
+      // Apply the custom position if valid
+      if (offset && offset.left) wheelHotspot.style.left = offset.left;
+      if (offset && offset.top) wheelHotspot.style.top = offset.top;
+
+      console.log('Applied custom hotspot position from car data:', offset);
+    } catch (e) {
+      console.error('Error parsing car cu_hotspot_offset:', e);
+      // Fallback to default position
+    }
+  }
 
   // Add click handler
   wheelHotspot.addEventListener('click', () => {
@@ -1640,6 +1658,20 @@ async function switchCar(model) {
     gsap.set('#closeupContainer', { display: 'flex', opacity: 0, autoAlpha: 0, width: '5%' });
     gsap.set('#closeupContentWrap', { display: 'flex', opacity: 0, autoAlpha: 0, scale: 0.3 });
 
+    // Animate hotspot out
+    const hotspot = document.querySelector('.wheel-hotspot');
+    if (hotspot) {
+      gsap.to(hotspot, {
+        scale: 0.5,
+        opacity: 0,
+        duration: 0.3,
+        ease: 'power2.out',
+        onComplete: () => {
+          hotspot.style.visibility = 'hidden';
+        }
+      });
+    }
+
     let tl = gsap.timeline();
     tl.to('#images-wrapper', { scale: 1, duration: 0.3, ease: 'expo.out' }, '<')
       .to('#closeupOverlay', { duration: 0.2, opacity: 1, autoAlpha: 1, ease: 'power2.expo' }, '<')
@@ -1662,6 +1694,14 @@ async function switchCar(model) {
         onComplete: () => {
           gsap.set('#closeupOverlay', { display: 'none' });
           gsap.set('#closeupContainer', { display: 'none' });
+
+          // Animate hotspot back in
+          const hotspot = document.querySelector('.wheel-hotspot');
+          if (hotspot) {
+            hotspot.style.visibility = 'visible';
+            gsap.fromTo(hotspot, { scale: 0.5, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.4, ease: 'back.out(1.7)' });
+          }
+
           // Cleanup slider if needed
           destroyCloseUpSlider();
         }
@@ -1673,6 +1713,22 @@ async function switchCar(model) {
   function initializeCloseUpSlider() {
     const closeupContainer = document.querySelector('#closeupContentWrap');
     closeupContainer.innerHTML = ''; // Clear existing content
+
+    // Create close button
+    const closeButton = document.createElement('div');
+    closeButton.className = 'closeup-close-btn';
+    closeButton.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="18" y1="6" x2="6" y2="18"></line>
+      <line x1="6" y1="6" x2="18" y2="18"></line>
+    </svg>`;
+
+    // Add click handler to close button
+    closeButton.addEventListener('click', () => {
+      hideCloseUpAnimation();
+      animateControlsIn();
+    });
+
+    closeupContainer.appendChild(closeButton);
 
     // Create slider container
     const sliderContainer = document.createElement('div');
@@ -1708,10 +1764,36 @@ async function switchCar(model) {
       slides.forEach((closeup, index) => {
         const slide = document.createElement('div');
         slide.className = `closeup-slide ${index === currentSlide ? 'active' : ''}`;
-        const img = document.createElement('img');
-        img.src = closeup.image;
-        img.alt = 'Close-up view';
-        img.draggable = false;
+
+        // Create image wrapper to hold both car and wheel images
+        const imageWrapper = document.createElement('div');
+        imageWrapper.className = 'closeup-image-wrapper';
+        imageWrapper.style.position = 'relative';
+        imageWrapper.style.width = '100%';
+        imageWrapper.style.height = '100%';
+
+        // Add car base image
+        const carImg = document.createElement('img');
+        carImg.src = closeup.carImage;
+        carImg.alt = 'Car close-up view';
+        carImg.draggable = false;
+        carImg.style.position = 'absolute';
+        carImg.style.width = '100%';
+        carImg.style.height = '100%';
+        carImg.style.objectFit = 'cover';
+
+        // Add wheel overlay image
+        const wheelImg = document.createElement('img');
+        wheelImg.src = closeup.wheelImage;
+        wheelImg.alt = 'Wheel close-up view';
+        wheelImg.draggable = false;
+        wheelImg.style.position = 'absolute';
+        wheelImg.style.width = '100%';
+        wheelImg.style.height = '100%';
+        wheelImg.style.objectFit = 'cover';
+
+        imageWrapper.appendChild(carImg);
+        imageWrapper.appendChild(wheelImg);
 
         // Add zoom button
         const zoomButton = document.createElement('div');
@@ -1769,7 +1851,7 @@ async function switchCar(model) {
           }
 
           // Limit the pan range (assuming 2x zoom)
-          const maxTranslate = img.width / 2;
+          const maxTranslate = imageWrapper.offsetWidth / 2;
           translateX = Math.min(Math.max(translateX, -maxTranslate), maxTranslate);
           translateY = Math.min(Math.max(translateY, -maxTranslate), maxTranslate);
 
@@ -1777,7 +1859,8 @@ async function switchCar(model) {
         }
 
         function updateImagePosition() {
-          img.style.transform = `scale(2) translate(${translateX}px, ${translateY}px)`;
+          carImg.style.transform = `scale(2) translate(${translateX}px, ${translateY}px)`;
+          wheelImg.style.transform = `scale(2) translate(${translateX}px, ${translateY}px)`;
         }
 
         // Add pan functionality
@@ -1794,7 +1877,7 @@ async function switchCar(model) {
             translateY = e.clientY - startY;
 
             // Limit the pan range (assuming 2x zoom)
-            const maxTranslate = img.width / 2;
+            const maxTranslate = imageWrapper.offsetWidth / 2;
             translateX = Math.min(Math.max(translateX, -maxTranslate), maxTranslate);
             translateY = Math.min(Math.max(translateY, -maxTranslate), maxTranslate);
 
@@ -1813,9 +1896,10 @@ async function switchCar(model) {
 
         slide.addEventListener('wheel', handleScroll, { passive: false });
         zoomButton.addEventListener('click', handleZoom);
-        img.addEventListener('click', handleZoom);
+        carImg.addEventListener('click', handleZoom);
+        wheelImg.addEventListener('click', handleZoom);
 
-        slide.appendChild(img);
+        slide.appendChild(imageWrapper);
         slide.appendChild(zoomButton);
         slidesContainer.appendChild(slide);
       });
@@ -1827,10 +1911,23 @@ async function switchCar(model) {
 
     function resetZoom(slide) {
       slide.classList.remove('zoomed');
-      const img = slide.querySelector('img');
-      img.style.transform = '';
-      img.style.transformOrigin = '';
-      translateX = 0;
+      const carImg = slide.querySelector('.closeup-image-wrapper img:first-child');
+      const wheelImg = slide.querySelector('.closeup-image-wrapper img:last-child');
+
+      if (carImg) {
+        carImg.style.transform = '';
+        carImg.style.transformOrigin = '';
+      }
+
+      if (wheelImg) {
+        wheelImg.style.transform = '';
+        wheelImg.style.transformOrigin = '';
+      }
+
+      zneejoqfgrqzvutkituy.supabase.co / storage / v1 / object / public / renders / BMW / m3 - g80 / car / cu1 / cu1 - aventurin - red.webp;
+      zneejoqfgrqzvutkituy.supabase.co / storage / v1 / object / public / renders / bmw / m3 - g80 / car / cu1 / cu1 - aventurin - red.webp;
+
+      https: translateX = 0;
       translateY = 0;
       isZoomed = false;
       // Show navigation arrows again
@@ -1907,11 +2004,37 @@ async function switchCar(model) {
 
 (window.closeUpSlider = function () {
   window.initCloseUpSlider = function () {
-    Wized.data.v.closeUps = Wized.data.r.get_renders.data
-      .find(item => item.model == Wized.data.v.carModel)
-      .renders.filter(render => render.model == Wized.data.v.wheelModel && render.color == Wized.data.v.wheelColor && render.view == 'closeup');
-    console.log('closeUps = ', JSON.stringify(Wized.data.v.closeUps, null, 2));
+    // Get all closeup views for the current car model
+    const carData = Wized.data.r.get_renders.data.find(item => item.model == Wized.data.v.carModel);
+    if (!carData) return;
 
+    // Get all unique closeup views (cu1, cu2, etc.)
+    const closeupViews = [...new Set(carData.renders.filter(render => render.view && render.view.startsWith('cu')).map(render => render.view))].sort();
+
+    if (closeupViews.length === 0) {
+      Wized.data.v.closeUps = [];
+      window.createHotspots();
+      return;
+    }
+
+    // Create combined closeup data with car and wheel overlays
+    Wized.data.v.closeUps = closeupViews
+      .map(view => {
+        // Find car image for this closeup view
+        const carImage = carData.renders.find(render => render.view === view && render.color === Wized.data.v.carColor && render.type === 'car');
+
+        // Find wheel overlay for this closeup view
+        const wheelOverlay = carData.renders.find(render => render.view === view && render.model === Wized.data.v.wheelModel && render.color === Wized.data.v.wheelColor && render.type === 'wheel');
+
+        return {
+          view: view,
+          carImage: carImage?.image || null,
+          wheelImage: wheelOverlay?.image || null
+        };
+      })
+      .filter(item => item.carImage && item.wheelImage); // Only keep views where we have both images
+
+    console.log('closeUps = ', JSON.stringify(Wized.data.v.closeUps, null, 2));
     window.createHotspots();
   };
 })();
