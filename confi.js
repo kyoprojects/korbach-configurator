@@ -1,3 +1,11 @@
+// Import the mobile scroll disabler utility
+// This will be loaded from the separate file
+if (typeof MobileScrollDisabler === 'undefined') {
+  const script = document.createElement('script');
+  script.src = 'mobileScrollDisabler.js';
+  document.head.appendChild(script);
+}
+
 function preloader() {
   const audioUrl = new Audio('https://zneejoqfgrqzvutkituy.supabase.co/storage/v1/object/public/Video/preloader/Tension%20Background%20Music%20Compilation.mp3');
   let videoPlayed = false;
@@ -1148,6 +1156,11 @@ window.defineEnterFunctions = async function () {
     gsap.fromTo(modal, { autoAlpha: 0, scale: 0.8, y: 50 }, { autoAlpha: 1, scale: 1, y: 0, duration: 0.2, ease: 'power3.out' });
 
     searchModalOpen = true;
+
+    // Disable scrolling on mobile devices
+    if (typeof MobileScrollDisabler !== 'undefined') {
+      MobileScrollDisabler.disable();
+    }
   };
   window.closeSearchModal = function () {
     const modal = document.getElementById('search-modal');
@@ -1161,6 +1174,11 @@ window.defineEnterFunctions = async function () {
       onComplete: () => {
         modal.style.display = 'none';
         searchModalOpen = false;
+
+        // Re-enable scrolling on mobile devices
+        if (typeof MobileScrollDisabler !== 'undefined') {
+          MobileScrollDisabler.enable();
+        }
       }
     });
   };
@@ -1325,6 +1343,12 @@ async function animateControlsIn() {
     }
     gsap.set('#splineOverlay', { display: 'flex', opacity: 0, autoAlpha: 0 });
     gsap.set('#splineContainer', { display: 'flex', opacity: 0, autoAlpha: 0, y: '100%', scale: 0, width: '10%' });
+
+    // Disable scrolling on mobile devices
+    if (typeof MobileScrollDisabler !== 'undefined') {
+      MobileScrollDisabler.disable();
+    }
+
     let tl = gsap.timeline();
     tl.to('#images-wrapper', { scale: 1, duration: 0.3, ease: 'expo.out' }, '<')
       .to('#splineOverlay', { duration: 0.2, opacity: 1, autoAlpha: 1, ease: 'power2.expo' }, '<')
@@ -1345,6 +1369,11 @@ async function animateControlsIn() {
         onComplete: () => {
           gsap.set('#splineOverlay', { display: 'none' });
           gsap.set('#splineContainer', { display: 'none' });
+
+          // Re-enable scrolling on mobile devices
+          if (typeof MobileScrollDisabler !== 'undefined') {
+            MobileScrollDisabler.enable();
+          }
         }
       })
       .to('#images-wrapper', { scale: 1.08, duration: 0.2, ease: 'expo.out' }, '<');
@@ -1369,6 +1398,12 @@ async function animateControlsIn() {
 (async function quoteFormTransitions() {
   function showQuoteForm() {
     gsap.set('#quoteOverlay', { display: 'flex', opacity: 0, autoAlpha: 0 });
+
+    // Disable scrolling on mobile devices
+    if (typeof MobileScrollDisabler !== 'undefined') {
+      MobileScrollDisabler.disable();
+    }
+
     let tl = gsap.timeline();
     tl.to('#images-wrapper', { scale: 1, duration: 0.3, ease: 'expo.out' }, '<')
       .to('#quoteOverlay', { duration: 0.2, opacity: 1, autoAlpha: 1, ease: 'power2.expo' }, '<')
@@ -1385,6 +1420,11 @@ async function animateControlsIn() {
       onComplete: () => {
         gsap.set('#quoteOverlay', { display: 'none' });
         window.destroyQuoteFormSlider && window.destroyQuoteFormSlider();
+
+        // Re-enable scrolling on mobile devices
+        if (typeof MobileScrollDisabler !== 'undefined') {
+          MobileScrollDisabler.enable();
+        }
       }
     }).to('#images-wrapper', { scale: 1.08, duration: 0.2, ease: 'expo.out' }, '<');
   }
@@ -1658,6 +1698,11 @@ async function switchCar(model) {
     gsap.set('#closeupContainer', { display: 'flex', opacity: 0, autoAlpha: 0, width: '5%' });
     gsap.set('#closeupContentWrap', { display: 'flex', opacity: 0, autoAlpha: 0, scale: 0.3 });
 
+    // Disable scrolling on mobile devices
+    if (typeof MobileScrollDisabler !== 'undefined') {
+      MobileScrollDisabler.disable();
+    }
+
     // Animate hotspot out
     const hotspot = document.querySelector('.wheel-hotspot');
     if (hotspot) {
@@ -1694,6 +1739,11 @@ async function switchCar(model) {
         onComplete: () => {
           gsap.set('#closeupOverlay', { display: 'none' });
           gsap.set('#closeupContainer', { display: 'none' });
+
+          // Re-enable scrolling on mobile devices
+          if (typeof MobileScrollDisabler !== 'undefined') {
+            MobileScrollDisabler.enable();
+          }
 
           // Animate hotspot back in
           const hotspot = document.querySelector('.wheel-hotspot');
