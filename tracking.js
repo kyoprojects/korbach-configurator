@@ -35,7 +35,9 @@
   }
 
   function updateTypeformUrl(url) {
-    const typeformUrl = new URL(url);
+    const dbUrl = '{{wf {&quot;path&quot;:&quot;typeform-link&quot;,&quot;type&quot;:&quot;Link&quot;} }}';
+    console.log('raw typeform url = ', typeformUrl);
+    const typeformUrl = new URL(dbUrl);
     const currentUrl = new URL(window.location.href);
     const params = ['utm_source', 'utm_medium', 'utm_campaign', 'gclid', 'fbclid', 'gad_source', 'gbraid', 'wbraid', 'fbc', 'referrer'];
 
