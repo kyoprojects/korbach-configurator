@@ -47,6 +47,7 @@
       console.log(param, value);
     });
 
+    console.log('typeform url after = ', typeformUrl);
     return typeformUrl.toString();
   }
 
