@@ -44,10 +44,9 @@
       const underscored = `_${param}`;
       const value = currentUrl.searchParams.get(param) || currentUrl.searchParams.get(underscored) || getCookie(param);
       if (value) typeformUrl.searchParams.set(param, value);
-      console.log(param, value);
     });
 
-    console.log('typeform url after = ', typeformUrl);
+    console.log('typeform url after = ', typeformUrl.toString);
     return typeformUrl.toString();
   }
 
