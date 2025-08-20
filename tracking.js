@@ -46,7 +46,7 @@
       if (value) typeformUrl.searchParams.set(param, value);
     });
 
-    console.log('typeform url after = ', typeformUrl.toString);
+    console.log('typeform url after = ', typeformUrl.toString());
     return typeformUrl.toString();
   }
 
