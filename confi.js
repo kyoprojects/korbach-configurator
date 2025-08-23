@@ -1089,46 +1089,82 @@ window.initializeData = async function () {
         animationPromiseResolve = resolve;
       });
 
+      // Add a timeout to ensure we don't hang forever
+      const imageLoadTimeout = setTimeout(() => {
+        console.log('updateAllLayers: Image load timeout triggered');
+        if (imagesLoaded < 2) {
+          console.warn(`updateAllLayers: Only ${imagesLoaded}/2 images loaded after timeout, proceeding anyway`);
+          // Force completion
+          completeImageLoading();
+        }
+      }, 5000); // 5 second timeout
+
+      function completeImageLoading() {
+        // Clear the timeout if it's still active
+        clearTimeout(imageLoadTimeout);
+
+        console.log('updateAllLayers: Completing image loading process');
+        try {
+          const preloadWrapper = document.querySelector('.images-wrapper.preload');
+          if (preloadWrapper) {
+            preloadWrapper.classList.add('show');
+            console.log('updateAllLayers: Added show class to preload wrapper');
+          } else {
+            console.warn('updateAllLayers: Preload wrapper not found');
+          }
+
+          // Update the regular images with the preloaded images
+          const wheelOverlayElement = document.querySelector('[w-el="scenery-wheel-overlay"]');
+          const carOverlayElement = document.querySelector('[w-el="scenery-car-overlay"]');
+
+          if (wheelOverlayElement && carOverlayElement) {
+            // Only set the src if the image actually loaded
+            if (wheelOverlayPreload.complete && wheelOverlayPreload.naturalWidth) {
+              wheelOverlayElement.src = wheelOverlayPreload.src;
+              console.log('updateAllLayers: Updated wheel overlay image');
+            } else {
+              console.warn('updateAllLayers: Wheel overlay image not fully loaded, using existing image');
+            }
+
+            if (carOverlayPreload.complete && carOverlayPreload.naturalWidth) {
+              carOverlayElement.src = carOverlayPreload.src;
+              console.log('updateAllLayers: Updated car overlay image');
+            } else {
+              console.warn('updateAllLayers: Car overlay image not fully loaded, using existing image');
+            }
+          } else {
+            console.warn('updateAllLayers: Regular image elements not found');
+          }
+
+          if (preloadWrapper) {
+            preloadWrapper.classList.remove('show');
+            console.log('updateAllLayers: Removed show class from preload wrapper');
+          }
+
+          // Now trigger the animation
+          console.log('updateAllLayers: Resolving animation promise');
+          animationPromiseResolve();
+        } catch (err) {
+          console.error('updateAllLayers: Error updating images:', err);
+          // Still resolve to prevent hanging
+          animationPromiseResolve();
+        }
+      }
+
       function checkAllLoaded() {
         imagesLoaded++;
         console.log(`updateAllLayers: Image loaded (${imagesLoaded}/2)`);
 
+        // Log which image loaded
+        if (this === wheelOverlayPreload) {
+          console.log('updateAllLayers: Wheel overlay image loaded');
+        } else if (this === carOverlayPreload) {
+          console.log('updateAllLayers: Car overlay image loaded');
+        }
+
         if (imagesLoaded === 2) {
           console.log('updateAllLayers: All images loaded, updating DOM');
-          try {
-            const preloadWrapper = document.querySelector('.images-wrapper.preload');
-            if (preloadWrapper) {
-              preloadWrapper.classList.add('show');
-              console.log('updateAllLayers: Added show class to preload wrapper');
-            } else {
-              console.warn('updateAllLayers: Preload wrapper not found');
-            }
-
-            // Update the regular images with the preloaded images
-            const wheelOverlayElement = document.querySelector('[w-el="scenery-wheel-overlay"]');
-            const carOverlayElement = document.querySelector('[w-el="scenery-car-overlay"]');
-
-            if (wheelOverlayElement && carOverlayElement) {
-              wheelOverlayElement.src = wheelOverlayPreload.src;
-              carOverlayElement.src = carOverlayPreload.src;
-              console.log('updateAllLayers: Updated regular images');
-            } else {
-              console.warn('updateAllLayers: Regular image elements not found');
-            }
-
-            if (preloadWrapper) {
-              preloadWrapper.classList.remove('show');
-              console.log('updateAllLayers: Removed show class from preload wrapper');
-            }
-
-            // Now trigger the animation
-            console.log('updateAllLayers: Resolving animation promise');
-            animationPromiseResolve();
-          } catch (err) {
-            console.error('updateAllLayers: Error updating images:', err);
-            // Still resolve to prevent hanging
-            animationPromiseResolve();
-          }
+          completeImageLoading();
         }
       }
 
@@ -1137,14 +1173,26 @@ window.initializeData = async function () {
       carOverlayPreload.onload = checkAllLoaded;
 
       // Also set onerror handlers to prevent hanging if images fail to load
-      wheelOverlayPreload.onerror = () => {
-        console.error('updateAllLayers: Wheel overlay failed to load');
-        checkAllLoaded();
+      wheelOverlayPreload.onerror = function () {
+        console.error('updateAllLayers: Wheel overlay failed to load:', wheelOverlayPreload.src);
+        checkAllLoaded.call(this);
       };
-      carOverlayPreload.onerror = () => {
-        console.error('updateAllLayers: Car overlay failed to load');
-        checkAllLoaded();
+      carOverlayPreload.onerror = function () {
+        console.error('updateAllLayers: Car overlay failed to load:', carOverlayPreload.src);
+        checkAllLoaded.call(this);
       };
+
+      // Check if images are already loaded (might happen with cached images)
+      console.log('updateAllLayers: Checking if images are already loaded');
+      if (wheelOverlayPreload.complete && wheelOverlayPreload.naturalWidth) {
+        console.log('updateAllLayers: Wheel overlay already loaded');
+        checkAllLoaded.call(wheelOverlayPreload);
+      }
+
+      if (carOverlayPreload.complete && carOverlayPreload.naturalWidth) {
+        console.log('updateAllLayers: Car overlay already loaded');
+        checkAllLoaded.call(carOverlayPreload);
+      }
 
       console.log('updateAllLayers: Waiting for animation promise');
       return animationPromise.then(() => {
