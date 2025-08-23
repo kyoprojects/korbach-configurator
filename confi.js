@@ -1079,20 +1079,20 @@ window.initializeData = async function () {
     };
 
     // Set a safety timeout
-    const safetyTimeout = setTimeout(() => {
-      console.log('Safety timeout triggered - continuing anyway');
+    // const safetyTimeout = setTimeout(() => {
+    //   console.log('Safety timeout triggered - continuing anyway');
 
-      // Force continue even if images aren't both loaded
-      wheelOverlayPreload.src = wheelOverlay;
-      carOverlayPreload.src = carOverlay;
+    //   // Force continue even if images aren't both loaded
+    //   wheelOverlayPreload.src = wheelOverlay;
+    //   carOverlayPreload.src = carOverlay;
 
-      document.querySelector('.images-wrapper.preload').classList.add('show');
-      document.querySelector('[w-el="scenery-wheel-overlay"]').src = wheelOverlay;
-      document.querySelector('[w-el="scenery-car-overlay"]').src = carOverlay;
-      document.querySelector('.images-wrapper.preload').classList.remove('show');
+    //   document.querySelector('.images-wrapper.preload').classList.add('show');
+    //   document.querySelector('[w-el="scenery-wheel-overlay"]').src = wheelOverlay;
+    //   document.querySelector('[w-el="scenery-car-overlay"]').src = carOverlay;
+    //   document.querySelector('.images-wrapper.preload').classList.remove('show');
 
-      animationPromiseResolve();
-    }, 3000);
+    //   animationPromiseResolve();
+    // }, 3000);
 
     // Load wheel image
     wheelImg.onload = () => {
