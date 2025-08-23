@@ -1050,14 +1050,14 @@ window.initializeData = async function () {
     // Using event-based approach for better mobile compatibility
 
     // Set a timeout to ensure we don't hang indefinitely
-    const loadTimeout = setTimeout(() => {
-      console.log('Image load timeout triggered');
-      document.querySelector('.images-wrapper.preload').classList.add('show');
-      document.querySelector('[w-el="scenery-wheel-overlay"]').src = wheelOverlayPreload.src;
-      document.querySelector('[w-el="scenery-car-overlay"]').src = carOverlayPreload.src;
-      document.querySelector('.images-wrapper.preload').classList.remove('show');
-      animationPromiseResolve();
-    }, 5000); // 5 second timeout as a fallback
+
+    console.log('directly conitnue temporarily');
+    document.querySelector('.images-wrapper.preload').classList.add('show');
+    document.querySelector('[w-el="scenery-wheel-overlay"]').src = wheelOverlayPreload.src;
+    document.querySelector('[w-el="scenery-car-overlay"]').src = carOverlayPreload.src;
+    document.querySelector('.images-wrapper.preload').classList.remove('show');
+    animationPromiseResolve();
+    // const loadTimeout = setTimeout(() => {}, 5000); // 5 second timeout as a fallback
 
     // Function to handle both images being loaded
     const handleBothImagesLoaded = () => {
