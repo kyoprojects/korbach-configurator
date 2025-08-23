@@ -1038,6 +1038,38 @@ window.initializeData = async function () {
     const carOverlayPreload = document.querySelector('[w-el="scenery-car-overlay-preload"]');
     // const sceneryPreload = document.querySelector('[w-el="scenery-preload"]');
 
+    // Add loading attributes for better mobile performance
+    wheelOverlayPreload.setAttribute('loading', 'eager');
+    carOverlayPreload.setAttribute('loading', 'eager');
+    wheelOverlayPreload.setAttribute('importance', 'high');
+    carOverlayPreload.setAttribute('importance', 'high');
+
+    // Add decoding attribute to help browser optimize
+    wheelOverlayPreload.setAttribute('decoding', 'async');
+    carOverlayPreload.setAttribute('decoding', 'async');
+
+    // Set crossOrigin to anonymous to avoid CORS issues with cached images
+    wheelOverlayPreload.crossOrigin = 'anonymous';
+    carOverlayPreload.crossOrigin = 'anonymous';
+
+    // Prefetch images to help with mobile performance
+    if (wheelOverlay) {
+      const prefetchWheel = document.createElement('link');
+      prefetchWheel.rel = 'prefetch';
+      prefetchWheel.as = 'image';
+      prefetchWheel.href = wheelOverlay;
+      document.head.appendChild(prefetchWheel);
+    }
+
+    if (carOverlay) {
+      const prefetchCar = document.createElement('link');
+      prefetchCar.rel = 'prefetch';
+      prefetchCar.as = 'image';
+      prefetchCar.href = carOverlay;
+      document.head.appendChild(prefetchCar);
+    }
+
+    // Set sources after prefetching and attributes are configured
     wheelOverlayPreload.src = wheelOverlay;
     carOverlayPreload.src = carOverlay;
     // sceneryPreload.src = baseImage;
@@ -1087,10 +1119,14 @@ window.initializeData = async function () {
     };
 
     // Set a fallback timeout in case one of the onload events doesn't fire
+    // Use a shorter timeout on mobile devices
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    const timeoutDuration = isMobile ? 800 : 2000;
+
     loadingTimeout = setTimeout(() => {
-      console.log('Image loading timeout reached');
+      console.log('Image loading timeout reached on ' + (isMobile ? 'mobile' : 'desktop'));
       checkAllLoaded();
-    }, 2000);
+    }, timeoutDuration);
 
     return animationPromise.then(() => {
       return new Promise(resolve => {
