@@ -1,4 +1,5 @@
 // Mobile scroll disabler has been removed
+console.log('execute js');
 
 function preloader() {
   const audioUrl = new Audio('https://zneejoqfgrqzvutkituy.supabase.co/storage/v1/object/public/Video/preloader/Tension%20Background%20Music%20Compilation.mp3');
@@ -1095,6 +1096,7 @@ window.defineEnterFunctions = async function () {
   gsap.set('#images-wrapper', { scale: 1 });
 
   window.hideStartScreen = function () {
+    console.log('hideStartScreen');
     return new Promise(resolve => {
       let tl = gsap.timeline();
 
