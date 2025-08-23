@@ -1069,64 +1069,106 @@ window.initializeData = async function () {
       document.head.appendChild(prefetchCar);
     }
 
-    // Set sources after prefetching and attributes are configured
-    wheelOverlayPreload.src = wheelOverlay;
-    carOverlayPreload.src = carOverlay;
+    // Don't set sources yet - we'll do it in the Promise-based approach
     // sceneryPreload.src = baseImage;
 
-    // check if all images are loaded
-    let imagesLoaded = 0;
-    let animationPromiseResolve;
-    let loadingTimeout = null;
-    const animationPromise = new Promise(resolve => {
-      animationPromiseResolve = resolve;
-    });
-
-    function checkAllLoaded() {
-      imagesLoaded++;
-      console.log('Image loaded: ' + imagesLoaded);
-
-      // If both images loaded or if 1 second has passed, update the images anyway
-      if (imagesLoaded === 2 || loadingTimeout) {
-        clearTimeout(loadingTimeout);
-        loadingTimeout = null;
-
-        document.querySelector('.images-wrapper.preload').classList.add('show');
-
-        // Update the regular images with the preloaded images
-        document.querySelector('[w-el="scenery-wheel-overlay"]').src = wheelOverlayPreload.src;
-        document.querySelector('[w-el="scenery-car-overlay"]').src = carOverlayPreload.src;
-
-        document.querySelector('.images-wrapper.preload').classList.remove('show');
-
-        // Now trigger the animation
-        animationPromiseResolve();
-      }
-    }
-
-    wheelOverlayPreload.onload = checkAllLoaded;
-    carOverlayPreload.onload = checkAllLoaded;
-
-    // Add error handlers to ensure we still proceed if images fail to load
-    wheelOverlayPreload.onerror = () => {
-      console.error('Failed to load wheel overlay image');
-      checkAllLoaded();
-    };
-
-    carOverlayPreload.onerror = () => {
-      console.error('Failed to load car overlay image');
-      checkAllLoaded();
-    };
-
-    // Set a fallback timeout in case one of the onload events doesn't fire
-    // Use a shorter timeout on mobile devices
+    // Create a more reliable image loading system using Promise.all
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    const timeoutDuration = isMobile ? 800 : 2000;
+    console.log('Device detected as: ' + (isMobile ? 'mobile' : 'desktop'));
 
-    loadingTimeout = setTimeout(() => {
-      console.log('Image loading timeout reached on ' + (isMobile ? 'mobile' : 'desktop'));
-      checkAllLoaded();
-    }, timeoutDuration);
+    // We're using a different approach with direct Image objects
+
+    // Create the main animation promise with a completely different approach
+    const animationPromise = new Promise(resolveAnimation => {
+      // Create a hidden container to preload both images
+      const preloadContainer = document.createElement('div');
+      preloadContainer.style.position = 'absolute';
+      preloadContainer.style.visibility = 'hidden';
+      preloadContainer.style.pointerEvents = 'none';
+      document.body.appendChild(preloadContainer);
+
+      // Create new image elements for true preloading
+      const wheelImg = new Image();
+      const carImg = new Image();
+
+      // Track loaded state
+      let wheelLoaded = false;
+      let carLoaded = false;
+
+      // Function to check if both are loaded and proceed
+      const checkBothLoaded = () => {
+        if (wheelLoaded && carLoaded) {
+          console.log('Both images truly preloaded, updating display');
+
+          // Apply both images simultaneously
+          document.querySelector('.images-wrapper.preload').classList.add('show');
+
+          const wheelTarget = document.querySelector('[w-el="scenery-wheel-overlay"]');
+          const carTarget = document.querySelector('[w-el="scenery-car-overlay"]');
+
+          // Use the URL directly rather than the preloaded image source
+          wheelTarget.src = wheelOverlay;
+          carTarget.src = carOverlay;
+
+          // Clean up the preload container
+          document.body.removeChild(preloadContainer);
+
+          // Wait a moment before removing the preload class
+          setTimeout(() => {
+            document.querySelector('.images-wrapper.preload').classList.remove('show');
+            resolveAnimation();
+          }, 100);
+        }
+      };
+
+      // Set up wheel image
+      wheelImg.onload = () => {
+        console.log('Wheel truly preloaded');
+        wheelLoaded = true;
+        checkBothLoaded();
+      };
+
+      wheelImg.onerror = () => {
+        console.error('Wheel failed to preload');
+        wheelLoaded = true; // Consider it "loaded" to proceed
+        checkBothLoaded();
+      };
+
+      // Set up car image
+      carImg.onload = () => {
+        console.log('Car truly preloaded');
+        carLoaded = true;
+        checkBothLoaded();
+      };
+
+      carImg.onerror = () => {
+        console.error('Car failed to preload');
+        carLoaded = true; // Consider it "loaded" to proceed
+        checkBothLoaded();
+      };
+
+      // Set a timeout as a fallback
+      setTimeout(
+        () => {
+          if (!wheelLoaded) {
+            console.log('Wheel preload timeout reached');
+            wheelLoaded = true;
+          }
+          if (!carLoaded) {
+            console.log('Car preload timeout reached');
+            carLoaded = true;
+          }
+          checkBothLoaded();
+        },
+        isMobile ? 1500 : 3000
+      );
+
+      // Start loading the images
+      preloadContainer.appendChild(wheelImg);
+      preloadContainer.appendChild(carImg);
+      wheelImg.src = wheelOverlay;
+      carImg.src = carOverlay;
+    });
 
     return animationPromise.then(() => {
       return new Promise(resolve => {
