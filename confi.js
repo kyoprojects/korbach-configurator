@@ -1050,38 +1050,50 @@ window.initializeData = async function () {
 
     // Function no longer needed as we're using Promise.all
 
-    // Create promises for both image loads
-    const wheelPromise = new Promise(resolve => {
-      if (wheelOverlayPreload.complete) {
-        resolve();
-      } else {
-        wheelOverlayPreload.onload = resolve;
-        wheelOverlayPreload.onerror = resolve; // Resolve even on error to prevent hanging
-      }
-    });
-
-    const carPromise = new Promise(resolve => {
-      if (carOverlayPreload.complete) {
-        resolve();
-      } else {
-        carOverlayPreload.onload = resolve;
-        carOverlayPreload.onerror = resolve; // Resolve even on error to prevent hanging
-      }
-    });
-
-    // Wait for both images to load
-    Promise.all([wheelPromise, carPromise]).then(() => {
+    // Set a timeout to ensure we don't hang indefinitely
+    const loadTimeout = setTimeout(() => {
+      console.log('Image load timeout triggered');
       document.querySelector('.images-wrapper.preload').classList.add('show');
-
-      // Update the regular images with the preloaded images
       document.querySelector('[w-el="scenery-wheel-overlay"]').src = wheelOverlayPreload.src;
       document.querySelector('[w-el="scenery-car-overlay"]').src = carOverlayPreload.src;
-
       document.querySelector('.images-wrapper.preload').classList.remove('show');
-
-      // Now trigger the animation
       animationPromiseResolve();
-    });
+    }, 5000); // 5 second timeout as a fallback
+
+    // Function to handle both images being loaded
+    const handleBothImagesLoaded = () => {
+      clearTimeout(loadTimeout);
+      document.querySelector('.images-wrapper.preload').classList.add('show');
+      document.querySelector('[w-el="scenery-wheel-overlay"]').src = wheelOverlayPreload.src;
+      document.querySelector('[w-el="scenery-car-overlay"]').src = carOverlayPreload.src;
+      document.querySelector('.images-wrapper.preload').classList.remove('show');
+      animationPromiseResolve();
+    };
+
+    // Track loaded images
+    let loadedImages = 0;
+    const imageLoadHandler = () => {
+      loadedImages++;
+      console.log(`Image loaded: ${loadedImages}/2`);
+      if (loadedImages === 2) {
+        handleBothImagesLoaded();
+      }
+    };
+
+    // Handle already loaded images
+    if (wheelOverlayPreload.complete) {
+      imageLoadHandler();
+    } else {
+      wheelOverlayPreload.onload = imageLoadHandler;
+      wheelOverlayPreload.onerror = imageLoadHandler; // Count errors as loaded to prevent hanging
+    }
+
+    if (carOverlayPreload.complete) {
+      imageLoadHandler();
+    } else {
+      carOverlayPreload.onload = imageLoadHandler;
+      carOverlayPreload.onerror = imageLoadHandler; // Count errors as loaded to prevent hanging
+    }
 
     return animationPromise.then(() => {
       return new Promise(resolve => {
