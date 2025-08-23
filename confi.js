@@ -1,10 +1,4 @@
-// Import the mobile scroll disabler utility
-// This will be loaded from the separate file
-if (typeof MobileScrollDisabler === 'undefined') {
-  const script = document.createElement('script');
-  script.src = 'mobileScrollDisabler.js';
-  document.head.appendChild(script);
-}
+// Mobile scroll disabler has been removed
 
 function preloader() {
   const audioUrl = new Audio('https://zneejoqfgrqzvutkituy.supabase.co/storage/v1/object/public/Video/preloader/Tension%20Background%20Music%20Compilation.mp3');
@@ -900,7 +894,11 @@ window.initializeData = async function () {
       {
         step: 'car-color',
         label: 'Car Color',
-        value: Wized.data.v.carColor || 'Not selected'
+        value: (Wized.data.v.carColor || 'Not selected')
+          .replace(/-/g, ' ')
+          .split(' ')
+          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(' ')
       },
       {
         step: 'wheel-model',
@@ -1011,6 +1009,9 @@ window.initializeData = async function () {
     //   view: Wized.data.v.view
     // };
     // console.log('Clicked Config:', clickedConfig);
+
+    // Update control tooltips when layers are updated
+    window.updateControlTooltips();
 
     window.initCloseUpSlider();
 
@@ -1157,10 +1158,7 @@ window.defineEnterFunctions = async function () {
 
     searchModalOpen = true;
 
-    // Disable scrolling on mobile devices
-    if (typeof MobileScrollDisabler !== 'undefined') {
-      MobileScrollDisabler.disable();
-    }
+    // Mobile scroll disabler has been removed
   };
   window.closeSearchModal = function () {
     const modal = document.getElementById('search-modal');
@@ -1344,10 +1342,7 @@ async function animateControlsIn() {
     gsap.set('#splineOverlay', { display: 'flex', opacity: 0, autoAlpha: 0 });
     gsap.set('#splineContainer', { display: 'flex', opacity: 0, autoAlpha: 0, y: '100%', scale: 0, width: '10%' });
 
-    // Disable scrolling on mobile devices
-    if (typeof MobileScrollDisabler !== 'undefined') {
-      MobileScrollDisabler.disable();
-    }
+    // Mobile scroll disabler has been removed
 
     let tl = gsap.timeline();
     tl.to('#images-wrapper', { scale: 1, duration: 0.3, ease: 'expo.out' }, '<')
@@ -1370,10 +1365,7 @@ async function animateControlsIn() {
           gsap.set('#splineOverlay', { display: 'none' });
           gsap.set('#splineContainer', { display: 'none' });
 
-          // Re-enable scrolling on mobile devices
-          if (typeof MobileScrollDisabler !== 'undefined') {
-            MobileScrollDisabler.enable();
-          }
+          // Mobile scroll disabler has been removed
         }
       })
       .to('#images-wrapper', { scale: 1.08, duration: 0.2, ease: 'expo.out' }, '<');
@@ -1399,10 +1391,7 @@ async function animateControlsIn() {
   function showQuoteForm() {
     gsap.set('#quoteOverlay', { display: 'flex', opacity: 0, autoAlpha: 0 });
 
-    // Disable scrolling on mobile devices
-    if (typeof MobileScrollDisabler !== 'undefined') {
-      MobileScrollDisabler.disable();
-    }
+    // Mobile scroll disabler has been removed
 
     let tl = gsap.timeline();
     tl.to('#images-wrapper', { scale: 1, duration: 0.3, ease: 'expo.out' }, '<')
@@ -1698,10 +1687,7 @@ async function switchCar(model) {
     gsap.set('#closeupContainer', { display: 'flex', opacity: 0, autoAlpha: 0, width: '5%' });
     gsap.set('#closeupContentWrap', { display: 'flex', opacity: 0, autoAlpha: 0, scale: 0.3 });
 
-    // Disable scrolling on mobile devices
-    if (typeof MobileScrollDisabler !== 'undefined') {
-      MobileScrollDisabler.disable();
-    }
+    // Mobile scroll disabler has been removed
 
     // Animate hotspot out
     const hotspot = document.querySelector('.wheel-hotspot');
@@ -1740,10 +1726,7 @@ async function switchCar(model) {
           gsap.set('#closeupOverlay', { display: 'none' });
           gsap.set('#closeupContainer', { display: 'none' });
 
-          // Re-enable scrolling on mobile devices
-          if (typeof MobileScrollDisabler !== 'undefined') {
-            MobileScrollDisabler.enable();
-          }
+          // Mobile scroll disabler has been removed
 
           // Animate hotspot back in
           const hotspot = document.querySelector('.wheel-hotspot');
