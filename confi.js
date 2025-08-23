@@ -1155,7 +1155,7 @@ window.defineEnterFunctions = async function () {
   window.hideStartScreen = function () {
     return new Promise(resolve => {
       let tl = gsap.timeline();
-
+      console.log('hideStartScreen');
       tl.to('#search-modal', {
         opacity: 0,
         y: 160,
