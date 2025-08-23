@@ -1047,65 +1047,83 @@ window.initializeData = async function () {
       animationPromiseResolve = resolve;
     });
 
-    // Using event-based approach for better mobile compatibility
+    // Simplified approach for better mobile compatibility
+    console.log('Starting image loading process');
 
-    // Set a timeout to ensure we don't hang indefinitely
+    // Pre-load images in memory first
+    const wheelImg = new Image();
+    const carImg = new Image();
 
-    console.log('directly conitnue temporarily');
-    document.querySelector('.images-wrapper.preload').classList.add('show');
-    document.querySelector('[w-el="scenery-wheel-overlay"]').src = wheelOverlayPreload.src;
-    document.querySelector('[w-el="scenery-car-overlay"]').src = carOverlayPreload.src;
-    document.querySelector('.images-wrapper.preload').classList.remove('show');
-    animationPromiseResolve();
-    // const loadTimeout = setTimeout(() => {}, 5000); // 5 second timeout as a fallback
+    let wheelLoaded = false;
+    let carLoaded = false;
 
-    // Function to handle both images being loaded
-    const handleBothImagesLoaded = () => {
-      clearTimeout(loadTimeout);
-      document.querySelector('.images-wrapper.preload').classList.add('show');
-      document.querySelector('[w-el="scenery-wheel-overlay"]').src = wheelOverlayPreload.src;
-      document.querySelector('[w-el="scenery-car-overlay"]').src = carOverlayPreload.src;
-      document.querySelector('.images-wrapper.preload').classList.remove('show');
-      animationPromiseResolve();
-    };
+    // Function to check if both images are loaded and continue
+    const checkBothLoaded = () => {
+      console.log(`Load status - Wheel: ${wheelLoaded}, Car: ${carLoaded}`);
+      if (wheelLoaded && carLoaded) {
+        console.log('Both images loaded, continuing');
 
-    // Track loaded images with separate handlers for better debugging
-    let loadedImages = 0;
+        // Update the preload images
+        wheelOverlayPreload.src = wheelImg.src;
+        carOverlayPreload.src = carImg.src;
 
-    const checkIfBothLoaded = () => {
-      console.log(`Image loaded: ${loadedImages}/2`);
-      if (loadedImages === 2) {
-        handleBothImagesLoaded();
+        // Update the visible images
+        document.querySelector('.images-wrapper.preload').classList.add('show');
+        document.querySelector('[w-el="scenery-wheel-overlay"]').src = wheelImg.src;
+        document.querySelector('[w-el="scenery-car-overlay"]').src = carImg.src;
+        document.querySelector('.images-wrapper.preload').classList.remove('show');
+
+        // Continue with animation
+        animationPromiseResolve();
       }
     };
 
-    // Create separate handlers for each image for better debugging
-    const wheelLoadHandler = () => {
+    // Set a safety timeout
+    const safetyTimeout = setTimeout(() => {
+      console.log('Safety timeout triggered - continuing anyway');
+
+      // Force continue even if images aren't both loaded
+      wheelOverlayPreload.src = wheelOverlay;
+      carOverlayPreload.src = carOverlay;
+
+      document.querySelector('.images-wrapper.preload').classList.add('show');
+      document.querySelector('[w-el="scenery-wheel-overlay"]').src = wheelOverlay;
+      document.querySelector('[w-el="scenery-car-overlay"]').src = carOverlay;
+      document.querySelector('.images-wrapper.preload').classList.remove('show');
+
+      animationPromiseResolve();
+    }, 3000);
+
+    // Load wheel image
+    wheelImg.onload = () => {
       console.log('Wheel image loaded');
-      loadedImages++;
-      checkIfBothLoaded();
+      wheelLoaded = true;
+      checkBothLoaded();
     };
 
-    const carLoadHandler = () => {
+    wheelImg.onerror = () => {
+      console.log('Wheel image failed to load');
+      wheelLoaded = true; // Consider it "loaded" to prevent hanging
+      checkBothLoaded();
+    };
+
+    // Load car image
+    carImg.onload = () => {
       console.log('Car image loaded');
-      loadedImages++;
-      checkIfBothLoaded();
+      carLoaded = true;
+      checkBothLoaded();
     };
 
-    // Force both images to load again to ensure events fire
-    wheelOverlayPreload.src = '';
-    carOverlayPreload.src = '';
+    carImg.onerror = () => {
+      console.log('Car image failed to load');
+      carLoaded = true; // Consider it "loaded" to prevent hanging
+      checkBothLoaded();
+    };
 
-    // Set up event handlers before setting src
-    wheelOverlayPreload.onload = wheelLoadHandler;
-    wheelOverlayPreload.onerror = wheelLoadHandler;
-
-    carOverlayPreload.onload = carLoadHandler;
-    carOverlayPreload.onerror = carLoadHandler;
-
-    // Now set the src to trigger loading
-    wheelOverlayPreload.src = wheelOverlay;
-    carOverlayPreload.src = carOverlay;
+    // Start loading both images
+    console.log('Setting image sources');
+    wheelImg.src = wheelOverlay;
+    carImg.src = carOverlay;
 
     return animationPromise.then(() => {
       return new Promise(resolve => {
