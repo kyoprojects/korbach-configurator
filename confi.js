@@ -1042,13 +1042,12 @@ window.initializeData = async function () {
     // sceneryPreload.src = baseImage;
 
     // check if all images are loaded
-    // No longer need to track loaded images count
     let animationPromiseResolve;
     const animationPromise = new Promise(resolve => {
       animationPromiseResolve = resolve;
     });
 
-    // Function no longer needed as we're using Promise.all
+    // Using event-based approach for better mobile compatibility
 
     // Set a timeout to ensure we don't hang indefinitely
     const loadTimeout = setTimeout(() => {
@@ -1070,30 +1069,43 @@ window.initializeData = async function () {
       animationPromiseResolve();
     };
 
-    // Track loaded images
+    // Track loaded images with separate handlers for better debugging
     let loadedImages = 0;
-    const imageLoadHandler = () => {
-      loadedImages++;
+
+    const checkIfBothLoaded = () => {
       console.log(`Image loaded: ${loadedImages}/2`);
       if (loadedImages === 2) {
         handleBothImagesLoaded();
       }
     };
 
-    // Handle already loaded images
-    if (wheelOverlayPreload.complete) {
-      imageLoadHandler();
-    } else {
-      wheelOverlayPreload.onload = imageLoadHandler;
-      wheelOverlayPreload.onerror = imageLoadHandler; // Count errors as loaded to prevent hanging
-    }
+    // Create separate handlers for each image for better debugging
+    const wheelLoadHandler = () => {
+      console.log('Wheel image loaded');
+      loadedImages++;
+      checkIfBothLoaded();
+    };
 
-    if (carOverlayPreload.complete) {
-      imageLoadHandler();
-    } else {
-      carOverlayPreload.onload = imageLoadHandler;
-      carOverlayPreload.onerror = imageLoadHandler; // Count errors as loaded to prevent hanging
-    }
+    const carLoadHandler = () => {
+      console.log('Car image loaded');
+      loadedImages++;
+      checkIfBothLoaded();
+    };
+
+    // Force both images to load again to ensure events fire
+    wheelOverlayPreload.src = '';
+    carOverlayPreload.src = '';
+
+    // Set up event handlers before setting src
+    wheelOverlayPreload.onload = wheelLoadHandler;
+    wheelOverlayPreload.onerror = wheelLoadHandler;
+
+    carOverlayPreload.onload = carLoadHandler;
+    carOverlayPreload.onerror = carLoadHandler;
+
+    // Now set the src to trigger loading
+    wheelOverlayPreload.src = wheelOverlay;
+    carOverlayPreload.src = carOverlay;
 
     return animationPromise.then(() => {
       return new Promise(resolve => {
