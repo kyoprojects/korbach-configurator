@@ -1,5 +1,4 @@
 // Mobile scroll disabler has been removed
-console.log('execute js');
 
 function preloader() {
   const audioUrl = new Audio('https://zneejoqfgrqzvutkituy.supabase.co/storage/v1/object/public/Video/preloader/Tension%20Background%20Music%20Compilation.mp3');
@@ -1038,136 +1037,50 @@ window.initializeData = async function () {
     const carOverlayPreload = document.querySelector('[w-el="scenery-car-overlay-preload"]');
     // const sceneryPreload = document.querySelector('[w-el="scenery-preload"]');
 
-    // Add loading attributes for better mobile performance
-    wheelOverlayPreload.setAttribute('loading', 'eager');
-    carOverlayPreload.setAttribute('loading', 'eager');
-    wheelOverlayPreload.setAttribute('importance', 'high');
-    carOverlayPreload.setAttribute('importance', 'high');
-
-    // Add decoding attribute to help browser optimize
-    wheelOverlayPreload.setAttribute('decoding', 'async');
-    carOverlayPreload.setAttribute('decoding', 'async');
-
-    // Set crossOrigin to anonymous to avoid CORS issues with cached images
-    wheelOverlayPreload.crossOrigin = 'anonymous';
-    carOverlayPreload.crossOrigin = 'anonymous';
-
-    // Prefetch images to help with mobile performance
-    if (wheelOverlay) {
-      const prefetchWheel = document.createElement('link');
-      prefetchWheel.rel = 'prefetch';
-      prefetchWheel.as = 'image';
-      prefetchWheel.href = wheelOverlay;
-      document.head.appendChild(prefetchWheel);
-    }
-
-    if (carOverlay) {
-      const prefetchCar = document.createElement('link');
-      prefetchCar.rel = 'prefetch';
-      prefetchCar.as = 'image';
-      prefetchCar.href = carOverlay;
-      document.head.appendChild(prefetchCar);
-    }
-
-    // Don't set sources yet - we'll do it in the Promise-based approach
+    wheelOverlayPreload.src = wheelOverlay;
+    carOverlayPreload.src = carOverlay;
     // sceneryPreload.src = baseImage;
 
-    // Create a more reliable image loading system using Promise.all
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    console.log('Device detected as: ' + (isMobile ? 'mobile' : 'desktop'));
+    // check if all images are loaded
+    // No longer need to track loaded images count
+    let animationPromiseResolve;
+    const animationPromise = new Promise(resolve => {
+      animationPromiseResolve = resolve;
+    });
 
-    // We're using a different approach with direct Image objects
+    // Function no longer needed as we're using Promise.all
 
-    // Create the main animation promise with a completely different approach
-    const animationPromise = new Promise(resolveAnimation => {
-      // Create a hidden container to preload both images
-      const preloadContainer = document.createElement('div');
-      preloadContainer.style.position = 'absolute';
-      preloadContainer.style.visibility = 'hidden';
-      preloadContainer.style.pointerEvents = 'none';
-      document.body.appendChild(preloadContainer);
+    // Create promises for both image loads
+    const wheelPromise = new Promise(resolve => {
+      if (wheelOverlayPreload.complete) {
+        resolve();
+      } else {
+        wheelOverlayPreload.onload = resolve;
+        wheelOverlayPreload.onerror = resolve; // Resolve even on error to prevent hanging
+      }
+    });
 
-      // Create new image elements for true preloading
-      const wheelImg = new Image();
-      const carImg = new Image();
+    const carPromise = new Promise(resolve => {
+      if (carOverlayPreload.complete) {
+        resolve();
+      } else {
+        carOverlayPreload.onload = resolve;
+        carOverlayPreload.onerror = resolve; // Resolve even on error to prevent hanging
+      }
+    });
 
-      // Track loaded state
-      let wheelLoaded = false;
-      let carLoaded = false;
+    // Wait for both images to load
+    Promise.all([wheelPromise, carPromise]).then(() => {
+      document.querySelector('.images-wrapper.preload').classList.add('show');
 
-      // Function to check if both are loaded and proceed
-      const checkBothLoaded = () => {
-        if (wheelLoaded && carLoaded) {
-          console.log('Both images truly preloaded, updating display');
+      // Update the regular images with the preloaded images
+      document.querySelector('[w-el="scenery-wheel-overlay"]').src = wheelOverlayPreload.src;
+      document.querySelector('[w-el="scenery-car-overlay"]').src = carOverlayPreload.src;
 
-          // Apply both images simultaneously
-          document.querySelector('.images-wrapper.preload').classList.add('show');
+      document.querySelector('.images-wrapper.preload').classList.remove('show');
 
-          const wheelTarget = document.querySelector('[w-el="scenery-wheel-overlay"]');
-          const carTarget = document.querySelector('[w-el="scenery-car-overlay"]');
-
-          // Use the URL directly rather than the preloaded image source
-          wheelTarget.src = wheelOverlay;
-          carTarget.src = carOverlay;
-
-          // Clean up the preload container
-          document.body.removeChild(preloadContainer);
-
-          // Wait a moment before removing the preload class
-          setTimeout(() => {
-            document.querySelector('.images-wrapper.preload').classList.remove('show');
-            resolveAnimation();
-          }, 100);
-        }
-      };
-
-      // Set up wheel image
-      wheelImg.onload = () => {
-        console.log('Wheel truly preloaded');
-        wheelLoaded = true;
-        checkBothLoaded();
-      };
-
-      wheelImg.onerror = () => {
-        console.error('Wheel failed to preload');
-        wheelLoaded = true; // Consider it "loaded" to proceed
-        checkBothLoaded();
-      };
-
-      // Set up car image
-      carImg.onload = () => {
-        console.log('Car truly preloaded');
-        carLoaded = true;
-        checkBothLoaded();
-      };
-
-      carImg.onerror = () => {
-        console.error('Car failed to preload');
-        carLoaded = true; // Consider it "loaded" to proceed
-        checkBothLoaded();
-      };
-
-      // Set a timeout as a fallback
-      setTimeout(
-        () => {
-          if (!wheelLoaded) {
-            console.log('Wheel preload timeout reached');
-            wheelLoaded = true;
-          }
-          if (!carLoaded) {
-            console.log('Car preload timeout reached');
-            carLoaded = true;
-          }
-          checkBothLoaded();
-        },
-        isMobile ? 1500 : 3000
-      );
-
-      // Start loading the images
-      preloadContainer.appendChild(wheelImg);
-      preloadContainer.appendChild(carImg);
-      wheelImg.src = wheelOverlay;
-      carImg.src = carOverlay;
+      // Now trigger the animation
+      animationPromiseResolve();
     });
 
     return animationPromise.then(() => {
@@ -1195,11 +1108,9 @@ window.initializeData = async function () {
 };
 
 window.defineEnterFunctions = async function () {
-  console.log('defineEnterFunctions');
   gsap.set('#images-wrapper', { scale: 1 });
 
   window.hideStartScreen = function () {
-    console.log('hideStartScreen');
     return new Promise(resolve => {
       let tl = gsap.timeline();
 
@@ -1601,7 +1512,6 @@ async function switchCar(model) {
 
   Wized.data.v.carModel = model;
   await changeNavTabs('car');
-  console.log('changeNavTabs completed');
 
   updateUrlParams();
 
