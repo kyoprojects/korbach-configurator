@@ -1093,31 +1093,47 @@ window.initializeData = async function () {
 };
 
 window.defineEnterFunctions = async function () {
+  console.log('defineEnterFunctions');
   gsap.set('#images-wrapper', { scale: 1 });
 
   window.hideStartScreen = function () {
-    console.log('hideStartScreen');
+    console.log('hideStartScreen function called');
     return new Promise(resolve => {
       let tl = gsap.timeline();
+
+      // Check if element exists
+      const startScreen = document.querySelector('#start-screen');
+      console.log('start-screen element found:', startScreen !== null);
+
+      if (!startScreen) {
+        console.error('#start-screen element not found in DOM');
+        // Continue with the rest of the function even if element is not found
+      }
 
       tl.to('#search-modal', {
         opacity: 0,
         y: 160,
         duration: 0.2,
         scale: 0.6,
-        ease: 'power3.out'
+        ease: 'power3.out',
+        onStart: () => console.log('Starting search-modal animation'),
+        onComplete: () => console.log('Completed search-modal animation')
       })
         .to(
           '#start-screen',
           {
             autoAlpha: 0,
             duration: 0.3,
-            ease: 'power4.out'
+            ease: 'power4.out',
+            onStart: () => console.log('Starting start-screen animation'),
+            onComplete: () => console.log('Completed start-screen animation')
           },
           '-=0.08'
         )
         .add(() => {
+          console.log('Starting startConfig');
           startConfig().then(() => {
+            console.log('startConfig completed');
             resolve();
           });
         });
@@ -1490,32 +1506,49 @@ window.changeNavTabs = async function (transitionType) {
 };
 
 async function switchCar(model) {
+  console.log('switchCar called with model:', model);
+  console.log('firstSearchModalInteraction state:', firstSearchModalInteraction);
+
   if (Wized.data.v.soundEnabled) clickSound2.play();
 
   closeSearchModal();
 
-  if (firstSearchModalInteraction == false) animateControlsOut();
+  if (firstSearchModalInteraction == false) {
+    console.log('Not first interaction, animating controls out');
+    animateControlsOut();
+  }
 
   Wized.data.v.carModel = model;
+  console.log('Set carModel to:', model);
+
   await changeNavTabs('car');
+  console.log('changeNavTabs completed');
 
   updateUrlParams();
+  console.log('updateUrlParams completed');
 
-  if (firstSearchModalInteraction == true) await hideStartScreen();
+  if (firstSearchModalInteraction == true) {
+    console.log('First interaction, calling hideStartScreen');
+    await hideStartScreen();
+    console.log('hideStartScreen completed');
+  }
 
   // set flag to false after first time
-  if (firstSearchModalInteraction == true) firstSearchModalInteraction = false;
+  if (firstSearchModalInteraction == true) {
+    firstSearchModalInteraction = false;
+    console.log('Set firstSearchModalInteraction to false');
+  }
 }
 
 (async function modalEventListening() {
   window.addEventListener('message', event => {
+    console.log('Message received:', event.origin, event.data);
     if (event.origin === 'https://prismatic-phoenix-e7fbdb.netlify.app' || event.origin === 'http://localhost:8080') {
-      if (event.data.type == 'selectCar') {
-        // console.log('Received message:', event);
-        if (event.data.type === 'selectCar') {
-          const model = event.data.data.model;
-          switchCar(model);
-        }
+      if (event.data.type === 'selectCar') {
+        console.log('Car selection message received:', event.data);
+        const model = event.data.data.model;
+        console.log('Calling switchCar with model:', model);
+        switchCar(model);
       }
     }
   });
