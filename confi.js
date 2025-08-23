@@ -1002,14 +1002,15 @@ window.initializeData = async function () {
   };
 
   window.updateAllLayers = async function (transitionType) {
-    // const clickedConfig = {
-    //   car: Wized.data.v.carModel,
-    //   carColor: Wized.data.v.carColor,
-    //   wheel: Wized.data.v.wheelModel,
-    //   wheelColor: Wized.data.v.wheelColor,
-    //   view: Wized.data.v.view
-    // };
-    // console.log('Clicked Config:', clickedConfig);
+    console.log('updateAllLayers called with transitionType:', transitionType);
+    console.log('Current state:', {
+      car: Wized.data.v.carModel,
+      carColor: Wized.data.v.carColor,
+      wheel: Wized.data.v.wheelModel,
+      wheelColor: Wized.data.v.wheelColor,
+      view: Wized.data.v.view,
+      firstSearchModalInteraction: firstSearchModalInteraction
+    });
 
     // Update control tooltips when layers are updated
     window.updateControlTooltips();
@@ -1097,18 +1098,24 @@ window.defineEnterFunctions = async function () {
   gsap.set('#images-wrapper', { scale: 1 });
 
   window.hideStartScreen = function () {
-    console.log('hideStartScreen function called');
+    console.log('hideStartScreen called');
+    console.log('Start screen element exists:', !!document.getElementById('start-screen'));
+    console.log('Start screen current state:', {
+      display: document.getElementById('start-screen')?.style.display,
+      opacity: document.getElementById('start-screen')?.style.opacity,
+      visibility: document.getElementById('start-screen')?.style.visibility,
+      classList: document.getElementById('start-screen')?.classList.toString()
+    });
+
     return new Promise(resolve => {
-      let tl = gsap.timeline();
-
-      // Check if element exists
-      const startScreen = document.querySelector('#start-screen');
-      console.log('start-screen element found:', startScreen !== null);
-
-      if (!startScreen) {
-        console.error('#start-screen element not found in DOM');
-        // Continue with the rest of the function even if element is not found
-      }
+      let tl = gsap.timeline({
+        onStart: () => {
+          console.log('hideStartScreen timeline started');
+        },
+        onUpdate: () => {
+          console.log('hideStartScreen timeline progress:', tl.progress().toFixed(2));
+        }
+      });
 
       tl.to('#search-modal', {
         opacity: 0,
@@ -1116,8 +1123,9 @@ window.defineEnterFunctions = async function () {
         duration: 0.2,
         scale: 0.6,
         ease: 'power3.out',
-        onStart: () => console.log('Starting search-modal animation'),
-        onComplete: () => console.log('Completed search-modal animation')
+        onComplete: () => {
+          console.log('Search modal animation completed');
+        }
       })
         .to(
           '#start-screen',
@@ -1125,13 +1133,22 @@ window.defineEnterFunctions = async function () {
             autoAlpha: 0,
             duration: 0.3,
             ease: 'power4.out',
-            onStart: () => console.log('Starting start-screen animation'),
-            onComplete: () => console.log('Completed start-screen animation')
+            onStart: () => {
+              console.log('Start screen fade animation started');
+            },
+            onComplete: () => {
+              console.log('Start screen fade animation completed');
+              console.log('Start screen after fade:', {
+                display: document.getElementById('start-screen')?.style.display,
+                opacity: document.getElementById('start-screen')?.style.opacity,
+                visibility: document.getElementById('start-screen')?.style.visibility
+              });
+            }
           },
           '-=0.08'
         )
         .add(() => {
-          console.log('Starting startConfig');
+          console.log('Starting config animation');
           startConfig().then(() => {
             console.log('startConfig completed');
             resolve();
@@ -1141,11 +1158,45 @@ window.defineEnterFunctions = async function () {
   };
 
   function startConfig() {
+    console.log('startConfig called');
+
     return new Promise(resolve => {
-      // const tl = gsap.timeline();
-      gsap
-        .timeline()
-        .set('[control="bottom"]', { autoAlpha: 0, y: 40, scale: 0.9 })
+      console.log('Creating startConfig timeline');
+
+      // Check if elements exist
+      console.log('Elements check:', {
+        bottomControl: !!document.querySelector('[control="bottom"]'),
+        whiteOverlay: !!document.querySelector('[overlay="white"]'),
+        imagesWrapper: !!document.getElementById('images-wrapper'),
+        wheelThumbnails: document.querySelectorAll('.wheel-control-thumbnail').length
+      });
+
+      const tl = gsap.timeline({
+        onStart: () => {
+          console.log('startConfig timeline started');
+        },
+        onUpdate: () => {
+          if (tl.progress() > 0.25 && tl.progress() < 0.3) {
+            console.log('startConfig timeline at 25% progress');
+          }
+          if (tl.progress() > 0.5 && tl.progress() < 0.55) {
+            console.log('startConfig timeline at 50% progress');
+          }
+          if (tl.progress() > 0.75 && tl.progress() < 0.8) {
+            console.log('startConfig timeline at 75% progress');
+          }
+        },
+        onComplete: () => {
+          console.log('startConfig timeline completed');
+        }
+      });
+
+      tl.set('[control="bottom"]', {
+        autoAlpha: 0,
+        y: 40,
+        scale: 0.9,
+        onComplete: () => console.log('Bottom control initial state set')
+      })
         .fromTo(
           '[overlay="white"]',
           { autoAlpha: 1 },
@@ -1153,14 +1204,54 @@ window.defineEnterFunctions = async function () {
             autoAlpha: 0,
             duration: 1,
             ease: 'power2.out',
+            onStart: () => console.log('White overlay animation started'),
             onComplete: () => {
+              console.log('White overlay animation completed');
               resolve();
             }
           }
         )
-        .to('#images-wrapper', { scale: 1.08, duration: 0.5, ease: 'expo.out' }, '<')
-        .fromTo('[control="bottom"]', { autoAlpha: 0, y: 30, scale: 0.7 }, { autoAlpha: 1, y: 0, scale: 1, duration: 0.8, ease: 'power3.out' }, '-=0.8')
-        .fromTo('.wheel-control-thumbnail', { autoAlpha: 0, y: 40 }, { autoAlpha: 1, y: 0, duration: 2, ease: 'expo.out', stagger: 0.04 }, '-=0.8');
+        .to(
+          '#images-wrapper',
+          {
+            scale: 1.08,
+            duration: 0.5,
+            ease: 'expo.out',
+            onStart: () => console.log('Images wrapper scale animation started'),
+            onComplete: () => console.log('Images wrapper scale animation completed')
+          },
+          '<'
+        )
+        .fromTo(
+          '[control="bottom"]',
+          { autoAlpha: 0, y: 30, scale: 0.7 },
+          {
+            autoAlpha: 1,
+            y: 0,
+            scale: 1,
+            duration: 0.8,
+            ease: 'power3.out',
+            onStart: () => console.log('Bottom control animation started'),
+            onComplete: () => console.log('Bottom control animation completed')
+          },
+          '-=0.8'
+        )
+        .fromTo(
+          '.wheel-control-thumbnail',
+          { autoAlpha: 0, y: 40 },
+          {
+            autoAlpha: 1,
+            y: 0,
+            duration: 2,
+            ease: 'expo.out',
+            stagger: 0.04,
+            onStart: () => console.log('Wheel thumbnails animation started'),
+            onComplete: () => console.log('Wheel thumbnails animation completed')
+          },
+          '-=0.8'
+        );
+
+      console.log('startConfig timeline created and started');
     });
   }
 };
@@ -1468,30 +1559,51 @@ document.addEventListener('mousemove', e => {
 });
 
 window.changeNavTabs = async function (transitionType) {
+  console.log('changeNavTabs called with transitionType:', transitionType);
+  console.log('DOM state at changeNavTabs start:', {
+    startScreenDisplay: document.getElementById('start-screen')?.style.display,
+    startScreenOpacity: document.getElementById('start-screen')?.style.opacity,
+    startScreenVisibility: document.getElementById('start-screen')?.style.visibility,
+    firstSearchModalInteraction: firstSearchModalInteraction
+  });
+
   if (transitionType === 'car') {
     // Start request immediately
+    console.log('Executing get_renders request');
     Wized.requests.execute('get_renders');
   }
 
   return new Promise(resolve => {
     if (transitionType == 'view' || transitionType == 'car') {
+      console.log('Creating timeline for view/car transition');
       let tl = gsap.timeline({
         onComplete: async function () {
+          console.log('Timeline complete, transitionType:', transitionType);
           if (transitionType == 'car') {
+            console.log('Car transition: waiting for get_renders');
             // Use Promise chaining instead of await
             Wized.requests
               .waitFor('get_renders')
               .then(() => {
+                console.log('get_renders completed, initializing configurator');
                 return initConfigurator(); // Return the promise from initConfigurator
               })
               .then(() => {
+                console.log('Configurator initialized, updating layers');
                 return window.updateAllLayers(transitionType);
               })
               .then(() => {
+                console.log('Layers updated, resolving changeNavTabs promise');
                 resolve();
+              })
+              .catch(err => {
+                console.error('Error in changeNavTabs promise chain:', err);
+                resolve(); // Still resolve to prevent hanging
               });
           } else {
+            console.log('View transition: updating layers');
             window.updateAllLayers(transitionType).then(() => {
+              console.log('Layers updated for view transition');
               resolve();
             });
           }
@@ -1499,6 +1611,7 @@ window.changeNavTabs = async function (transitionType) {
       });
       tl.to('#images-wrapper', { scale: 1, duration: 0.3, ease: 'expo.out' }).to('[overlay="white"]', { autoAlpha: 1, opacity: 1, duration: 0.3, ease: 'power2.out' }, '-=0.1');
     } else {
+      console.log('No animation needed, resolving immediately');
       resolve();
       window.updateAllLayers(transitionType);
     }
@@ -1507,48 +1620,54 @@ window.changeNavTabs = async function (transitionType) {
 
 async function switchCar(model) {
   console.log('switchCar called with model:', model);
-  console.log('firstSearchModalInteraction state:', firstSearchModalInteraction);
+  console.log('firstSearchModalInteraction at start of switchCar:', firstSearchModalInteraction);
 
   if (Wized.data.v.soundEnabled) clickSound2.play();
 
   closeSearchModal();
+  console.log('Search modal closed');
 
   if (firstSearchModalInteraction == false) {
     console.log('Not first interaction, animating controls out');
     animateControlsOut();
+  } else {
+    console.log('First interaction, keeping controls');
   }
 
   Wized.data.v.carModel = model;
   console.log('Set carModel to:', model);
 
+  console.log('Calling changeNavTabs with car');
   await changeNavTabs('car');
   console.log('changeNavTabs completed');
 
+  console.log('Updating URL params');
   updateUrlParams();
-  console.log('updateUrlParams completed');
 
   if (firstSearchModalInteraction == true) {
-    console.log('First interaction, calling hideStartScreen');
+    console.log('First interaction, hiding start screen');
     await hideStartScreen();
     console.log('hideStartScreen completed');
   }
 
   // set flag to false after first time
   if (firstSearchModalInteraction == true) {
+    console.log('Setting firstSearchModalInteraction to false');
     firstSearchModalInteraction = false;
-    console.log('Set firstSearchModalInteraction to false');
   }
+
+  console.log('switchCar completed, firstSearchModalInteraction:', firstSearchModalInteraction);
 }
 
 (async function modalEventListening() {
   window.addEventListener('message', event => {
-    console.log('Message received:', event.origin, event.data);
     if (event.origin === 'https://prismatic-phoenix-e7fbdb.netlify.app' || event.origin === 'http://localhost:8080') {
-      if (event.data.type === 'selectCar') {
-        console.log('Car selection message received:', event.data);
-        const model = event.data.data.model;
-        console.log('Calling switchCar with model:', model);
-        switchCar(model);
+      if (event.data.type == 'selectCar') {
+        // console.log('Received message:', event);
+        if (event.data.type === 'selectCar') {
+          const model = event.data.data.model;
+          switchCar(model);
+        }
       }
     }
   });
