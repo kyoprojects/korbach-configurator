@@ -1012,84 +1012,225 @@ window.initializeData = async function () {
       firstSearchModalInteraction: firstSearchModalInteraction
     });
 
-    // Update control tooltips when layers are updated
-    window.updateControlTooltips();
-
-    window.initCloseUpSlider();
-
-    const data = Wized.data.r.get_renders.data;
-
-    const wheelOverlay = data
-      .find(item => item.model === Wized.data.v.carModel)
-      .renders.find(item => item.view === Wized.data.v.view && item.model === Wized.data.v.wheelModel && item.color === Wized.data.v.wheelColor)?.image;
-
-    const carOverlay = data
-      .find(item => item.model === Wized.data.v.carModel)
-      .renders.find(item => item.view === Wized.data.v.view && item.color === Wized.data.v.carColor && item.car_model === Wized.data.v.carModel)?.image;
-
-    // const baseImage = data.find(item => item.model === Wized.data.v.carModel).renders.find(item => item.view === Wized.data.v.view && item.base === true)?.image;
-
-    const matchedImages = {
-      wheelOverlay,
-      carOverlay
-    };
-    console.log('Matched Images:', matchedImages);
-
-    const wheelOverlayPreload = document.querySelector('[w-el="scenery-wheel-overlay-preload"]');
-    const carOverlayPreload = document.querySelector('[w-el="scenery-car-overlay-preload"]');
-    // const sceneryPreload = document.querySelector('[w-el="scenery-preload"]');
-
-    wheelOverlayPreload.src = wheelOverlay;
-    carOverlayPreload.src = carOverlay;
-    // sceneryPreload.src = baseImage;
-
-    // check if all images are loaded
-    let imagesLoaded = 0;
-    let animationPromiseResolve;
-    const animationPromise = new Promise(resolve => {
-      animationPromiseResolve = resolve;
-    });
-
-    function checkAllLoaded() {
-      imagesLoaded++;
-      if (imagesLoaded === 2) {
-        document.querySelector('.images-wrapper.preload').classList.add('show');
-
-        // Update the regular images with the preloaded images
-        document.querySelector('[w-el="scenery-wheel-overlay"]').src = wheelOverlayPreload.src;
-        document.querySelector('[w-el="scenery-car-overlay"]').src = carOverlayPreload.src;
-
-        document.querySelector('.images-wrapper.preload').classList.remove('show');
-
-        // Now trigger the animation
-        animationPromiseResolve();
-      }
+    console.log('updateAllLayers: Updating control tooltips');
+    try {
+      // Update control tooltips when layers are updated
+      window.updateControlTooltips();
+      console.log('updateAllLayers: Control tooltips updated');
+    } catch (err) {
+      console.error('updateAllLayers: Error updating tooltips:', err);
     }
 
-    wheelOverlayPreload.onload = checkAllLoaded;
-    carOverlayPreload.onload = checkAllLoaded;
+    console.log('updateAllLayers: Initializing closeup slider');
+    try {
+      window.initCloseUpSlider();
+      console.log('updateAllLayers: Closeup slider initialized');
+    } catch (err) {
+      console.error('updateAllLayers: Error initializing closeup slider:', err);
+    }
 
-    return animationPromise.then(() => {
-      return new Promise(resolve => {
-        let tl = gsap.timeline({
-          onComplete: function () {
+    console.log('updateAllLayers: Getting render data');
+    try {
+      const data = Wized.data.r.get_renders.data;
+      console.log('updateAllLayers: Got render data, finding overlays');
+
+      let wheelOverlay, carOverlay;
+      try {
+        const carModel = data.find(item => item.model === Wized.data.v.carModel);
+        console.log('updateAllLayers: Found car model:', Wized.data.v.carModel, !!carModel);
+
+        if (!carModel) {
+          console.error('updateAllLayers: Car model not found in data');
+          throw new Error('Car model not found');
+        }
+
+        wheelOverlay = carModel.renders.find(item => item.view === Wized.data.v.view && item.model === Wized.data.v.wheelModel && item.color === Wized.data.v.wheelColor)?.image;
+
+        carOverlay = carModel.renders.find(item => item.view === Wized.data.v.view && item.color === Wized.data.v.carColor && item.car_model === Wized.data.v.carModel)?.image;
+
+        console.log('updateAllLayers: Found overlays:', {
+          wheelOverlay: !!wheelOverlay,
+          carOverlay: !!carOverlay
+        });
+      } catch (err) {
+        console.error('updateAllLayers: Error finding overlays:', err);
+        throw err;
+      }
+
+      const matchedImages = {
+        wheelOverlay,
+        carOverlay
+      };
+      console.log('updateAllLayers: Matched Images:', matchedImages);
+
+      console.log('updateAllLayers: Getting DOM elements');
+      const wheelOverlayPreload = document.querySelector('[w-el="scenery-wheel-overlay-preload"]');
+      const carOverlayPreload = document.querySelector('[w-el="scenery-car-overlay-preload"]');
+
+      console.log('updateAllLayers: DOM elements found:', {
+        wheelOverlayPreload: !!wheelOverlayPreload,
+        carOverlayPreload: !!carOverlayPreload
+      });
+
+      if (!wheelOverlayPreload || !carOverlayPreload) {
+        console.error('updateAllLayers: Preload elements not found');
+        throw new Error('Preload elements not found');
+      }
+
+      console.log('updateAllLayers: Setting image sources');
+      wheelOverlayPreload.src = wheelOverlay;
+      carOverlayPreload.src = carOverlay;
+
+      // check if all images are loaded
+      let imagesLoaded = 0;
+      let animationPromiseResolve;
+      console.log('updateAllLayers: Creating animation promise');
+      const animationPromise = new Promise(resolve => {
+        animationPromiseResolve = resolve;
+      });
+
+      function checkAllLoaded() {
+        imagesLoaded++;
+        console.log(`updateAllLayers: Image loaded (${imagesLoaded}/2)`);
+
+        if (imagesLoaded === 2) {
+          console.log('updateAllLayers: All images loaded, updating DOM');
+          try {
+            const preloadWrapper = document.querySelector('.images-wrapper.preload');
+            if (preloadWrapper) {
+              preloadWrapper.classList.add('show');
+              console.log('updateAllLayers: Added show class to preload wrapper');
+            } else {
+              console.warn('updateAllLayers: Preload wrapper not found');
+            }
+
+            // Update the regular images with the preloaded images
+            const wheelOverlayElement = document.querySelector('[w-el="scenery-wheel-overlay"]');
+            const carOverlayElement = document.querySelector('[w-el="scenery-car-overlay"]');
+
+            if (wheelOverlayElement && carOverlayElement) {
+              wheelOverlayElement.src = wheelOverlayPreload.src;
+              carOverlayElement.src = carOverlayPreload.src;
+              console.log('updateAllLayers: Updated regular images');
+            } else {
+              console.warn('updateAllLayers: Regular image elements not found');
+            }
+
+            if (preloadWrapper) {
+              preloadWrapper.classList.remove('show');
+              console.log('updateAllLayers: Removed show class from preload wrapper');
+            }
+
+            // Now trigger the animation
+            console.log('updateAllLayers: Resolving animation promise');
+            animationPromiseResolve();
+          } catch (err) {
+            console.error('updateAllLayers: Error updating images:', err);
+            // Still resolve to prevent hanging
+            animationPromiseResolve();
+          }
+        }
+      }
+
+      console.log('updateAllLayers: Setting onload handlers');
+      wheelOverlayPreload.onload = checkAllLoaded;
+      carOverlayPreload.onload = checkAllLoaded;
+
+      // Also set onerror handlers to prevent hanging if images fail to load
+      wheelOverlayPreload.onerror = () => {
+        console.error('updateAllLayers: Wheel overlay failed to load');
+        checkAllLoaded();
+      };
+      carOverlayPreload.onerror = () => {
+        console.error('updateAllLayers: Car overlay failed to load');
+        checkAllLoaded();
+      };
+
+      console.log('updateAllLayers: Waiting for animation promise');
+      return animationPromise.then(() => {
+        console.log('updateAllLayers: Animation promise resolved, creating final timeline');
+
+        return new Promise(resolve => {
+          console.log('updateAllLayers: Creating GSAP timeline');
+          let tl = gsap.timeline({
+            onStart: () => {
+              console.log('updateAllLayers: GSAP timeline started');
+            },
+            onUpdate: () => {
+              // Log only at specific progress points to avoid console spam
+              const progress = tl.progress();
+              if (progress > 0.5 && progress < 0.55) {
+                console.log('updateAllLayers: GSAP timeline at 50% progress');
+              }
+            },
+            onComplete: function () {
+              console.log('updateAllLayers: GSAP timeline completed, resolving final promise');
+              resolve();
+            }
+          });
+
+          if (transitionType == 'view') {
+            console.log('updateAllLayers: Creating view transition animation');
+            tl.to('[overlay="white"]', {
+              autoAlpha: 0,
+              opacity: 0,
+              duration: 0.3,
+              ease: 'power2.out',
+              onStart: () => console.log('updateAllLayers: White overlay animation started'),
+              onComplete: () => console.log('updateAllLayers: White overlay animation completed')
+            }).to(
+              '#images-wrapper',
+              {
+                scale: 1.08,
+                duration: 0.3,
+                ease: 'expo.out',
+                onStart: () => console.log('updateAllLayers: Images wrapper animation started'),
+                onComplete: () => console.log('updateAllLayers: Images wrapper animation completed')
+              },
+              '-=0.1'
+            );
+          } else if (transitionType == 'car') {
+            if (firstSearchModalInteraction == false) {
+              console.log('updateAllLayers: Not first interaction, setting timeout for controls');
+              setTimeout(() => {
+                console.log('updateAllLayers: Animating controls in');
+                animateControlsIn();
+              }, 100);
+
+              console.log('updateAllLayers: Creating car transition animation');
+              tl.to('[overlay="white"]', {
+                autoAlpha: 0,
+                opacity: 0,
+                duration: 0.3,
+                ease: 'power2.out',
+                onStart: () => console.log('updateAllLayers: White overlay animation started'),
+                onComplete: () => console.log('updateAllLayers: White overlay animation completed')
+              }).to(
+                '#images-wrapper',
+                {
+                  scale: 1.08,
+                  duration: 0.3,
+                  ease: 'expo.out',
+                  onStart: () => console.log('updateAllLayers: Images wrapper animation started'),
+                  onComplete: () => console.log('updateAllLayers: Images wrapper animation completed')
+                },
+                '-=0.1'
+              );
+            } else {
+              console.log('updateAllLayers: First interaction, skipping animation and resolving immediately');
+              resolve();
+            }
+          } else {
+            console.log('updateAllLayers: No transition type match, resolving immediately');
             resolve();
           }
         });
-        if (transitionType == 'view') {
-          tl.to('[overlay="white"]', { autoAlpha: 0, opacity: 0, duration: 0.3, ease: 'power2.out' }).to('#images-wrapper', { scale: 1.08, duration: 0.3, ease: 'expo.out' }, '-=0.1');
-        } else if (transitionType == 'car') {
-          if (firstSearchModalInteraction == false) {
-            setTimeout(() => {
-              animateControlsIn();
-            }, 100);
-            tl.to('[overlay="white"]', { autoAlpha: 0, opacity: 0, duration: 0.3, ease: 'power2.out' }).to('#images-wrapper', { scale: 1.08, duration: 0.3, ease: 'expo.out' }, '-=0.1');
-          }
-        } else {
-          resolve();
-        }
       });
-    });
+    } catch (err) {
+      console.error('updateAllLayers: Critical error:', err);
+      // Return a resolved promise to prevent hanging
+      return Promise.resolve();
+    }
   };
 };
 
