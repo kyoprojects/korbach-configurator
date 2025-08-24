@@ -1485,9 +1485,11 @@ async function animateControlsIn() {
     showQuoteForm();
     animateControlsOut();
   });
-  document.querySelector('#quotePseudo').addEventListener('click', () => {
-    hideQuoteForm();
-    animateControlsIn();
+  document.querySelectorAll('#quotePseudo').forEach(el => {
+    el.addEventListener('click', () => {
+      hideQuoteForm();
+      animateControlsIn();
+    });
   });
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') {
