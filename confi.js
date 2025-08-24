@@ -1,5 +1,7 @@
 // Mobile scroll disabler has been removed
 
+const isMobile = window.innerWidth < 768;
+
 function preloader() {
   const audioUrl = new Audio('https://zneejoqfgrqzvutkituy.supabase.co/storage/v1/object/public/Video/preloader/Tension%20Background%20Music%20Compilation.mp3');
   let videoPlayed = false;
@@ -1287,6 +1289,7 @@ async function appleDockNav() {
     }
   };
 
+  if (isMobile) return;
   navItems.forEach((item, index) => {
     item.addEventListener('mouseenter', () => {
       item.classList.add('hover');
@@ -1316,6 +1319,8 @@ async function initDock() {
 
 async function handleSidebarSfx() {
   const navItems = document.querySelectorAll('[element="sidebar-item"]');
+
+  if (isMobile) return;
 
   navItems.forEach((item, index) => {
     item.addEventListener('mouseenter', () => {
