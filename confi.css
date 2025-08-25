@@ -111,14 +111,30 @@
 .control-tooltip::before {
   content: '';
   position: absolute;
+  width: 0;
+  height: 0;
+}
+
+/* Default arrow (pointing left) */
+.control-tooltip:not([style*='bottom'])::before {
   left: -6px;
   top: 50%;
   transform: translateY(-50%);
-  width: 0;
-  height: 0;
   border-top: 6px solid transparent;
   border-bottom: 6px solid transparent;
   border-right: 6px solid rgba(0, 0, 0, 0.9);
+}
+
+/* Mobile arrow (pointing down) */
+.control-tooltip[style*='bottom']::before {
+  left: 50%;
+  bottom: -6px;
+  top: auto;
+  transform: translateX(-50%);
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 6px solid rgba(0, 0, 0, 0.9);
+  border-bottom: none;
 }
 
 /* Style the label part (first line) */
@@ -133,7 +149,24 @@
 .div-block-85:hover .control-tooltip {
   opacity: 1;
   visibility: visible;
+}
+
+/* Default hover transform */
+.div-block-85:hover .control-tooltip:not([style*='bottom']) {
   transform: translateY(-50%) translateX(0);
+}
+
+/* Mobile hover transform */
+.div-block-85:hover .control-tooltip[style*='bottom'] {
+  transform: translateX(-50%) translateY(0);
+}
+
+/* Mobile specific tooltip styles */
+@media (max-width: 767px) {
+  .control-tooltip[style*='bottom'] {
+    max-width: 120px;
+    text-align: center;
+  }
 }
 
 /* Target when hovering the show-view-controls element or the container itself */
@@ -183,7 +216,6 @@
 .div-block-95:hover .div-block-97:nth-child(3) {
   transition-delay: 0.15s;
 }
-
 /* Subtle hover effect for individual view buttons */
 .div-block-97 {
   transform-origin: center;

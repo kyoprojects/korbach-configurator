@@ -949,7 +949,7 @@ window.initializeData = async function () {
     });
   };
 
-  // updateControlTooltips();
+  // updateControlTooltips();tool
 
   // Update tooltips when Wized data changes
   Wized.on('requestend', result => {
