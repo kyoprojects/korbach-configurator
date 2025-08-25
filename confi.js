@@ -1232,6 +1232,24 @@ window.defineEnterFunctions = async function () {
 
     searchModalOpen = true;
 
+    // Focus the search input in the iframe, but only on desktop
+    if (!isMobile) {
+      // Wait a tiny bit for the animation to start
+      setTimeout(() => {
+        const searchModalIframe = document.getElementById('searchModalIframe');
+        if (searchModalIframe) {
+          searchModalIframe.contentWindow.postMessage(
+            {
+              type: 'searchModal',
+              action: 'focusInput'
+            },
+            '*'
+          );
+          console.log('Search modal focus message sent');
+        }
+      }, 100);
+    }
+
     // Mobile scroll disabler has been removed
   };
   window.closeSearchModal = function () {

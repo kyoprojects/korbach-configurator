@@ -94,7 +94,7 @@
   border-radius: 6px;
   font-size: 13px;
   font-weight: 400;
-  white-space: pre;
+  white-space: normal; /* Changed from pre to normal to allow wrapping */
   color: white;
   pointer-events: none;
   transition: all 0.2s ease;
@@ -105,6 +105,9 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
+  max-width: 200px; /* Set a maximum width */
+  word-wrap: break-word; /* Ensure long words break */
+  overflow-wrap: break-word; /* Modern browsers */
 }
 
 /* Add tooltip arrow */
@@ -164,8 +167,9 @@
 /* Mobile specific tooltip styles */
 @media (max-width: 767px) {
   .control-tooltip[style*='bottom'] {
-    max-width: 120px;
+    max-width: 150px;
     text-align: center;
+    white-space: normal;
   }
 }
 
