@@ -1,5 +1,5 @@
 (function setCookies() {
-  const params = ['utm_source', 'utm_medium', 'utm_campaign', 'gclid', 'fbclid', 'gad_source', 'gbraid', 'wbraid', 'fbc'];
+  const params = ['utm_source', 'utm_medium', 'utm_campaign', 'gclid', 'fbclid', 'gad_source', 'gbraid', 'wbraid', 'fbc', 'ad_id', 'campaign_id', 'adset_id', 'utm_content'];
 
   function setCookie(key, value) {
     if (value) {
@@ -37,7 +37,7 @@
   function updateTypeformUrl(url) {
     const typeformUrl = new URL(url);
     const currentUrl = new URL(window.location.href);
-    const params = ['utm_source', 'utm_medium', 'utm_campaign', 'gclid', 'fbclid', 'gad_source', 'gbraid', 'wbraid', 'fbc', 'referrer'];
+    const params = ['utm_source', 'utm_medium', 'utm_campaign', 'gclid', 'fbclid', 'gad_source', 'gbraid', 'wbraid', 'fbc', 'referrer', 'ad_id', 'campaign_id', 'adset_id', 'utm_content'];
 
     // Handle parameters from both query and fragment
     params.forEach(param => {
@@ -46,7 +46,6 @@
       if (value) typeformUrl.searchParams.set(param, value);
     });
 
-    console.log('typeform url after = ', typeformUrl.toString());
     return typeformUrl.toString();
   }
 
