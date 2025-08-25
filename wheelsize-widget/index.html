@@ -2,7 +2,17 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <style>
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        position: relative;
+      }
+    </style>
     <title>Vehicle Selector Widget</title>
 
     <!-- React Dependencies -->
@@ -21,7 +31,7 @@
   </head>
   <body>
     <!-- Target container -->
-    <div id="multistep-form" style="height: 100vh"></div>
+    <div id="multistep-form" style="height: 100%; max-height: 100vh; overflow-y: auto; -webkit-overflow-scrolling: touch"></div>
 
     <!-- Our script -->
     <script src="index.js"></script>

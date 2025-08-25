@@ -1531,20 +1531,22 @@ async function animateControlsIn() {
   });
 })();
 
-document.addEventListener('mousemove', e => {
-  const centerX = window.innerWidth / 2;
-  const centerY = window.innerHeight / 2;
+if (!isMobile) {
+  document.addEventListener('mousemove', e => {
+    const centerX = window.innerWidth / 2;
+    const centerY = window.innerHeight / 2;
 
-  const offsetX = (e.clientX - centerX) * 0.012;
-  const offsetY = (e.clientY - centerY) * 0.012;
+    const offsetX = (e.clientX - centerX) * 0.012;
+    const offsetY = (e.clientY - centerY) * 0.012;
 
-  gsap.to('#images-wrapper', {
-    x: offsetX,
-    y: offsetY,
-    ease: 'power4.out',
-    duration: 16
+    gsap.to('#images-wrapper', {
+      x: offsetX,
+      y: offsetY,
+      ease: 'power4.out',
+      duration: 16
+    });
   });
-});
+}
 
 window.changeNavTabs = async function (transitionType) {
   if (transitionType === 'car') {

@@ -94,7 +94,7 @@
   border-radius: 6px;
   font-size: 13px;
   font-weight: 400;
-  white-space: normal; /* Changed from pre to normal to allow wrapping */
+  white-space: nowrap; /* Prevent text from wrapping */
   color: white;
   pointer-events: none;
   transition: all 0.2s ease;
@@ -161,7 +161,7 @@
 
 /* Mobile hover transform */
 .div-block-85:hover .control-tooltip[style*='bottom'] {
-  transform: translateX(-50%) translateY(0);
+  transform: translateX(-50%) translateY(-5px);
 }
 
 /* Mobile specific tooltip styles */
@@ -169,7 +169,59 @@
   .control-tooltip[style*='bottom'] {
     max-width: 150px;
     text-align: center;
-    white-space: normal;
+    white-space: nowrap;
+    /* overflow: hidden; */
+    padding: 8px 8px;
+  }
+
+  .control-tooltip span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Hide only car tooltip on hover for mobile */
+  .div-block-85[step='car-model']:hover .control-tooltip {
+    opacity: 0;
+    visibility: hidden;
+  }
+
+  /* Only show tooltips when explicitly set to visible by JS */
+  /* Higher specificity for car tooltip */
+  [element='sidebar-item'][step='car-model'] .control-tooltip.mobile-visible {
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: translateX(-50%) translateY(-5px) !important;
+  }
+
+  /* Animation for bottom control tooltips */
+  [control='bottom'] .control-tooltip {
+    bottom: 100%;
+    top: auto;
+    left: 50%;
+    transform: translateX(-50%) translateY(10px);
+    margin-left: 0;
+    margin-bottom: 10px;
+    transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease;
+  }
+
+  [control='bottom']:hover .control-tooltip {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* Arrow for bottom control tooltips */
+  [control='bottom'] .control-tooltip::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: -6px;
+    transform: translateX(-50%);
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 6px solid rgba(0, 0, 0, 0.9);
+    border-bottom: none;
   }
 }
 
@@ -375,34 +427,6 @@
 /* ======================
    Closeup Slider Styles
    ====================== */
-
-/* Close button for closeup view */
-.closeup-close-btn {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  width: 40px;
-  height: 40px;
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  z-index: 10;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  transition: all 0.2s ease;
-}
-
-.closeup-close-btn:hover {
-  background: white;
-  transform: scale(1.1);
-}
-
-.closeup-close-btn svg {
-  width: 20px;
-  height: 20px;
-}
 
 /* Main slider container */
 .closeup-slider {
@@ -821,8 +845,7 @@
   position: fixed;
   z-index: 9999;
   pointer-events: none;
-  transition: all 0.2s ease;
-  transform: translateY(4px);
+  transition: opacity 0.25s ease, visibility 0.25s ease, transform 0.25s ease;
   opacity: 0;
   visibility: hidden; /* Ensure tooltips are hidden by default */
 }
