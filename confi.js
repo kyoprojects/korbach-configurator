@@ -927,12 +927,16 @@ window.initializeData = async function () {
         tooltip.style.left = '50%';
         tooltip.style.top = 'auto';
         tooltip.style.bottom = '100%';
-        tooltip.style.transform = 'translateX(-50%) translateY(-10px)';
+        tooltip.style.transform = 'translateX(-50%) translateY(-5px)';
         tooltip.style.marginLeft = '0';
-        tooltip.style.marginBottom = '10px';
+        tooltip.style.marginBottom = '5px';
 
         // Modify the arrow to point down instead of left
         tooltip.style.setProperty('--tooltip-arrow-position', 'bottom');
+
+        // We no longer add mobile-visible class here
+        // This is now handled in the changeNavTabs callback
+        // to ensure tooltips only show after animation completes
       }
 
       const labelSpan = document.createElement('span');
@@ -1026,8 +1030,12 @@ window.initializeData = async function () {
     // };
     // console.log('Clicked Config:', clickedConfig);
 
-    // Update control tooltips when layers are updated
-    window.updateControlTooltips();
+    // We no longer update tooltips here for car transitions
+    // This is now handled in the changeNavTabs callback
+    // to ensure tooltips only show after animation completes
+    if (transitionType !== 'car') {
+      window.updateControlTooltips();
+    }
 
     window.initCloseUpSlider();
 
@@ -1569,6 +1577,33 @@ window.changeNavTabs = async function (transitionType) {
                 return window.updateAllLayers(transitionType);
               })
               .then(() => {
+                if (transitionType == 'car') {
+                  if (isMobile) {
+                    // Force remove any existing tooltips first to ensure clean state
+                    document.querySelectorAll('.control-tooltip').forEach(tooltip => tooltip.remove());
+
+                    // Update tooltips to recreate them
+                    updateControlTooltips();
+
+                    // Find the car-model tooltip (should be freshly created)
+                    const carTooltip = document.querySelector('[element="sidebar-item"][step="car-model"] .control-tooltip');
+                    if (carTooltip) {
+                      console.log('carTooltip found - showing after animation');
+
+                      // Make it visible now that animations are complete
+                      carTooltip.classList.add('mobile-visible');
+
+                      // Auto-hide after 3 seconds
+                      setTimeout(() => {
+                        if (carTooltip && carTooltip.parentNode) {
+                          carTooltip.classList.remove('mobile-visible');
+                        }
+                      }, 3000);
+                    } else {
+                      console.log('no carTooltip found after animation');
+                    }
+                  }
+                }
                 resolve();
               });
           } else {
@@ -1596,6 +1631,10 @@ async function switchCar(model) {
   Wized.data.v.carModel = model;
   await changeNavTabs('car');
 
+  // We no longer update tooltips here
+  // Tooltips are now updated in the changeNavTabs callback
+  // to ensure they only show after animation completes
+
   updateUrlParams();
 
   if (firstSearchModalInteraction == true) await hideStartScreen();
@@ -1622,6 +1661,7 @@ async function switchCar(model) {
   // Get elements
   const viewControls = document.querySelector('[show-view-controls]');
   const navContainer = document.querySelector('[nav-views-container]');
+  const imagesWrapper = document.querySelector('#images-wrapper');
 
   if (viewControls && navContainer) {
     // Initial state - hide view controls
@@ -1691,11 +1731,14 @@ async function switchCar(model) {
 
     // Flag to track if the animation is currently running
     let isAnimating = false;
+    // Flag to track if controls are visible
+    let controlsVisible = false;
 
     // Function to show the controls
     function showControls() {
-      // if (isAnimating) return;
-      // isAnimating = true;
+      if (isAnimating) return;
+      isAnimating = true;
+      controlsVisible = true;
 
       // Play the timeline forward
       controlsTimeline
@@ -1711,8 +1754,9 @@ async function switchCar(model) {
 
     // Function to hide the controls
     function hideControls() {
-      // if (isAnimating) return;
-      // isAnimating = true;
+      if (isAnimating) return;
+      isAnimating = true;
+      controlsVisible = false;
 
       // Play the timeline in reverse
       controlsTimeline
@@ -1725,10 +1769,36 @@ async function switchCar(model) {
         });
     }
 
-    // Event listeners
-    viewControls.addEventListener('mouseenter', showControls);
-    navContainer.addEventListener('mouseenter', showControls);
-    navContainer.addEventListener('mouseleave', hideControls);
+    // Event listeners for desktop
+    if (!isMobile) {
+      viewControls.addEventListener('mouseenter', showControls);
+      navContainer.addEventListener('mouseenter', showControls);
+      navContainer.addEventListener('mouseleave', hideControls);
+    }
+    // Mobile-specific event handling
+    else {
+      // For mobile, toggle controls on click
+      viewControls.addEventListener('click', () => {
+        if (controlsVisible) {
+          hideControls();
+        } else {
+          showControls();
+        }
+      });
+
+      // Close controls when clicking outside on mobile
+      document.addEventListener('click', e => {
+        // Only process if controls are visible
+        if (!controlsVisible) return;
+
+        // Check if click was outside the view controls and nav container
+        const clickedOnControls = e.target.closest('[nav-views-container]') || e.target.closest('[show-view-controls]') || e.target.closest('.div-block-95');
+
+        if (!clickedOnControls) {
+          hideControls();
+        }
+      });
+    }
 
     // Individual view button hover effects (opacity only)
     document.querySelectorAll('.div-block-97').forEach(button => {
@@ -1743,18 +1813,6 @@ async function switchCar(model) {
             });
           }
         });
-
-        // // Arrow animation
-        // const arrow = button.querySelector('.nav-view-arrow');
-        // if (arrow) {
-        //   if (arrow.classList.contains('l')) {
-        //     gsap.to(arrow, { x: -3, duration: 0.2, ease: 'power2.out' });
-        //   } else if (arrow.classList.contains('r')) {
-        //     gsap.to(arrow, { x: 3, duration: 0.2, ease: 'power2.out' });
-        //   } else {
-        //     gsap.to(arrow, { y: 3, duration: 0.2, ease: 'power2.out' });
-        //   }
-        // }
       });
 
       button.addEventListener('mouseleave', () => {
@@ -1846,22 +1904,6 @@ async function switchCar(model) {
     const closeupContainer = document.querySelector('#closeupContentWrap');
     closeupContainer.innerHTML = ''; // Clear existing content
 
-    // Create close button
-    const closeButton = document.createElement('div');
-    closeButton.className = 'closeup-close-btn';
-    closeButton.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <line x1="18" y1="6" x2="6" y2="18"></line>
-      <line x1="6" y1="6" x2="18" y2="18"></line>
-    </svg>`;
-
-    // Add click handler to close button
-    closeButton.addEventListener('click', () => {
-      hideCloseUpAnimation();
-      animateControlsIn();
-    });
-
-    closeupContainer.appendChild(closeButton);
-
     // Create slider container
     const sliderContainer = document.createElement('div');
     sliderContainer.className = 'closeup-slider';
@@ -1890,6 +1932,22 @@ async function switchCar(model) {
       startY = 0;
     let translateX = 0,
       translateY = 0;
+
+    // Function to manage arrow visibility
+    function updateArrowVisibility() {
+      // If zoomed, hide arrows
+      if (isZoomed) {
+        prevArrow.style.display = 'none';
+        nextArrow.style.display = 'none';
+        return;
+      }
+
+      // Show arrows with proper opacity based on current slide
+      prevArrow.style.display = 'flex';
+      nextArrow.style.display = 'flex';
+      prevArrow.style.opacity = currentSlide === 0 ? '0.3' : '1';
+      nextArrow.style.opacity = currentSlide === slides.length - 1 ? '0.3' : '1';
+    }
 
     function updateSlides() {
       slidesContainer.innerHTML = '';
@@ -1924,6 +1982,19 @@ async function switchCar(model) {
         wheelImg.style.height = '100%';
         wheelImg.style.objectFit = 'cover';
 
+        // Add direct event listeners to images for better dragging experience
+        carImg.addEventListener('mousedown', e => {
+          if (isZoomed) {
+            e.preventDefault(); // Prevent image dragging default behavior
+          }
+        });
+
+        wheelImg.addEventListener('mousedown', e => {
+          if (isZoomed) {
+            e.preventDefault(); // Prevent image dragging default behavior
+          }
+        });
+
         imageWrapper.appendChild(carImg);
         imageWrapper.appendChild(wheelImg);
 
@@ -1942,9 +2013,8 @@ async function switchCar(model) {
           if (!isZoomed) {
             slide.classList.add('zoomed');
             isZoomed = true;
-            // Hide navigation arrows when zoomed
-            prevArrow.style.display = 'none';
-            nextArrow.style.display = 'none';
+            // Update navigation arrows visibility
+            updateArrowVisibility();
             // Update zoom button icon
             zoomButton.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="11" cy="11" r="8"></circle>
@@ -1953,7 +2023,12 @@ async function switchCar(model) {
             </svg>`;
 
             // Center the zoom
-            img.style.transformOrigin = '50% 50%';
+            carImg.style.transformOrigin = '50% 50%';
+            wheelImg.style.transformOrigin = '50% 50%';
+            // Set cursor to grab to indicate draggability
+            carImg.style.cursor = 'grab';
+            wheelImg.style.cursor = 'grab';
+            imageWrapper.style.cursor = 'grab';
             translateX = 0;
             translateY = 0;
             updateImagePosition();
@@ -2003,6 +2078,11 @@ async function switchCar(model) {
           startY = e.clientY - translateY;
           slide.classList.add('panning');
 
+          // Change cursor to grabbing during drag
+          carImg.style.cursor = 'grabbing';
+          wheelImg.style.cursor = 'grabbing';
+          imageWrapper.style.cursor = 'grabbing';
+
           function onMouseMove(e) {
             if (!isZoomed) return;
             translateX = e.clientX - startX;
@@ -2018,6 +2098,12 @@ async function switchCar(model) {
 
           function onMouseUp() {
             slide.classList.remove('panning');
+            // Reset cursor to grab after drag ends
+            if (isZoomed) {
+              carImg.style.cursor = 'grab';
+              wheelImg.style.cursor = 'grab';
+              imageWrapper.style.cursor = 'grab';
+            }
             document.removeEventListener('mousemove', onMouseMove);
             document.removeEventListener('mouseup', onMouseUp);
           }
@@ -2028,8 +2114,6 @@ async function switchCar(model) {
 
         slide.addEventListener('wheel', handleScroll, { passive: false });
         zoomButton.addEventListener('click', handleZoom);
-        carImg.addEventListener('click', handleZoom);
-        wheelImg.addEventListener('click', handleZoom);
 
         slide.appendChild(imageWrapper);
         slide.appendChild(zoomButton);
@@ -2037,8 +2121,7 @@ async function switchCar(model) {
       });
 
       // Update arrow visibility
-      prevArrow.style.opacity = currentSlide === 0 ? '0.3' : '1';
-      nextArrow.style.opacity = currentSlide === slides.length - 1 ? '0.3' : '1';
+      updateArrowVisibility();
     }
 
     function resetZoom(slide) {
@@ -2049,22 +2132,26 @@ async function switchCar(model) {
       if (carImg) {
         carImg.style.transform = '';
         carImg.style.transformOrigin = '';
+        carImg.style.cursor = '';
       }
 
       if (wheelImg) {
         wheelImg.style.transform = '';
         wheelImg.style.transformOrigin = '';
+        wheelImg.style.cursor = '';
       }
 
-      zneejoqfgrqzvutkituy.supabase.co / storage / v1 / object / public / renders / BMW / m3 - g80 / car / cu1 / cu1 - aventurin - red.webp;
-      zneejoqfgrqzvutkituy.supabase.co / storage / v1 / object / public / renders / bmw / m3 - g80 / car / cu1 / cu1 - aventurin - red.webp;
+      // Reset image wrapper cursor
+      const imageWrapper = slide.querySelector('.closeup-image-wrapper');
+      if (imageWrapper) {
+        imageWrapper.style.cursor = '';
+      }
 
-      https: translateX = 0;
+      translateX = 0;
       translateY = 0;
       isZoomed = false;
-      // Show navigation arrows again
-      prevArrow.style.display = '';
-      nextArrow.style.display = '';
+      // Update navigation arrows visibility
+      updateArrowVisibility();
     }
 
     function nextSlide() {
@@ -2206,10 +2293,31 @@ async function switchCar(model) {
       tooltip.innerHTML = this.tooltipTemplate;
       tooltip.querySelector('.tooltip-text').textContent = text;
 
+      // Set initial transform based on position
+      let initialTransform = '';
+      switch (position) {
+        case 'top':
+          initialTransform = 'translateY(4px)';
+          break;
+        case 'bottom':
+        case 'bottom-right':
+        case 'bottom-left':
+          initialTransform = 'translateY(-4px)';
+          break;
+        case 'left':
+          initialTransform = 'translateX(4px)';
+          break;
+        case 'right':
+          initialTransform = 'translateX(-4px)';
+          break;
+        default:
+          initialTransform = 'translateY(4px)';
+      }
+
       // Ensure initial state is hidden
       tooltip.style.opacity = '0';
       tooltip.style.visibility = 'hidden';
-      tooltip.style.transform = 'translateY(4px)';
+      tooltip.style.transform = initialTransform;
 
       // Add tooltip to DOM
       document.body.appendChild(tooltip);
@@ -2233,33 +2341,46 @@ async function switchCar(model) {
       const tooltipRect = tooltip.getBoundingClientRect();
 
       let top, left;
+      let initialTransform = '';
+      let finalTransform = '';
 
-      switch (tooltip.className.split('tooltip-')[1]) {
+      const position = tooltip.className.split('tooltip-')[1];
+      switch (position) {
         case 'top':
           top = rect.top - tooltipRect.height - 8;
           left = rect.left + (rect.width - tooltipRect.width) / 2;
+          initialTransform = 'translateY(4px)';
+          finalTransform = 'translateY(0)';
           break;
         case 'bottom':
           top = rect.bottom + 8;
           left = rect.left + (rect.width - tooltipRect.width) / 2;
+          initialTransform = 'translateY(-4px)';
+          finalTransform = 'translateY(0)';
           break;
         case 'bottom-right':
           top = rect.bottom + 8;
-          // Align to the right edge of the button
           left = rect.right - tooltipRect.width;
+          initialTransform = 'translateY(-4px)';
+          finalTransform = 'translateY(0)';
           break;
         case 'bottom-left':
           top = rect.bottom + 8;
-          // Align to the left edge of the button
           left = rect.left;
+          initialTransform = 'translateY(-4px)';
+          finalTransform = 'translateY(0)';
           break;
         case 'left':
           top = rect.top + (rect.height - tooltipRect.height) / 2;
           left = rect.left - tooltipRect.width - 8;
+          initialTransform = 'translateX(4px)';
+          finalTransform = 'translateX(0)';
           break;
         case 'right':
           top = rect.top + (rect.height - tooltipRect.height) / 2;
           left = rect.right + 8;
+          initialTransform = 'translateX(-4px)';
+          finalTransform = 'translateX(0)';
           break;
       }
 
@@ -2270,9 +2391,15 @@ async function switchCar(model) {
       // Show with animation
       tooltip.style.opacity = '0';
       tooltip.style.visibility = 'visible';
+      tooltip.style.transform = initialTransform;
+
+      // Force a reflow to ensure the initial transform is applied
+      tooltip.offsetHeight;
+
+      // Apply the animation
       requestAnimationFrame(() => {
         tooltip.style.opacity = '1';
-        tooltip.style.transform = 'translateY(0)';
+        tooltip.style.transform = finalTransform;
       });
     }
 
@@ -2280,8 +2407,31 @@ async function switchCar(model) {
       const tooltip = this.tooltips.get(element);
       if (!tooltip) return;
 
+      const position = tooltip.className.split('tooltip-')[1];
+      let hideTransform = '';
+
+      // Set the correct hide transform based on position
+      switch (position) {
+        case 'top':
+          hideTransform = 'translateY(4px)';
+          break;
+        case 'bottom':
+        case 'bottom-right':
+        case 'bottom-left':
+          hideTransform = 'translateY(-4px)';
+          break;
+        case 'left':
+          hideTransform = 'translateX(4px)';
+          break;
+        case 'right':
+          hideTransform = 'translateX(-4px)';
+          break;
+        default:
+          hideTransform = 'translateY(4px)';
+      }
+
       tooltip.style.opacity = '0';
-      tooltip.style.transform = 'translateY(4px)';
+      tooltip.style.transform = hideTransform;
       setTimeout(() => {
         tooltip.style.visibility = 'hidden';
       }, 200);
