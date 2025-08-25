@@ -921,6 +921,20 @@ window.initializeData = async function () {
       const tooltip = document.createElement('div');
       tooltip.className = 'control-tooltip';
 
+      // For mobile devices, position tooltips on top
+      if (isMobile) {
+        // Position tooltip above the element instead of to the right
+        tooltip.style.left = '50%';
+        tooltip.style.top = 'auto';
+        tooltip.style.bottom = '100%';
+        tooltip.style.transform = 'translateX(-50%) translateY(-10px)';
+        tooltip.style.marginLeft = '0';
+        tooltip.style.marginBottom = '10px';
+
+        // Modify the arrow to point down instead of left
+        tooltip.style.setProperty('--tooltip-arrow-position', 'bottom');
+      }
+
       const labelSpan = document.createElement('span');
       labelSpan.style.opacity = '0.5';
       labelSpan.textContent = label;
