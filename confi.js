@@ -1015,7 +1015,8 @@ window.initializeData = async function () {
     // Preload only critical images
     await preloadImages(criticalImages);
 
-    lazyLoadImages(criticalImages);
+    // temporarily disable for mobile performance debugging
+    // lazyLoadImages(criticalImages);
 
     initDock();
   };
