@@ -1158,13 +1158,69 @@ window.initializeData = async function () {
           }
         });
         if (transitionType == 'view') {
-          tl.to('[overlay="white"]', { autoAlpha: 0, opacity: 0, duration: 0.3, ease: 'power2.out' }).to('#images-wrapper', { scale: 1.08, duration: 0.3, ease: 'expo.out' }, '-=0.1');
+          // For view transitions, ensure consistent animation
+          tl.to({}, { duration: 0.3 }) // Brief delay for consistency
+            // Animate out the logo if it's visible
+            .to('[logo-loader]', {
+              autoAlpha: 0,
+              scale: 1.2,
+              duration: 0.2,
+              ease: 'power2.in'
+            })
+            // Then fade out overlay and scale images
+            .to('[overlay="white"]', {
+              autoAlpha: 0,
+              opacity: 0,
+              duration: 0.3,
+              ease: 'power2.out',
+              onComplete: () => {
+                gsap.set('[logo-loader]', { display: 'none' });
+              }
+            })
+            .to(
+              '#images-wrapper',
+              {
+                scale: 1.08,
+                duration: 0.3,
+                ease: 'expo.out'
+              },
+              '-=0.1'
+            );
         } else if (transitionType == 'car') {
           if (firstSearchModalInteraction == false) {
             setTimeout(() => {
               animateControlsIn();
             }, 100);
-            tl.to('[overlay="white"]', { autoAlpha: 0, opacity: 0, duration: 0.3, ease: 'power2.out' }).to('#images-wrapper', { scale: 1.08, duration: 0.3, ease: 'expo.out' }, '-=0.1');
+
+            // Ensure logo is visible for at least 1 sec total
+            tl.to({}, { duration: 0.6 }) // Add delay to ensure minimum 1sec visibility (0.4s from entrance + 0.6s = 1sec)
+              // First animate out the logo
+              .to('[logo-loader]', {
+                autoAlpha: 0,
+                scale: 1.2,
+                duration: 0.3,
+                ease: 'power2.in'
+              })
+              // Then fade out the white overlay and scale images
+              .to('[overlay="white"]', {
+                autoAlpha: 0,
+                opacity: 0,
+                duration: 0.3,
+                ease: 'power2.out',
+                onComplete: () => {
+                  // Hide the logo-loader again
+                  gsap.set('[logo-loader]', { display: 'none' });
+                }
+              })
+              .to(
+                '#images-wrapper',
+                {
+                  scale: 1.08,
+                  duration: 0.3,
+                  ease: 'expo.out'
+                },
+                '-=0.1'
+              );
           }
         } else {
           resolve();
@@ -1615,7 +1671,11 @@ window.changeNavTabs = async function (transitionType) {
           }
         }
       });
-      tl.to('#images-wrapper', { scale: 1, duration: 0.3, ease: 'expo.out' }).to('[overlay="white"]', { autoAlpha: 1, opacity: 1, duration: 0.3, ease: 'power2.out' }, '-=0.1');
+      // First scale the images wrapper and fade in white overlay
+      tl.to('#images-wrapper', { scale: 1, duration: 0.3, ease: 'expo.out' })
+        .to('[overlay="white"]', { autoAlpha: 1, opacity: 1, duration: 0.3, ease: 'power2.out' }, '-=0.1')
+        // Animate in the logo-loader right after white overlay appears
+        .fromTo('[logo-loader]', { display: 'block', autoAlpha: 0, scale: 0.5 }, { autoAlpha: 1, scale: 1, duration: 0.4, ease: 'back.out(1.7)' }, '-=0.1');
     } else {
       resolve();
       window.updateAllLayers(transitionType);
