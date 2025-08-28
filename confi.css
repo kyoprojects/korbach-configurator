@@ -27,33 +27,67 @@
   }
 }
 
-/* Reduce opacity of neighboring dark dividers when navbar-option is hovered */
+/* Handle dividers around hovered navbar options */
+
+/* Hide the divider immediately AFTER a hovered navbar option */
 .navbar-option:hover + .dark-divider {
-  opacity: 0;
+  opacity: 0 !important;
   transition: opacity 0.2s ease;
 }
 
-.navbar-option:hover ~ .dark-divider {
-  opacity: 0;
-  transition: opacity 0.2s ease;
-}
-
-/* Handle divider before the hovered element */
+/* Keep the hovered navbar option visible */
 .dark-divider + .navbar-option:hover {
   opacity: 1;
 }
 
-.dark-divider + .navbar-option:hover ~ .dark-divider {
-  opacity: 0;
+/* Hide the divider immediately BEFORE a hovered navbar option */
+.dark-divider:has(+ .navbar-option:hover) {
+  opacity: 0 !important;
+  transition: opacity 0.2s ease;
 }
 
-/* This targets the immediate previous divider with some JavaScript help */
-.navbar-option.hovered-option .prev-divider {
-  opacity: 0;
+/* Fallback for browsers that don't support :has() selector */
+.navbar-option.hovered-option ~ .dark-divider:first-of-type,
+.navbar-option.hovered-option + .dark-divider {
+  opacity: 0 !important;
+}
+
+.prev-divider {
+  opacity: 0 !important;
+  transition: opacity 0.2s ease;
 }
 
 /* Ensure dividers have a transition by default */
 .dark-divider {
+  transition: opacity 0.2s ease;
+}
+
+/* Selected state for navbar options */
+.navbar-option.selected {
+  background-color: #fff;
+}
+
+/* Hide dividers around selected navbar options - exactly like hover */
+/* Hide the divider immediately AFTER a selected navbar option */
+.navbar-option.selected + .dark-divider {
+  opacity: 0 !important;
+  transition: opacity 0.2s ease;
+}
+
+/* Keep the selected navbar option visible */
+.dark-divider + .navbar-option.selected {
+  opacity: 1;
+}
+
+/* Hide the divider immediately BEFORE a selected navbar option */
+.dark-divider:has(+ .navbar-option.selected) {
+  opacity: 0 !important;
+  transition: opacity 0.2s ease;
+}
+
+/* Fallback for browsers that don't support :has() */
+.prev-divider-selected {
+  opacity: 0 !important;
   transition: opacity 0.2s ease;
 }
 
@@ -183,22 +217,22 @@
   opacity: 0.6;
 }
 
-.div-block-85 {
+.navbar-option {
   position: relative;
 }
 
-.div-block-85:hover .control-tooltip {
+.navbar-option:hover .control-tooltip {
   opacity: 1;
   visibility: visible;
 }
 
 /* Default hover transform */
-.div-block-85:hover .control-tooltip:not([style*='bottom']) {
+.navbar-option:hover .control-tooltip:not([style*='bottom']) {
   transform: translateY(-50%) translateX(0);
 }
 
 /* Mobile hover transform */
-.div-block-85:hover .control-tooltip[style*='bottom'] {
+.navbar-option:hover .control-tooltip[style*='bottom'] {
   transform: translateX(-50%) translateY(-5px);
 }
 
@@ -219,7 +253,7 @@
   }
 
   /* Hide only car tooltip on hover for mobile */
-  .div-block-85[step='car-model']:hover .control-tooltip {
+  .navbar-option[step='car-model']:hover .control-tooltip {
     opacity: 0;
     visibility: hidden;
   }
@@ -1024,4 +1058,28 @@
 
 [logo-loader] {
   animation: logoZoom 1s infinite ease-in-out;
+}
+
+/* Car color swatch with subtle mesh overlay effect */
+/* Apply mesh effect to Webflow color swatches */
+.swatch-container {
+  position: relative;
+  overflow: hidden;
+}
+
+.carcolorswatch::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.4' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.3'/%3E%3C/svg%3E");
+  background-size: 80px 80px;
+  mix-blend-mode: overlay;
+  opacity: 1;
+  pointer-events: none;
+  z-index: 1;
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.2);
+  border-radius: 12px;
 }

@@ -1227,39 +1227,97 @@ window.initializeData = async function () {
   };
 };
 
-// Helper function to handle navbar option hover effect on dividers
-function setupNavbarOptionHoverEffects() {
-  const navbarOptions = document.querySelectorAll('.navbar-option');
+// // Helper function to handle navbar option hover effect on dividers
+// function setupNavbarOptionHoverEffects() {
+//   // Check if browser supports :has selector
+//   const supportsHasSelector = CSS.supports('selector(:has(*))');
 
-  navbarOptions.forEach(option => {
-    option.addEventListener('mouseenter', () => {
-      // Add hover class
-      option.classList.add('hovered-option');
+//   // Only need JavaScript fallback if :has is not supported
+//   if (!supportsHasSelector) {
+//     const navbarOptions = document.querySelectorAll('.navbar-option');
 
-      // Find previous divider and add class
-      let prevElement = option.previousElementSibling;
-      if (prevElement && prevElement.classList.contains('dark-divider')) {
-        prevElement.classList.add('prev-divider');
-      }
-    });
+//     navbarOptions.forEach(option => {
+//       option.addEventListener('mouseenter', () => {
+//         // Add hover class
+//         option.classList.add('hovered-option');
 
-    option.addEventListener('mouseleave', () => {
-      // Remove hover class
-      option.classList.remove('hovered-option');
+//         // Find previous divider and add class
+//         let prevElement = option.previousElementSibling;
+//         if (prevElement && prevElement.classList.contains('dark-divider')) {
+//           prevElement.classList.add('prev-divider');
+//         }
+//       });
 
-      // Remove class from previous divider
-      document.querySelectorAll('.prev-divider').forEach(el => {
-        el.classList.remove('prev-divider');
-      });
-    });
+//       option.addEventListener('mouseleave', () => {
+//         // Remove hover class
+//         option.classList.remove('hovered-option');
+
+//         // Remove class from previous divider
+//         document.querySelectorAll('.prev-divider').forEach(el => {
+//           el.classList.remove('prev-divider');
+//         });
+//       });
+//     });
+//   }
+// }
+
+// Store the previous navigation step when modal is opened
+let previousNavigationStep = '';
+let isCarModalOpen = false;
+
+// Function to update active navbar option based on current navigation step or modal state
+function updateActiveNavbarOption() {
+  // Get current navigation step from Wized
+  const navigationStep = Wized.data.v.navigationStep || '';
+
+  // Check if browser supports :has selector
+  const supportsHasSelector = CSS.supports('selector(:has(*))');
+
+  // First, clear all previous states
+  document.querySelectorAll('.navbar-option').forEach(option => {
+    option.classList.remove('selected');
   });
+
+  document.querySelectorAll('.prev-divider-selected').forEach(el => {
+    el.classList.remove('prev-divider-selected');
+  });
+
+  // Determine which step should be active
+  let activeStep = navigationStep;
+
+  // If car modal is open, set car-model as active regardless of navigation step
+  if (isCarModalOpen) {
+    activeStep = 'car-model';
+  }
+
+  // Find and highlight the active option
+  if (activeStep) {
+    const activeOption = document.querySelector(`.navbar-option[step="${activeStep}"]`);
+    if (activeOption) {
+      activeOption.classList.add('selected');
+
+      // Handle the divider before the selected option for browsers that don't support :has()
+      if (!supportsHasSelector) {
+        const prevElement = activeOption.previousElementSibling;
+        if (prevElement && prevElement.classList.contains('dark-divider')) {
+          prevElement.classList.add('prev-divider-selected');
+        }
+      }
+    }
+  }
 }
 
 window.defineEnterFunctions = async function () {
   gsap.set('#images-wrapper', { scale: 1 });
 
   // Setup navbar option hover effects
-  setupNavbarOptionHoverEffects();
+  // setupNavbarOptionHoverEffects();
+
+  // Set up Wized variable change listener for updating active state
+  Wized.reactivity.watch(() => Wized.data.v.navigationStep, updateActiveNavbarOption);
+
+  // Initial update
+  updateActiveNavbarOption();
 
   window.hideStartScreen = function () {
     return new Promise(resolve => {
@@ -1325,6 +1383,13 @@ window.defineEnterFunctions = async function () {
 
     searchModalOpen = true;
 
+    // Store the current navigation step and set car modal flag
+    previousNavigationStep = Wized.data.v.navigationStep || '';
+    isCarModalOpen = true;
+
+    // Update the active navbar option to show car-model as selected
+    updateActiveNavbarOption();
+
     // Focus the search input in the iframe, but only on desktop
     if (!isMobile) {
       // Wait a tiny bit for the animation to start
@@ -1357,6 +1422,12 @@ window.defineEnterFunctions = async function () {
       onComplete: () => {
         modal.style.display = 'none';
         searchModalOpen = false;
+
+        // Reset car modal flag and restore previous navigation step selection
+        isCarModalOpen = false;
+
+        // Update the active navbar option back to the previous selection
+        updateActiveNavbarOption();
 
         // Re-enable scrolling on mobile devices
         if (typeof MobileScrollDisabler !== 'undefined') {
