@@ -1158,39 +1158,28 @@ window.initializeData = async function () {
           }
         });
         if (transitionType == 'view') {
-          // For view transitions, ensure consistent animation
-          tl.to({}, { duration: 0.3 }); // Brief delay for consistency
-
-          // Only animate the logo if not the first interaction
-          if (firstSearchModalInteraction !== true) {
-            // Animate out the logo if it's visible
-            tl.to('[logo-loader]', {
+          // For view transitions, just animate the white overlay (no logo)
+          tl.to({}, { duration: 0.3 }) // Brief delay for consistency
+            // Directly fade out overlay and scale images (skip logo animation)
+            .to('[overlay="white"]', {
               autoAlpha: 0,
-              scale: 1.2,
-              duration: 0.2,
-              ease: 'power2.in'
-            });
-          }
-
-          // Then fade out overlay and scale images
-          tl.to('[overlay="white"]', {
-            autoAlpha: 0,
-            opacity: 0,
-            duration: 0.3,
-            ease: 'power2.out',
-            onComplete: () => {
-              // Always hide the logo-loader regardless of animation
-              gsap.set('[logo-loader]', { display: 'none' });
-            }
-          }).to(
-            '#images-wrapper',
-            {
-              scale: 1.08,
+              opacity: 0,
               duration: 0.3,
-              ease: 'expo.out'
-            },
-            '-=0.1'
-          );
+              ease: 'power2.out',
+              onComplete: () => {
+                // Always ensure logo-loader is hidden
+                gsap.set('[logo-loader]', { display: 'none' });
+              }
+            })
+            .to(
+              '#images-wrapper',
+              {
+                scale: 1.08,
+                duration: 0.3,
+                ease: 'expo.out'
+              },
+              '-=0.1'
+            );
         } else if (transitionType == 'car') {
           if (firstSearchModalInteraction == false) {
             setTimeout(() => {
@@ -1682,8 +1671,8 @@ window.changeNavTabs = async function (transitionType) {
       // First scale the images wrapper and fade in white overlay
       tl.to('#images-wrapper', { scale: 1, duration: 0.3, ease: 'expo.out' }).to('[overlay="white"]', { autoAlpha: 1, opacity: 1, duration: 0.3, ease: 'power2.out' }, '-=0.1');
 
-      // Only show the logo-loader if not the first interaction
-      if (firstSearchModalInteraction !== true) {
+      // Only show the logo-loader if it's a car transition AND not the first interaction
+      if (transitionType === 'car' && firstSearchModalInteraction !== true) {
         tl.fromTo('[logo-loader]', { display: 'block', autoAlpha: 0, scale: 0.5 }, { autoAlpha: 1, scale: 1, duration: 0.4, ease: 'back.out(1.7)' }, '-=0.1');
       }
     } else {
