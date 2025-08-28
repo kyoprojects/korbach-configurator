@@ -19,6 +19,44 @@
   transform: translate(0px, -60%);
 }
 
+/* Disable hover behavior for wheel model control on mobile */
+@media screen and (max-width: 767px) {
+  [w-el='control-wheelmodel'][nav-item]:hover .nav-item__tooltip {
+    opacity: 0 !important;
+    transform: none;
+  }
+}
+
+/* Reduce opacity of neighboring dark dividers when navbar-option is hovered */
+.navbar-option:hover + .dark-divider {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.navbar-option:hover ~ .dark-divider {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+/* Handle divider before the hovered element */
+.dark-divider + .navbar-option:hover {
+  opacity: 1;
+}
+
+.dark-divider + .navbar-option:hover ~ .dark-divider {
+  opacity: 0;
+}
+
+/* This targets the immediate previous divider with some JavaScript help */
+.navbar-option.hovered-option .prev-divider {
+  opacity: 0;
+}
+
+/* Ensure dividers have a transition by default */
+.dark-divider {
+  transition: opacity 0.2s ease;
+}
+
 [nav-item].selected .nav-item__tooltip .navbar-selected-indicator {
   display: block;
 }

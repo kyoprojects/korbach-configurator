@@ -1227,8 +1227,39 @@ window.initializeData = async function () {
   };
 };
 
+// Helper function to handle navbar option hover effect on dividers
+function setupNavbarOptionHoverEffects() {
+  const navbarOptions = document.querySelectorAll('.navbar-option');
+
+  navbarOptions.forEach(option => {
+    option.addEventListener('mouseenter', () => {
+      // Add hover class
+      option.classList.add('hovered-option');
+
+      // Find previous divider and add class
+      let prevElement = option.previousElementSibling;
+      if (prevElement && prevElement.classList.contains('dark-divider')) {
+        prevElement.classList.add('prev-divider');
+      }
+    });
+
+    option.addEventListener('mouseleave', () => {
+      // Remove hover class
+      option.classList.remove('hovered-option');
+
+      // Remove class from previous divider
+      document.querySelectorAll('.prev-divider').forEach(el => {
+        el.classList.remove('prev-divider');
+      });
+    });
+  });
+}
+
 window.defineEnterFunctions = async function () {
   gsap.set('#images-wrapper', { scale: 1 });
+
+  // Setup navbar option hover effects
+  setupNavbarOptionHoverEffects();
 
   window.hideStartScreen = function () {
     return new Promise(resolve => {
