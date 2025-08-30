@@ -1113,14 +1113,28 @@
 
 .share-modal {
   background: white;
-  border-radius: 20px;
-  padding: 36px;
-  width: 510px;
-  max-width: 90vw;
+  border-radius: 16px;
+  padding: 4px;
+  width: 480px;
+  max-width: 95vw;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
   display: flex;
   flex-direction: column;
-  gap: 26px;
+  gap: 0;
+}
+
+.share-modal-inner {
+  display: flex;
+  flex-direction: column;
+}
+
+.share-modal-body {
+  padding: 20px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: stretch;
+  width: 100%;
 }
 
 .share-header {
@@ -1131,12 +1145,12 @@
 
 .share-config-info {
   background: #f6f6f6;
-  border-radius: 14px;
-  padding: 16px 8px 16px 16px;
+  border-radius: 12px;
+  padding: 12px 16px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  min-height: 77px;
+  min-height: 64px;
 }
 
 .share-config-details {
@@ -1165,9 +1179,9 @@
 }
 
 .share-thumbnail {
-  width: 88px;
-  height: 61px;
-  border-radius: 10px;
+  width: 72px;
+  height: 48px;
+  border-radius: 8px;
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -1176,11 +1190,12 @@
 
 .share-options {
   background: #eaeaea;
-  border-radius: 9.537px;
-  padding: 4px;
+  border-radius: 8px;
+  padding: 3px;
   display: flex;
-  gap: 0;
-  height: 46px;
+  gap: 3px;
+  height: 40px;
+  width: 100%;
 }
 
 .share-option {
@@ -1188,12 +1203,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  padding: 0 20px;
+  gap: 5px;
+  padding: 0 16px;
   border: none;
   background: none;
-  border-radius: 8px;
-  font-size: 16px;
+  border-radius: 6px;
+  font-size: 14px;
   font-weight: 600;
   color: #898989;
   cursor: pointer;
@@ -1205,6 +1220,10 @@
   background: white;
   color: #898989;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+}
+
+.share-toggle-text {
+  color: #a3a3a3;
 }
 
 .share-option:hover:not(.active) {
@@ -1220,7 +1239,20 @@
 }
 
 .share-toggle-section {
-  padding: 0 6px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  width: 100%;
+}
+
+.share-toggle-section:hover {
+  background: #f8f8f8;
+}
+
+.share-toggle-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .share-toggle-wrapper {
@@ -1234,7 +1266,7 @@
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  gap: 16px;
+  gap: 20px;
 }
 
 .share-toggle-text {
@@ -1242,20 +1274,25 @@
   flex-direction: column;
   gap: 4px;
   flex: 1;
+  max-width: 252px;
 }
 
-.share-toggle-text label {
+.share-toggle-label {
+  font-family: 'Geist', sans-serif;
   font-size: 14px;
   font-weight: 500;
   color: #09090b;
+  line-height: 1.5;
   cursor: pointer;
 }
 
 .share-toggle-text p {
+  font-family: 'Geist', sans-serif;
   font-size: 14px;
+  font-weight: 400;
   color: #71717a;
+  line-height: 1.4;
   margin: 0;
-  line-height: 1.5;
 }
 
 .share-toggle {
@@ -1279,9 +1316,9 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: #ccc;
-  transition: 0.4s;
-  border-radius: 20px;
+  background-color: #e4e4e7;
+  transition: all 0.3s ease;
+  border-radius: 10px;
 }
 
 .toggle-slider:before {
@@ -1290,9 +1327,9 @@
   height: 16px;
   width: 16px;
   left: 2px;
-  bottom: 2px;
+  top: 2px;
   background-color: white;
-  transition: 0.4s;
+  transition: all 0.3s ease;
   border-radius: 50%;
 }
 
@@ -1308,17 +1345,32 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
+  width: 100%;
 }
 
 .share-link-box {
   background: #fdfdfd;
   border: 1px solid #dddddd;
-  border-radius: 14px;
-  padding: 8px 8px 8px 14px;
+  border-radius: 12px;
+  padding: 6px 6px 6px 12px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  box-shadow: 0 4px 4px -1px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 3px 3px -1px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.share-link-box:hover {
+  background: #f8f8f8;
+  border-color: #ccc;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.08);
+}
+
+.share-link-box.copied {
+  background: #f0f9ff;
+  border-color: #4caf50;
+  box-shadow: 0 4px 8px -1px rgba(76, 175, 80, 0.2);
 }
 
 .share-link-text {
@@ -1335,8 +1387,8 @@
 .copy-icon-btn {
   background: #f6f6f6;
   border: 1px solid #b5b5b5;
-  border-radius: 8px;
-  padding: 6px;
+  border-radius: 6px;
+  padding: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1356,27 +1408,221 @@
   height: 12px;
 }
 
+/* Email form styles */
+.share-email-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
+.share-email-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.email-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.email-input,
+.email-textarea {
+  width: 100%;
+  padding: 8px 16px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background-color: white;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #333;
+  font-family: inherit;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+  box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.08);
+  resize: vertical;
+}
+
+.email-input:hover,
+.email-textarea:hover {
+  border-color: #ccc;
+}
+
+.email-input:focus,
+.email-textarea:focus {
+  outline: none;
+  border-color: #333;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.2);
+}
+
+.email-input::placeholder,
+.email-textarea::placeholder {
+  color: #999;
+}
+
+.email-textarea {
+  min-height: 80px;
+  max-height: 150px;
+}
+
+.email-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+.email-send-btn {
+  background-color: #333333;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 16px 24px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  line-height: 1;
+  position: relative;
+  z-index: 1;
+  min-width: 120px;
+}
+
+.email-send-btn:hover {
+  background-color: #000000;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.email-send-btn:active {
+  transform: translateY(1px);
+}
+
+.email-send-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.email-success-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.email-success-message .success-icon {
+  width: 48px;
+  height: 48px;
+  color: #4caf50;
+}
+
+.email-success-message p {
+  font-size: 16px;
+  font-weight: 500;
+  color: #333;
+  margin: 0;
+}
+
+/* WhatsApp share section styles */
+.share-whatsapp-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
+.whatsapp-share-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.whatsapp-share-description {
+  font-size: 16px;
+  color: #666;
+  margin: 0;
+}
+
+.whatsapp-share-btn {
+  background-color: #fff;
+  color: #2ac25f;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 16px 24px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-align: center;
+  line-height: 1;
+  position: relative;
+  z-index: 1;
+  min-width: 180px;
+  box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.08);
+}
+
+.whatsapp-share-btn:hover {
+  background-color: #f8f8f8;
+  border-color: #ccc;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.whatsapp-share-btn:active {
+  transform: translateY(1px);
+}
+
+.whatsapp-share-btn svg {
+  flex-shrink: 0;
+  color: #2ac25f;
+}
+
 /* Mobile responsive */
 @media (max-width: 767px) {
   .share-modal {
-    padding: 24px;
-    width: calc(100vw - 40px);
+    padding: 3px;
+    width: calc(100vw - 30px);
+    border-radius: 12px;
+  }
+
+  .share-modal-body {
+    padding: 16px 12px;
+    gap: 14px;
   }
 
   .share-config-info {
     flex-direction: column;
-    gap: 16px;
-    padding: 16px;
+    gap: 12px;
+    padding: 12px;
+    min-height: auto;
   }
 
   .share-thumbnail {
     width: 100%;
-    height: 200px;
+    height: 120px;
   }
 
   .share-option {
-    font-size: 14px;
-    padding: 0 12px;
+    font-size: 12px;
+    padding: 0 8px;
+    gap: 4px;
   }
 
   .share-option span {
@@ -1384,7 +1630,17 @@
   }
 
   .share-option svg {
-    width: 20px;
-    height: 20px;
+    width: 18px;
+    height: 18px;
+  }
+
+  .share-options {
+    height: 36px;
+    padding: 2px;
+  }
+
+  .email-input,
+  .email-textarea {
+    font-size: 16px; /* Prevent zoom on iOS */
   }
 }

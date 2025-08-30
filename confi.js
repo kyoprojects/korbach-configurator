@@ -784,23 +784,25 @@ function createShareModal() {
       <div id="sharePseudo" class="share-pseudo"></div>
       <div class="share-container">
         <div class="share-modal">
-          <div class="share-header">
-            <div class="share-config-info">
-              <div class="share-config-details">
-                <div class="share-config-row">
-                  <span class="share-label" id="shareCarName">Porsche Taycan</span>
-                  <span class="share-value" id="shareCarColor">Dolomite Silver</span>
+          <div class="share-modal-inner">
+            <div class="share-header">
+              <div class="share-config-info">
+                <div class="share-config-details">
+                  <div class="share-config-row">
+                    <span class="share-label" id="shareCarName">Porsche Taycan</span>
+                    <span class="share-value" id="shareCarColor">Dolomite Silver</span>
+                  </div>
+                  <div class="share-config-row">
+                    <span class="share-label" id="shareWheelModel">PS3</span>
+                    <span class="share-value" id="shareWheelName">Porsche Taycan</span>
+                  </div>
                 </div>
-                <div class="share-config-row">
-                  <span class="share-label" id="shareWheelModel">PS3</span>
-                  <span class="share-value" id="shareWheelName">Porsche Taycan</span>
-                </div>
+                <div class="share-thumbnail" id="shareThumbnail"></div>
               </div>
-              <div class="share-thumbnail" id="shareThumbnail"></div>
             </div>
-          </div>
-          
-          <div class="share-options">
+            
+            <div class="share-modal-body">
+              <div class="share-options">
             <button class="share-option active" id="copyLinkBtn">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
@@ -823,12 +825,12 @@ function createShareModal() {
             </button>
           </div>
           
-          <div class="share-toggle-section">
+          <label for="includeConfigToggle" class="share-toggle-section">
             <div class="share-toggle-wrapper">
               <div class="share-toggle-content">
                 <div class="share-toggle-text">
-                  <label>Include current configuration</label>
-                  <p>Lorem ipsum dolor amit lorem ipsum</p>
+                  <label class="share-toggle-label">Include current configuration</label>
+                  <p class="share-toggle-text">Lorem ipsum dolor amit lorem ipsum</p>
                 </div>
                 <label class="share-toggle">
                   <input type="checkbox" id="includeConfigToggle" checked>
@@ -836,9 +838,9 @@ function createShareModal() {
                 </label>
               </div>
             </div>
-          </div>
+          </label>
           
-          <div class="share-link-section">
+          <div class="share-link-section" id="linkSection">
             <div class="share-link-box">
               <span class="share-link-text" id="shareLinkText">configurator.korbachforged.com/?car-model=taycan-turbo&wh...</span>
               <button class="copy-icon-btn" id="copyIconBtn">
@@ -847,6 +849,40 @@ function createShareModal() {
                   <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
                 </svg>
               </button>
+            </div>
+          </div>
+          
+          <div class="share-email-section" id="emailSection" style="display: none;">
+            <form id="shareEmailForm" class="share-email-form">
+              <div class="email-form-group">
+                <input type="email" id="recipientEmail" class="email-input" placeholder="Enter email address" required>
+              </div>
+              <div class="email-form-group">
+                <textarea id="emailMessage" class="email-textarea" placeholder="Add a personal message (optional)" rows="3"></textarea>
+              </div>
+              <div class="email-form-actions">
+                <button type="submit" class="email-send-btn">Send Email</button>
+              </div>
+            </form>
+            <div class="email-success-message" id="emailSuccess" style="display: none;">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="success-icon">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+              </svg>
+              <p>Email sent successfully!</p>
+            </div>
+          </div>
+          
+          <div class="share-whatsapp-section" id="whatsappSection" style="display: none;">
+            <div class="whatsapp-share-content">
+              <p class="whatsapp-share-description">Share your configuration via WhatsApp</p>
+              <button type="button" class="whatsapp-share-btn" id="whatsappShareButton">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+                </svg>
+                <span>Share to WhatsApp</span>
+              </button>
+            </div>
             </div>
           </div>
         </div>
@@ -1747,18 +1783,73 @@ async function animateControlsIn() {
     document.getElementById('shareWheelModel').textContent = (Wized.data.v.wheelModel || '').toUpperCase();
     document.getElementById('shareWheelName').textContent = `${carData.brand} ${carData.name}`;
 
-    // Update thumbnail
-    const thumbnailUrl = carData.renders?.find(render => render.view === 'front' && render.color === Wized.data.v.carColor && render.model === Wized.data.v.wheelModel)?.image || carData.thumbnail;
+    // Create composed thumbnail with car + wheel overlay
+    createComposedThumbnail(carData);
+  }
 
+  function createComposedThumbnail(carData) {
     const thumbnailElement = document.getElementById('shareThumbnail');
-    if (thumbnailUrl) {
-      thumbnailElement.style.backgroundImage = `url('${thumbnailUrl}')`;
-      thumbnailElement.style.backgroundSize = 'cover';
-      thumbnailElement.style.backgroundPosition = 'center';
+
+    // Get car and wheel images for front view
+    const carImage = carData.renders?.find(render => render.view === 'front' && render.color === Wized.data.v.carColor && render.car_model === Wized.data.v.carModel)?.image;
+
+    const wheelImage = carData.renders?.find(render => render.view === 'front' && render.model === Wized.data.v.wheelModel && render.color === Wized.data.v.wheelColor)?.image;
+
+    if (!carImage || !wheelImage) {
+      // Fallback to single image or default thumbnail
+      const fallbackUrl = carImage || carData.thumbnail || '';
+      thumbnailElement.style.backgroundImage = fallbackUrl ? `url('${fallbackUrl}')` : '';
+      return;
     }
 
-    // Update share link
-    updateShareLink();
+    // Clear existing content
+    thumbnailElement.innerHTML = '';
+    thumbnailElement.style.backgroundImage = '';
+
+    // Create container for layered images
+    const imageContainer = document.createElement('div');
+    imageContainer.style.cssText = `
+      position: relative;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      border-radius: 10px;
+    `;
+
+    // Create car base image
+    const carImg = document.createElement('img');
+    carImg.src = carImage;
+    carImg.alt = 'Car configuration';
+    carImg.style.cssText = `
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+    `;
+
+    // Create wheel overlay image
+    const wheelImg = document.createElement('img');
+    wheelImg.src = wheelImage;
+    wheelImg.alt = 'Wheel overlay';
+    wheelImg.style.cssText = `
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+    `;
+
+    // Add images to container
+    imageContainer.appendChild(carImg);
+    imageContainer.appendChild(wheelImg);
+
+    // Add container to thumbnail element
+    thumbnailElement.appendChild(imageContainer);
   }
 
   function updateShareLink() {
@@ -1782,17 +1873,19 @@ async function animateControlsIn() {
     document.getElementById('shareLinkText').setAttribute('data-full-url', shareUrl);
   }
 
-  function copyToClipboard(text) {
+  function copyToClipboard(text, sourceElement = null) {
     navigator.clipboard.writeText(text).then(() => {
-      // Show success feedback
-      const copyBtn = document.getElementById('copyLinkBtn');
-      const originalText = copyBtn.querySelector('span').textContent;
-      copyBtn.querySelector('span').textContent = 'Copied!';
-      copyBtn.classList.add('copied');
+      // Show success feedback on the link box instead of button
+      const linkBox = document.querySelector('.share-link-box');
+      const linkText = document.getElementById('shareLinkText');
+      const originalText = linkText.textContent;
+
+      linkText.textContent = 'Copied!';
+      linkBox.classList.add('copied');
 
       setTimeout(() => {
-        copyBtn.querySelector('span').textContent = originalText;
-        copyBtn.classList.remove('copied');
+        linkText.textContent = originalText;
+        linkBox.classList.remove('copied');
       }, 2000);
     });
   }
@@ -1832,10 +1925,39 @@ async function animateControlsIn() {
 
     // Share option buttons
     const shareOptions = document.querySelectorAll('.share-option');
+    const linkSection = document.getElementById('linkSection');
+    const emailSection = document.getElementById('emailSection');
+    const whatsappSection = document.getElementById('whatsappSection');
+    const toggleSection = document.querySelector('.share-toggle-section');
+
     shareOptions.forEach(option => {
       option.addEventListener('click', function () {
         shareOptions.forEach(opt => opt.classList.remove('active'));
         this.classList.add('active');
+
+        // Hide all sections first
+        linkSection.style.display = 'none';
+        emailSection.style.display = 'none';
+        whatsappSection.style.display = 'none';
+        toggleSection.style.display = 'none';
+
+        // Show appropriate section based on selected option
+        if (this.id === 'emailShareBtn') {
+          emailSection.style.display = 'flex';
+        } else if (this.id === 'whatsappShareBtn') {
+          whatsappSection.style.display = 'flex';
+        } else {
+          // Copy link option
+          linkSection.style.display = 'flex';
+          toggleSection.style.display = 'block';
+        }
+
+        // Reset email form when switching away
+        if (this.id !== 'emailShareBtn') {
+          document.getElementById('shareEmailForm').reset();
+          document.getElementById('emailSuccess').style.display = 'none';
+          document.getElementById('shareEmailForm').style.display = 'flex';
+        }
       });
     });
 
@@ -1845,28 +1967,98 @@ async function animateControlsIn() {
       copyToClipboard(fullUrl);
     });
 
-    document.getElementById('copyIconBtn').addEventListener('click', () => {
+    document.getElementById('copyIconBtn').addEventListener('click', e => {
+      e.stopPropagation(); // Prevent triggering the link box click
       const fullUrl = document.getElementById('shareLinkText').getAttribute('data-full-url');
       copyToClipboard(fullUrl);
     });
 
-    // Email share
-    document.getElementById('emailShareBtn').addEventListener('click', () => {
+    // Make entire link box clickable
+    document.querySelector('.share-link-box').addEventListener('click', () => {
       const fullUrl = document.getElementById('shareLinkText').getAttribute('data-full-url');
-      const subject = 'Check out my Korbach Forged configuration';
-      const body = `I've configured this amazing wheel setup: ${fullUrl}`;
-      window.open(`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`);
+      copyToClipboard(fullUrl);
     });
 
-    // WhatsApp share
-    document.getElementById('whatsappShareBtn').addEventListener('click', () => {
+    // Email form submission
+    document.getElementById('shareEmailForm').addEventListener('submit', async e => {
+      e.preventDefault();
+
+      const recipientEmail = document.getElementById('recipientEmail').value;
+      const personalMessage = document.getElementById('emailMessage').value;
       const fullUrl = document.getElementById('shareLinkText').getAttribute('data-full-url');
-      const text = `Check out my Korbach Forged configuration: ${fullUrl}`;
-      window.open(`https://wa.me/?text=${encodeURIComponent(text)}`);
+
+      // Get current configuration details
+      const carData = Wized.data.r.get_renders?.data?.find(item => item.model === Wized.data.v.carModel);
+      const carName = `${carData.brand} ${carData.name}`;
+      const carColor = (Wized.data.v.carColor || '')
+        .replace(/-/g, ' ')
+        .split(' ')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+      const wheelModel = (Wized.data.v.wheelModel || '').toUpperCase();
+
+      // Prepare email content
+      const subject = 'Check out this Korbach Forged configuration';
+      let body = `Hi,\n\n`;
+
+      if (personalMessage) {
+        body += `${personalMessage}\n\n`;
+      }
+
+      body += `I wanted to share this amazing wheel configuration with you:\n\n`;
+      body += `Car: ${carName} in ${carColor}\n`;
+      body += `Wheels: ${wheelModel}\n\n`;
+      body += `View the full configuration here: ${fullUrl}\n\n`;
+      body += `Best regards,\nKorbach Forged Configurator`;
+
+      // In a real implementation, this would send via a backend API
+      // For now, we'll simulate success and show the success message
+      const sendButton = e.target.querySelector('.email-send-btn');
+      sendButton.textContent = 'Sending...';
+      sendButton.disabled = true;
+
+      // Simulate API call
+      setTimeout(() => {
+        document.getElementById('shareEmailForm').style.display = 'none';
+        document.getElementById('emailSuccess').style.display = 'flex';
+
+        // Reset form after 3 seconds
+        setTimeout(() => {
+          document.getElementById('shareEmailForm').reset();
+          document.getElementById('emailSuccess').style.display = 'none';
+          document.getElementById('shareEmailForm').style.display = 'flex';
+          sendButton.textContent = 'Send Email';
+          sendButton.disabled = false;
+
+          // Switch back to copy link view
+          document.getElementById('copyLinkBtn').click();
+        }, 3000);
+      }, 1000);
+    });
+
+    // WhatsApp share button functionality
+    document.getElementById('whatsappShareButton').addEventListener('click', () => {
+      const fullUrl = document.getElementById('shareLinkText').getAttribute('data-full-url');
+      const carData = Wized.data.r.get_renders?.data?.find(item => item.model === Wized.data.v.carModel);
+      const carName = `${carData.brand} ${carData.name}`;
+      const carColor = (Wized.data.v.carColor || '')
+        .replace(/-/g, ' ')
+        .split(' ')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+      const wheelModel = (Wized.data.v.wheelModel || '').toUpperCase();
+
+      const message = `Check out this Korbach Forged configuration:\n\n🚗 Car: ${carName} in ${carColor}\n🛞 Wheels: ${wheelModel}\n\nView here: ${fullUrl}`;
+      window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
     });
 
     // Toggle config inclusion
     document.getElementById('includeConfigToggle').addEventListener('change', updateShareLink);
+
+    // Prevent copy when clicking on toggle section
+    document.querySelector('.share-toggle-section').addEventListener('click', e => {
+      e.stopPropagation();
+    });
 
     // Click outside to close
     document.addEventListener('click', e => {

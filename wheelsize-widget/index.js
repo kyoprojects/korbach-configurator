@@ -34,117 +34,119 @@ class VehicleSelectorWidget {
       <form id="vehicle-form" class="vehicle-selector">
         <!-- Step 1: Vehicle Selection -->
         <div class="form-step active" data-step="1">
-          <div class="form-header">
-            <p class="form-title">Request free quotation</p>
-            <p class="form-description">Configure your vehicle and wheel preferences below to receive a personalized quotation for your perfect wheel set.</p>
-          </div>
+          <div class="form-content-wrapper">
+            <div class="form-header">
+              <p class="form-title">Request free quotation</p>
+              <p class="form-description">Configure your vehicle and wheel preferences below to receive a personalized quotation for your perfect wheel set.</p>
+            </div>
 
-          <!-- Wheel Slider -->
-          <div class="wheel-slider-container">
-            <div class="swiper wheel-slider">
-              <div class="swiper-wrapper">
-                <!-- Wheels will be populated dynamically -->
+            <!-- Wheel Slider -->
+            <div class="wheel-slider-container">
+              <div class="swiper wheel-slider">
+                <div class="swiper-wrapper">
+                  <!-- Wheels will be populated dynamically -->
+                </div>
               </div>
             </div>
-          </div>
 
-          <div class="selector-group">
-            <div class="selector-item">
-              <label class="select-label">Inch size</label>
-              <div class="custom-select" id="inch-select">
-                <div class="select-header">
-                  <span>I don't know</span>
+            <div class="selector-group">
+              <div class="selector-item">
+                <label class="select-label">Inch size</label>
+                <div class="custom-select" id="inch-select">
+                  <div class="select-header">
+                    <span>I don't know</span>
+                  </div>
+                  <div class="select-options">
+                    <div class="options-container">
+                      <div class="option-item selected" data-value="unknown">
+                        <span>I don't know</span>
+                      </div>
+                      <div class="option-item" data-value="18">
+                        <span>18"</span>
+                      </div>
+                      <div class="option-item" data-value="19">
+                        <span>19"</span>
+                      </div>
+                      <div class="option-item" data-value="20">
+                        <span>20"</span>
+                      </div>
+                      <div class="option-item" data-value="21">
+                        <span>21"</span>
+                      </div>
+                      <div class="option-item" data-value="22">
+                        <span>22"</span>
+                      </div>
+                      <div class="option-item" data-value="23">
+                        <span>23"</span>
+                      </div>
+                      <div class="option-item" data-value="24">
+                        <span>24"</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div class="select-options">
-                  <div class="options-container">
-                    <div class="option-item selected" data-value="unknown">
-                      <span>I don't know</span>
-                    </div>
-                    <div class="option-item" data-value="18">
-                      <span>18"</span>
-                    </div>
-                    <div class="option-item" data-value="19">
-                      <span>19"</span>
-                    </div>
-                    <div class="option-item" data-value="20">
-                      <span>20"</span>
-                    </div>
-                    <div class="option-item" data-value="21">
-                      <span>21"</span>
-                    </div>
-                    <div class="option-item" data-value="22">
-                      <span>22"</span>
-                    </div>
-                    <div class="option-item" data-value="23">
-                      <span>23"</span>
-                    </div>
-                    <div class="option-item" data-value="24">
-                      <span>24"</span>
+              </div>
+              <div class="selector-item">
+                <label class="select-label">Wheel color</label>
+                <div class="custom-select" id="color-select">
+                  <div class="select-header">
+                    <span class="color-option">
+                      <span class="color-dot" style="background-color: #000000"></span>
+                      Gloss Black
+                    </span>
+                  </div>
+                  <div class="select-options">
+                    <div class="options-container">
+                      <!-- Wheel color options will be populated by JavaScript -->
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-            <div class="selector-item">
-              <label class="select-label">Wheel color</label>
-              <div class="custom-select" id="color-select">
-                <div class="select-header">
-                  <span class="color-option">
-                    <span class="color-dot" style="background-color: #000000"></span>
-                    Gloss Black
-                  </span>
+
+            <div class="selector-group">
+              <div class="selector-item">
+                <label class="select-label">Your car make</label>
+                <div class="custom-select" id="make-select">
+                  <div class="select-header">
+                    <span>Make</span>
+                  </div>
+                  <div class="select-options extra-width select-make">
+                    <div class="search-container">
+                      <input type="text" class="search-input" placeholder="Search make..." />
+                    </div>
+                    <div class="options-container"></div>
+                  </div>
                 </div>
-                <div class="select-options">
-                  <div class="options-container">
-                    <!-- Wheel color options will be populated by JavaScript -->
+              </div>
+              <div class="selector-item">
+                <label class="select-label">Model</label>
+                <div class="custom-select disabled" id="model-select">
+                  <div class="select-header">
+                    <span>Model</span>
+                  </div>
+                  <div class="select-options extra-width select-model">
+                    <div class="search-container">
+                      <input type="text" class="search-input" placeholder="Search model..." />
+                    </div>
+                    <div class="options-container"></div>
+                  </div>
+                </div>
+              </div>
+              <div class="selector-item">
+                <label class="select-label">Year</label>
+                <div class="custom-select disabled" id="year-select">
+                  <div class="select-header">
+                    <span>Year</span>
+                  </div>
+                  <div class="select-options extra-width select-year" style="right: 0; left: auto;">
+                    <div class="options-container"></div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-
-          <div class="selector-group">
-            <div class="selector-item">
-              <label class="select-label">Your car make</label>
-              <div class="custom-select" id="make-select">
-                <div class="select-header">
-                  <span>Make</span>
-                </div>
-                <div class="select-options extra-width select-make">
-                  <div class="search-container">
-                    <input type="text" class="search-input" placeholder="Search make..." />
-                  </div>
-                  <div class="options-container"></div>
-                </div>
-              </div>
-            </div>
-            <div class="selector-item">
-              <label class="select-label">Model</label>
-              <div class="custom-select disabled" id="model-select">
-                <div class="select-header">
-                  <span>Model</span>
-                </div>
-                <div class="select-options extra-width select-model">
-                  <div class="search-container">
-                    <input type="text" class="search-input" placeholder="Search model..." />
-                  </div>
-                  <div class="options-container"></div>
-                </div>
-              </div>
-            </div>
-            <div class="selector-item">
-              <label class="select-label">Year</label>
-              <div class="custom-select disabled" id="year-select">
-                <div class="select-header">
-                  <span>Year</span>
-                </div>
-                <div class="select-options extra-width select-year" style="right: 0; left: auto;">
-                  <div class="options-container"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-
+          
           <div class="form-buttons">
             <button type="button" class="form-button" id="next-step">Next</button>
           </div>
@@ -152,27 +154,29 @@ class VehicleSelectorWidget {
 
         <!-- Step 2: Personal Information -->
         <div class="form-step" data-step="2">
-          <div class="selector-group">
-            <div class="selector-item">
-              <label class="form-label" for="first_name">First Name</label>
-              <input type="text" id="first_name" name="first_name" class="form-input" required />
+          <div class="form-content-wrapper">
+            <div class="selector-group">
+              <div class="selector-item">
+                <label class="form-label" for="first_name">First Name</label>
+                <input type="text" id="first_name" name="first_name" class="form-input" required />
+              </div>
+              <div class="selector-item">
+                <label class="form-label" for="last_name">Last Name</label>
+                <input type="text" id="last_name" name="last_name" class="form-input" required />
+              </div>
             </div>
-            <div class="selector-item">
-              <label class="form-label" for="last_name">Last Name</label>
-              <input type="text" id="last_name" name="last_name" class="form-input" required />
+
+            <div class="form-group">
+              <label class="form-label" for="email">Email</label>
+              <input type="email" id="email" name="email" class="form-input" required />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="phone">Phone</label>
+              <input type="tel" id="phone" name="phone" class="form-input" required />
             </div>
           </div>
-
-          <div class="form-group">
-            <label class="form-label" for="email">Email</label>
-            <input type="email" id="email" name="email" class="form-input" required />
-          </div>
-
-          <div class="form-group">
-            <label class="form-label" for="phone">Phone</label>
-            <input type="tel" id="phone" name="phone" class="form-input" required />
-          </div>
-
+          
           <div class="form-buttons">
             <button type="button" class="form-button" id="prev-step">Previous</button>
             <button type="submit" class="form-button">Complete</button>
