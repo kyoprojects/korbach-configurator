@@ -391,6 +391,7 @@ function preloader() {
                     // start configurator
                     window.initializeData();
                     window.defineEnterFunctions();
+                    window.initializeShareModal(); // Initialize share modal
                     // open search modal
                     if (!hasQueryParams) {
                       window.openSearchModal();
@@ -774,6 +775,87 @@ function preloader() {
 
   // Start the preloader
   new PreloaderController();
+}
+
+// Function to create share modal HTML
+function createShareModal() {
+  const shareModalHTML = `
+    <div id="shareOverlay" class="share-overlay" style="display: none;">
+      <div id="sharePseudo" class="share-pseudo"></div>
+      <div class="share-container">
+        <div class="share-modal">
+          <div class="share-header">
+            <div class="share-config-info">
+              <div class="share-config-details">
+                <div class="share-config-row">
+                  <span class="share-label" id="shareCarName">Porsche Taycan</span>
+                  <span class="share-value" id="shareCarColor">Dolomite Silver</span>
+                </div>
+                <div class="share-config-row">
+                  <span class="share-label" id="shareWheelModel">PS3</span>
+                  <span class="share-value" id="shareWheelName">Porsche Taycan</span>
+                </div>
+              </div>
+              <div class="share-thumbnail" id="shareThumbnail"></div>
+            </div>
+          </div>
+          
+          <div class="share-options">
+            <button class="share-option active" id="copyLinkBtn">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+              </svg>
+              <span>Copy link</span>
+            </button>
+            <button class="share-option" id="emailShareBtn">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                <polyline points="22,6 12,13 2,6"></polyline>
+              </svg>
+              <span>E-mail</span>
+            </button>
+            <button class="share-option" id="whatsappShareBtn">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+              </svg>
+              <span>Whatsapp</span>
+            </button>
+          </div>
+          
+          <div class="share-toggle-section">
+            <div class="share-toggle-wrapper">
+              <div class="share-toggle-content">
+                <div class="share-toggle-text">
+                  <label>Include current configuration</label>
+                  <p>Lorem ipsum dolor amit lorem ipsum</p>
+                </div>
+                <label class="share-toggle">
+                  <input type="checkbox" id="includeConfigToggle" checked>
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+          
+          <div class="share-link-section">
+            <div class="share-link-box">
+              <span class="share-link-text" id="shareLinkText">configurator.korbachforged.com/?car-model=taycan-turbo&wh...</span>
+              <button class="copy-icon-btn" id="copyIconBtn">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Inject the modal HTML into the body
+  document.body.insertAdjacentHTML('beforeend', shareModalHTML);
 }
 
 let searchModalOpen = false;
@@ -1645,6 +1727,163 @@ async function animateControlsIn() {
       animateControlsIn();
     }
   });
+})();
+
+(async function shareModalTransitions() {
+  function updateShareModalContent() {
+    // Get current configuration
+    const carData = Wized.data.r.get_renders?.data?.find(item => item.model === Wized.data.v.carModel);
+    if (!carData) return;
+
+    // Update car info
+    document.getElementById('shareCarName').textContent = `${carData.brand} ${carData.name}`;
+    document.getElementById('shareCarColor').textContent = (Wized.data.v.carColor || '')
+      .replace(/-/g, ' ')
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+
+    // Update wheel info
+    document.getElementById('shareWheelModel').textContent = (Wized.data.v.wheelModel || '').toUpperCase();
+    document.getElementById('shareWheelName').textContent = `${carData.brand} ${carData.name}`;
+
+    // Update thumbnail
+    const thumbnailUrl = carData.renders?.find(render => render.view === 'front' && render.color === Wized.data.v.carColor && render.model === Wized.data.v.wheelModel)?.image || carData.thumbnail;
+
+    const thumbnailElement = document.getElementById('shareThumbnail');
+    if (thumbnailUrl) {
+      thumbnailElement.style.backgroundImage = `url('${thumbnailUrl}')`;
+      thumbnailElement.style.backgroundSize = 'cover';
+      thumbnailElement.style.backgroundPosition = 'center';
+    }
+
+    // Update share link
+    updateShareLink();
+  }
+
+  function updateShareLink() {
+    const includeConfig = document.getElementById('includeConfigToggle').checked;
+    const baseUrl = 'https://configurator.korbachforged.com/';
+
+    let shareUrl = baseUrl;
+    if (includeConfig) {
+      const params = new URLSearchParams();
+      if (Wized.data.v.carModel) params.set('car-model', Wized.data.v.carModel);
+      if (Wized.data.v.wheelModel) params.set('wheel-model', Wized.data.v.wheelModel);
+      if (Wized.data.v.wheelColor) params.set('wheel-color', Wized.data.v.wheelColor);
+      if (Wized.data.v.carColor) params.set('car-color', Wized.data.v.carColor);
+      if (Wized.data.v.view) params.set('view', Wized.data.v.view);
+      shareUrl = `${baseUrl}?${params.toString()}`;
+    }
+
+    // Truncate display text but keep full URL for copying
+    const displayText = shareUrl.length > 60 ? shareUrl.substring(0, 57) + '...' : shareUrl;
+    document.getElementById('shareLinkText').textContent = displayText;
+    document.getElementById('shareLinkText').setAttribute('data-full-url', shareUrl);
+  }
+
+  function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(() => {
+      // Show success feedback
+      const copyBtn = document.getElementById('copyLinkBtn');
+      const originalText = copyBtn.querySelector('span').textContent;
+      copyBtn.querySelector('span').textContent = 'Copied!';
+      copyBtn.classList.add('copied');
+
+      setTimeout(() => {
+        copyBtn.querySelector('span').textContent = originalText;
+        copyBtn.classList.remove('copied');
+      }, 2000);
+    });
+  }
+
+  function showShareModal() {
+    updateShareModalContent();
+    gsap.set('#shareOverlay', { display: 'flex', opacity: 0, autoAlpha: 0 });
+
+    let tl = gsap.timeline();
+    tl.to('#images-wrapper', { scale: 1, duration: 0.3, ease: 'expo.out' }, '<').to('#shareOverlay', { duration: 0.2, opacity: 1, autoAlpha: 1, ease: 'power2.expo' }, '<');
+  }
+
+  function hideShareModal() {
+    let tl = gsap.timeline();
+    tl.to('#shareOverlay', {
+      duration: 0.2,
+      opacity: 0,
+      autoAlpha: 0,
+      ease: 'power2.expo',
+      onComplete: () => {
+        gsap.set('#shareOverlay', { display: 'none' });
+      }
+    }).to('#images-wrapper', { scale: 1.08, duration: 0.2, ease: 'expo.out' }, '<');
+  }
+
+  // Initialize share modal after DOM is ready
+  window.initializeShareModal = function () {
+    createShareModal();
+
+    const shareButton = document.querySelector('#openShareModal');
+    if (shareButton) {
+      shareButton.addEventListener('click', () => {
+        showShareModal();
+        animateControlsOut();
+      });
+    }
+
+    // Share option buttons
+    const shareOptions = document.querySelectorAll('.share-option');
+    shareOptions.forEach(option => {
+      option.addEventListener('click', function () {
+        shareOptions.forEach(opt => opt.classList.remove('active'));
+        this.classList.add('active');
+      });
+    });
+
+    // Copy link functionality
+    document.getElementById('copyLinkBtn').addEventListener('click', () => {
+      const fullUrl = document.getElementById('shareLinkText').getAttribute('data-full-url');
+      copyToClipboard(fullUrl);
+    });
+
+    document.getElementById('copyIconBtn').addEventListener('click', () => {
+      const fullUrl = document.getElementById('shareLinkText').getAttribute('data-full-url');
+      copyToClipboard(fullUrl);
+    });
+
+    // Email share
+    document.getElementById('emailShareBtn').addEventListener('click', () => {
+      const fullUrl = document.getElementById('shareLinkText').getAttribute('data-full-url');
+      const subject = 'Check out my Korbach Forged configuration';
+      const body = `I've configured this amazing wheel setup: ${fullUrl}`;
+      window.open(`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`);
+    });
+
+    // WhatsApp share
+    document.getElementById('whatsappShareBtn').addEventListener('click', () => {
+      const fullUrl = document.getElementById('shareLinkText').getAttribute('data-full-url');
+      const text = `Check out my Korbach Forged configuration: ${fullUrl}`;
+      window.open(`https://wa.me/?text=${encodeURIComponent(text)}`);
+    });
+
+    // Toggle config inclusion
+    document.getElementById('includeConfigToggle').addEventListener('change', updateShareLink);
+
+    // Click outside to close
+    document.addEventListener('click', e => {
+      if (e.target.id === 'shareOverlay' || e.target.id === 'sharePseudo') {
+        hideShareModal();
+        animateControlsIn();
+      }
+    });
+
+    // Escape key to close
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && document.querySelector('#shareOverlay')?.style.display === 'flex') {
+        hideShareModal();
+        animateControlsIn();
+      }
+    });
+  };
 })();
 
 (async function quoteFormTransitions() {
@@ -2615,7 +2854,7 @@ async function switchCar(model) {
   // Right top controls tooltips
   const openQuoteForm = document.getElementById('openQuoteForm');
   const toggleSound = document.getElementById('toggleSound');
-  const shareButton = openQuoteForm?.nextElementSibling;
+  const shareButton = document.getElementById('openShareModal');
   const splineModal = document.getElementById('opensplinemodal');
 
   if (openQuoteForm) {
@@ -2663,11 +2902,13 @@ async function switchCar(model) {
     if (!hasQueryParams) {
       await window.initializeData();
       await window.defineEnterFunctions();
+      window.initializeShareModal(); // Initialize share modal
     } else {
       gsap.set('#search-modal', { display: 'none' });
 
       await window.initializeData();
       await window.defineEnterFunctions();
+      window.initializeShareModal(); // Initialize share modal
 
       Wized.data.v.carModel = hasCarQueryParam;
       Wized.data.v.wheelModel = hasWheelQueryParam;
