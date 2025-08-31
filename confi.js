@@ -1068,6 +1068,24 @@ window.initializeData = async function () {
       tooltip.appendChild(valueSpan);
 
       menuItem.appendChild(tooltip);
+
+      // Add mobile touch events for auto-hide behavior
+      if (isMobile) {
+        menuItem.addEventListener('touchstart', () => {
+          // Clear any existing timer for this tooltip
+          if (tooltip.hideTimer) {
+            clearTimeout(tooltip.hideTimer);
+          }
+
+          // Show tooltip
+          tooltip.classList.add('mobile-visible');
+
+          // Set timer to auto-hide after 2 seconds
+          tooltip.hideTimer = setTimeout(() => {
+            tooltip.classList.remove('mobile-visible');
+          }, 2000);
+        });
+      }
     });
   };
 
@@ -1157,6 +1175,11 @@ window.initializeData = async function () {
     }
 
     window.initCloseUpSlider();
+
+    // Update share modal content if it exists
+    if (window.updateShareModalContent && document.getElementById('shareThumbnail')) {
+      window.updateShareModalContent();
+    }
 
     const data = Wized.data.r.get_renders.data;
 
@@ -1781,7 +1804,18 @@ async function animateControlsIn() {
 
     // Update wheel info
     document.getElementById('shareWheelModel').textContent = (Wized.data.v.wheelModel || '').toUpperCase();
-    document.getElementById('shareWheelName').textContent = `${carData.brand} ${carData.name}`;
+
+    // Format wheel color same as in configuration tooltips
+    const wheelColors = {
+      gloss_black: 'Gloss Black',
+      gloss_bronze: 'Gloss Bronze',
+      gloss_titanium: 'Gloss Titanium',
+      satin_black: 'Satin Black',
+      satin_bronze: 'Satin Bronze',
+      satin_grey: 'Satin Grey'
+    };
+
+    document.getElementById('shareWheelName').textContent = wheelColors[Wized.data.v.wheelColor] || Wized.data.v.wheelColor || 'Not selected';
 
     // Create composed thumbnail with car + wheel overlay
     createComposedThumbnail(carData);
@@ -1914,6 +1948,49 @@ async function animateControlsIn() {
   // Initialize share modal after DOM is ready
   window.initializeShareModal = function () {
     createShareModal();
+
+    // Set up reactivity watchers for real-time updates
+    if (typeof Wized !== 'undefined' && Wized.reactivity) {
+      // Watch for car model changes
+      Wized.reactivity.watch(
+        () => Wized.data.v.carModel,
+        () => {
+          if (document.getElementById('shareThumbnail')) {
+            updateShareModalContent();
+          }
+        }
+      );
+
+      // Watch for car color changes
+      Wized.reactivity.watch(
+        () => Wized.data.v.carColor,
+        () => {
+          if (document.getElementById('shareThumbnail')) {
+            updateShareModalContent();
+          }
+        }
+      );
+
+      // Watch for wheel model changes
+      Wized.reactivity.watch(
+        () => Wized.data.v.wheelModel,
+        () => {
+          if (document.getElementById('shareThumbnail')) {
+            updateShareModalContent();
+          }
+        }
+      );
+
+      // Watch for wheel color changes
+      Wized.reactivity.watch(
+        () => Wized.data.v.wheelColor,
+        () => {
+          if (document.getElementById('shareThumbnail')) {
+            updateShareModalContent();
+          }
+        }
+      );
+    }
 
     const shareButton = document.querySelector('#openShareModal');
     if (shareButton) {
@@ -2076,6 +2153,9 @@ async function animateControlsIn() {
       }
     });
   };
+
+  // Export functions for external access
+  window.updateShareModalContent = updateShareModalContent;
 })();
 
 (async function quoteFormTransitions() {
@@ -2181,12 +2261,12 @@ window.changeNavTabs = async function (transitionType) {
                       // Make it visible now that animations are complete
                       carTooltip.classList.add('mobile-visible');
 
-                      // Auto-hide after 3 seconds
+                      // Auto-hide after 2 seconds
                       setTimeout(() => {
                         if (carTooltip && carTooltip.parentNode) {
                           carTooltip.classList.remove('mobile-visible');
                         }
-                      }, 3000);
+                      }, 2000);
                     } else {
                       console.log('no carTooltip found after animation');
                     }
@@ -2228,6 +2308,11 @@ async function switchCar(model) {
   // We no longer update tooltips here
   // Tooltips are now updated in the changeNavTabs callback
   // to ensure they only show after animation completes
+
+  // Update share modal content after car switch
+  if (window.updateShareModalContent && document.getElementById('shareThumbnail')) {
+    window.updateShareModalContent();
+  }
 
   updateUrlParams();
 
@@ -2870,6 +2955,7 @@ async function switchCar(model) {
   class TooltipManager {
     constructor() {
       this.tooltips = new Map();
+      this.hideTimers = new Map();
       this.tooltipTemplate = `
       <div class="tooltip-content">
         <div class="tooltip-text"></div>
@@ -2924,11 +3010,19 @@ async function switchCar(model) {
       element.addEventListener('mouseleave', () => this.hide(element));
       element.addEventListener('focus', () => this.show(element));
       element.addEventListener('blur', () => this.hide(element));
+
+      // Add mobile touch events
+      if (isMobile) {
+        element.addEventListener('touchstart', () => this.showWithAutoHide(element));
+      }
     }
 
     show(element) {
       const tooltip = this.tooltips.get(element);
       if (!tooltip) return;
+
+      // Clear any existing hide timer
+      this.clearHideTimer(element);
 
       // Position the tooltip
       const rect = element.getBoundingClientRect();
@@ -2997,9 +3091,31 @@ async function switchCar(model) {
       });
     }
 
+    showWithAutoHide(element) {
+      this.show(element);
+
+      // Set timer to auto-hide after 2 seconds on mobile
+      const timer = setTimeout(() => {
+        this.hide(element);
+      }, 2000);
+
+      this.hideTimers.set(element, timer);
+    }
+
+    clearHideTimer(element) {
+      const timer = this.hideTimers.get(element);
+      if (timer) {
+        clearTimeout(timer);
+        this.hideTimers.delete(element);
+      }
+    }
+
     hide(element) {
       const tooltip = this.tooltips.get(element);
       if (!tooltip) return;
+
+      // Clear any hide timer
+      this.clearHideTimer(element);
 
       const position = tooltip.className.split('tooltip-')[1];
       let hideTransform = '';
@@ -3034,6 +3150,8 @@ async function switchCar(model) {
     remove(element) {
       const tooltip = this.tooltips.get(element);
       if (tooltip) {
+        // Clear any hide timer
+        this.clearHideTimer(element);
         tooltip.remove();
         this.tooltips.delete(element);
       }
@@ -3049,7 +3167,7 @@ async function switchCar(model) {
   const shareButton = document.getElementById('openShareModal');
   const splineModal = document.getElementById('opensplinemodal');
 
-  if (openQuoteForm) {
+  if (openQuoteForm && !isMobile) {
     tooltipManager.create(openQuoteForm, 'Request Quote', 'bottom-right');
   }
   if (shareButton) {
