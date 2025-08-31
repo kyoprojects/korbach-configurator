@@ -3011,7 +3011,10 @@ async function switchCar(model) {
         element.addEventListener('click', e => {
           e.preventDefault();
           e.stopPropagation();
-          this.showWithAutoHide(element);
+          this.show(element);
+          setTimeout(() => {
+            this.hide(element);
+          }, 2000);
         });
       } else {
         // On desktop, use hover events
