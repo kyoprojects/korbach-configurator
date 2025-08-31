@@ -102,7 +102,8 @@ html {
   }
 }
 
-/* Tilt Screen Overlay Styles */
+/* Zoom Screen Overlay Styles */
+.zoom-overlay,
 .tilt-overlay {
   position: fixed;
   top: 0;
@@ -122,11 +123,13 @@ html {
   text-size-adjust: 100%;
 }
 
+.zoom-overlay.active,
 .tilt-overlay.active {
   opacity: 1;
   visibility: visible;
 }
 
+.zoom-overlay-content,
 .tilt-overlay-content {
   position: absolute;
   top: 0;
@@ -140,6 +143,7 @@ html {
   justify-content: center;
 }
 
+.zoom-overlay-images,
 .tilt-overlay-images {
   position: relative;
   width: 100%;
@@ -149,22 +153,28 @@ html {
   justify-content: center;
 }
 
+.zoom-overlay-car,
+.zoom-overlay-wheel,
 .tilt-overlay-car,
 .tilt-overlay-wheel {
   position: absolute;
   width: 100%;
   height: 100%;
   object-fit: contain;
+  transition: object-fit 0.3s ease;
 }
 
+.zoom-overlay-wheel,
 .tilt-overlay-wheel {
   z-index: 2;
 }
 
+.zoom-overlay-car,
 .tilt-overlay-car {
   z-index: 1;
 }
 
+.zoom-overlay .close-btn,
 .tilt-overlay .close-btn {
   position: fixed;
   top: 20px;
@@ -173,8 +183,35 @@ html {
   z-index: 10000;
 }
 
+/* Orientation-specific image stretching */
+@media screen and (orientation: landscape) {
+  .zoom-overlay-car,
+  .zoom-overlay-wheel,
+  .tilt-overlay-car,
+  .tilt-overlay-wheel {
+    object-fit: cover;
+    object-position: center;
+  }
+
+  .zoom-overlay-images,
+  .tilt-overlay-images {
+    width: 100%;
+    height: 100%;
+  }
+}
+
+@media screen and (orientation: portrait) {
+  .zoom-overlay-car,
+  .zoom-overlay-wheel,
+  .tilt-overlay-car,
+  .tilt-overlay-wheel {
+    object-fit: contain;
+  }
+}
+
 /* Mobile specific adjustments */
 @media screen and (max-width: 767px) {
+  .zoom-overlay .close-btn,
   .tilt-overlay .close-btn {
     top: 15px;
     right: 15px;

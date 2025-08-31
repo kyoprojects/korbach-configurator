@@ -3366,15 +3366,15 @@ document.querySelectorAll('[w-el="control-navigation-step"]').forEach(control =>
   }
 })();
 
-// Tilt Screen Overlay Functionality
-(function initializeTiltOverlay() {
-  function createTiltOverlay() {
+// Zoom Overlay Functionality
+(function initializeZoomOverlay() {
+  function createZoomOverlay() {
     const overlay = document.createElement('div');
-    overlay.className = 'tilt-overlay';
-    overlay.id = 'tiltOverlay';
+    overlay.className = 'zoom-overlay';
+    overlay.id = 'zoomOverlay';
 
     const content = document.createElement('div');
-    content.className = 'tilt-overlay-content';
+    content.className = 'zoom-overlay-content';
 
     const closeBtn = document.createElement('div');
     closeBtn.className = 'close-btn';
@@ -3386,17 +3386,17 @@ document.querySelectorAll('[w-el="control-navigation-step"]').forEach(control =>
     closeImg.className = 'image-32';
 
     closeBtn.appendChild(closeImg);
-    closeBtn.addEventListener('click', closeTiltOverlay);
+    closeBtn.addEventListener('click', closeZoomOverlay);
 
     const imagesContainer = document.createElement('div');
-    imagesContainer.className = 'tilt-overlay-images';
+    imagesContainer.className = 'zoom-overlay-images';
 
     const carImg = document.createElement('img');
-    carImg.className = 'tilt-overlay-car';
+    carImg.className = 'zoom-overlay-car';
     carImg.alt = 'Car configuration';
 
     const wheelImg = document.createElement('img');
-    wheelImg.className = 'tilt-overlay-wheel';
+    wheelImg.className = 'zoom-overlay-wheel';
     wheelImg.alt = 'Wheel configuration';
 
     imagesContainer.appendChild(carImg);
@@ -3424,17 +3424,17 @@ document.querySelectorAll('[w-el="control-navigation-step"]').forEach(control =>
     return { carImage, wheelImage };
   }
 
-  function openTiltOverlay() {
-    const overlay = document.getElementById('tiltOverlay') || createTiltOverlay();
+  function openZoomOverlay() {
+    const overlay = document.getElementById('zoomOverlay') || createZoomOverlay();
     const { carImage, wheelImage } = getCurrentConfigurationImages();
 
     if (!carImage && !wheelImage) {
-      console.warn('Could not load configuration images for tilt overlay');
+      console.warn('Could not load configuration images for zoom overlay');
       return;
     }
 
-    const carImg = overlay.querySelector('.tilt-overlay-car');
-    const wheelImg = overlay.querySelector('.tilt-overlay-wheel');
+    const carImg = overlay.querySelector('.zoom-overlay-car');
+    const wheelImg = overlay.querySelector('.zoom-overlay-wheel');
 
     // Set images with fallback handling
     if (carImage) {
@@ -3462,19 +3462,19 @@ document.querySelectorAll('[w-el="control-navigation-step"]').forEach(control =>
   }
 
   function preventScroll(e) {
-    if (document.getElementById('tiltOverlay')?.classList.contains('active')) {
+    if (document.getElementById('zoomOverlay')?.classList.contains('active')) {
       e.preventDefault();
     }
   }
 
   function handleEscapeKey(e) {
-    if (e.key === 'Escape' && document.getElementById('tiltOverlay')?.classList.contains('active')) {
-      closeTiltOverlay();
+    if (e.key === 'Escape' && document.getElementById('zoomOverlay')?.classList.contains('active')) {
+      closeZoomOverlay();
     }
   }
 
-  function closeTiltOverlay() {
-    const overlay = document.getElementById('tiltOverlay');
+  function closeZoomOverlay() {
+    const overlay = document.getElementById('zoomOverlay');
     if (overlay) {
       overlay.classList.remove('active');
       document.body.style.overflow = '';
@@ -3485,25 +3485,25 @@ document.querySelectorAll('[w-el="control-navigation-step"]').forEach(control =>
     }
   }
 
-  // Connect to tilt button
-  function connectTiltButton() {
-    const tiltButton = document.getElementById('tiltButton');
-    if (tiltButton) {
-      tiltButton.addEventListener('click', openTiltOverlay);
+  // Connect to zoom button
+  function connectZoomButton() {
+    const zoomButton = document.getElementById('tiltButton');
+    if (zoomButton) {
+      zoomButton.addEventListener('click', openZoomOverlay);
     }
   }
 
   // Initialize when DOM is ready
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', connectTiltButton);
+    document.addEventListener('DOMContentLoaded', connectZoomButton);
   } else {
-    connectTiltButton();
+    connectZoomButton();
   }
 
   // Also try to connect after a small delay in case the button is added dynamically
-  setTimeout(connectTiltButton, 1000);
+  setTimeout(connectZoomButton, 1000);
 
   // Expose functions globally for potential external access
-  window.openTiltOverlay = openTiltOverlay;
-  window.closeTiltOverlay = closeTiltOverlay;
+  window.openZoomOverlay = openZoomOverlay;
+  window.closeZoomOverlay = closeZoomOverlay;
 })();
