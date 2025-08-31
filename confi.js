@@ -3005,15 +3005,20 @@ async function switchCar(model) {
       // Store reference
       this.tooltips.set(element, tooltip);
 
-      // Add event listeners
-      element.addEventListener('mouseenter', () => this.show(element));
-      element.addEventListener('mouseleave', () => this.hide(element));
-      element.addEventListener('focus', () => this.show(element));
-      element.addEventListener('blur', () => this.hide(element));
-
-      // Add mobile touch events
+      // Add event listeners based on device type
       if (isMobile) {
-        element.addEventListener('touchstart', () => this.showWithAutoHide(element));
+        // On mobile, use click events instead of hover
+        element.addEventListener('click', e => {
+          e.preventDefault();
+          e.stopPropagation();
+          this.showWithAutoHide(element);
+        });
+      } else {
+        // On desktop, use hover events
+        element.addEventListener('mouseenter', () => this.show(element));
+        element.addEventListener('mouseleave', () => this.hide(element));
+        element.addEventListener('focus', () => this.show(element));
+        element.addEventListener('blur', () => this.hide(element));
       }
     }
 
