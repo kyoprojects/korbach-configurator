@@ -3337,35 +3337,6 @@ document.querySelectorAll('[w-el="control-navigation-step"]').forEach(control =>
   });
 });
 
-// Prevent zoom on orientation change globally
-(function preventOrientationZoom() {
-  // Ensure proper viewport meta tag exists
-  function ensureProperViewport() {
-    let viewportMeta = document.querySelector('meta[name="viewport"]');
-    const properContent = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover';
-
-    if (!viewportMeta) {
-      viewportMeta = document.createElement('meta');
-      viewportMeta.name = 'viewport';
-      document.head.appendChild(viewportMeta);
-    }
-
-    // Only update if it doesn't already have zoom restrictions
-    const currentContent = viewportMeta.getAttribute('content') || '';
-    if (!currentContent.includes('maximum-scale') && !currentContent.includes('user-scalable=no')) {
-      viewportMeta.setAttribute('content', properContent);
-    }
-  }
-
-  // Apply immediately
-  ensureProperViewport();
-
-  // Also apply when DOM is ready
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', ensureProperViewport);
-  }
-})();
-
 // Zoom Overlay Functionality
 (function initializeZoomOverlay() {
   function createZoomOverlay() {
