@@ -62,17 +62,44 @@
   transition: opacity 0.2s ease;
 }
 
-/* Prevent zoom on orientation change */
+/* Prevent zoom on orientation change - CRITICAL for mobile */
 @viewport {
   width: device-width;
   zoom: 1;
+  user-zoom: fixed;
 }
 
-/* Prevent zoom on mobile orientation change */
+/* Prevent automatic zoom on orientation change */
 html {
   -webkit-text-size-adjust: 100%;
   -ms-text-size-adjust: 100%;
   text-size-adjust: 100%;
+}
+
+/* Prevent zoom on orientation change for all elements */
+* {
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* Mobile viewport stability */
+@media screen and (orientation: landscape) {
+  html,
+  body {
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+}
+
+@media screen and (orientation: portrait) {
+  html,
+  body {
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
 }
 
 /* Tilt Screen Overlay Styles */
@@ -108,8 +135,6 @@ html {
   bottom: 0;
   width: 100vw;
   height: 100vh;
-  transform: rotate(90deg);
-  transform-origin: center;
   display: flex;
   align-items: center;
   justify-content: center;

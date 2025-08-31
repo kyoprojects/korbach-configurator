@@ -3337,6 +3337,35 @@ document.querySelectorAll('[w-el="control-navigation-step"]').forEach(control =>
   });
 });
 
+// Prevent zoom on orientation change globally
+(function preventOrientationZoom() {
+  // Ensure proper viewport meta tag exists
+  function ensureProperViewport() {
+    let viewportMeta = document.querySelector('meta[name="viewport"]');
+    const properContent = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover';
+
+    if (!viewportMeta) {
+      viewportMeta = document.createElement('meta');
+      viewportMeta.name = 'viewport';
+      document.head.appendChild(viewportMeta);
+    }
+
+    // Only update if it doesn't already have zoom restrictions
+    const currentContent = viewportMeta.getAttribute('content') || '';
+    if (!currentContent.includes('maximum-scale') && !currentContent.includes('user-scalable=no')) {
+      viewportMeta.setAttribute('content', properContent);
+    }
+  }
+
+  // Apply immediately
+  ensureProperViewport();
+
+  // Also apply when DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', ensureProperViewport);
+  }
+})();
+
 // Tilt Screen Overlay Functionality
 (function initializeTiltOverlay() {
   function createTiltOverlay() {
@@ -3425,9 +3454,6 @@ document.querySelectorAll('[w-el="control-navigation-step"]').forEach(control =>
     overlay.classList.add('active');
     document.body.style.overflow = 'hidden';
 
-    // Prevent zoom on mobile
-    preventMobileZoom();
-
     // Prevent scrolling on mobile when overlay is open
     document.addEventListener('touchmove', preventScroll, { passive: false });
 
@@ -3447,43 +3473,11 @@ document.querySelectorAll('[w-el="control-navigation-step"]').forEach(control =>
     }
   }
 
-  let originalViewport = null;
-
-  function preventMobileZoom() {
-    // Store original viewport
-    const viewportMeta = document.querySelector('meta[name="viewport"]');
-    if (viewportMeta) {
-      originalViewport = viewportMeta.getAttribute('content');
-    }
-
-    // Set fixed viewport to prevent zoom
-    const newViewport = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
-
-    if (viewportMeta) {
-      viewportMeta.setAttribute('content', newViewport);
-    } else {
-      const meta = document.createElement('meta');
-      meta.name = 'viewport';
-      meta.content = newViewport;
-      document.head.appendChild(meta);
-    }
-  }
-
-  function restoreMobileZoom() {
-    const viewportMeta = document.querySelector('meta[name="viewport"]');
-    if (viewportMeta && originalViewport) {
-      viewportMeta.setAttribute('content', originalViewport);
-    }
-  }
-
   function closeTiltOverlay() {
     const overlay = document.getElementById('tiltOverlay');
     if (overlay) {
       overlay.classList.remove('active');
       document.body.style.overflow = '';
-
-      // Restore mobile zoom capability
-      restoreMobileZoom();
 
       // Remove event listeners
       document.removeEventListener('touchmove', preventScroll);
