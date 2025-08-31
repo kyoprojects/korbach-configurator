@@ -1731,7 +1731,78 @@ async function animateControlsIn() {
 
   function showSplineAnimation() {
     const iframe = document.getElementById('wheelFrame');
+    const spinner = document.getElementById('splineSpinner');
+    const defaultIcon = document.getElementById('splineDefaultIcon');
+    let sceneReady = false;
+
+    // Show loading state
+    if (spinner) spinner.style.display = 'flex';
+    if (defaultIcon) defaultIcon.style.display = 'none';
+
+    // Initialize iframe src if not already loaded
+    if (iframe && !iframe.src) {
+      const currentUrl = window.location.href;
+      const baseUrl = currentUrl.includes('configurator.korbachforged.com') ? 'https://korbach-spline.netlify.app/' : 'http://localhost:5173';
+
+      iframe.src = baseUrl;
+
+      // Add mouse movement tracking for desktop
+      const isMobile = /Mobi|Android/i.test(navigator.userAgent);
+      if (!isMobile && !iframe.dataset.mouseListenerAdded) {
+        document.addEventListener('mousemove', e => {
+          if (iframe) {
+            iframe.contentWindow.postMessage(
+              {
+                type: 'MOUSE_MOVE',
+                normalizedX: e.clientX / window.innerWidth,
+                normalizedY: e.clientY / window.innerHeight
+              },
+              '*'
+            );
+          }
+        });
+        iframe.dataset.mouseListenerAdded = 'true';
+      }
+
+      // Listen for page initialization and then change scene
+      if (!iframe.dataset.initListenerAdded) {
+        const handleMessage = e => {
+          if (e.data.type === 'IFRAME_INIT' && e.data.status === 'framework_ready') {
+            iframe.contentWindow.postMessage(
+              {
+                type: 'CHANGE_SCENE',
+                url: Wized.data.r.get_wheels.data.find(w => w.model == Wized.data.v.wheelModel).spline
+              },
+              '*'
+            );
+            window.removeEventListener('message', handleMessage);
+          }
+        };
+        window.addEventListener('message', handleMessage);
+        iframe.dataset.initListenerAdded = 'true';
+      }
+    }
+
+    // Send scene change message and wait for scene_rendered
     if (iframe) {
+      const handleSceneRendered = e => {
+        if (e.data.type === 'APP_INITIALIZED' && e.data.status === 'ready') {
+          sceneReady = true;
+          // Hide loading state
+          if (spinner) spinner.style.display = 'none';
+          if (defaultIcon) defaultIcon.style.display = 'flex';
+
+          // Add small timeout before starting animation
+          setTimeout(() => {
+            startSplineModalAnimation();
+          }, 100);
+
+          window.removeEventListener('message', handleSceneRendered);
+        }
+      };
+
+      window.addEventListener('message', handleSceneRendered);
+
       iframe.contentWindow.postMessage(
         {
           type: 'CHANGE_SCENE',
@@ -1740,6 +1811,18 @@ async function animateControlsIn() {
         '*'
       );
     }
+
+    // Only start animation if scene is already ready (subsequent opens)
+    if (sceneReady) {
+      setTimeout(() => {
+        startSplineModalAnimation();
+      }, 100);
+    }
+  }
+
+  function startSplineModalAnimation() {
+    animateControlsOut();
+
     gsap.set('#splineOverlay', { display: 'flex', opacity: 0, autoAlpha: 0 });
     gsap.set('#splineContainer', { display: 'flex', opacity: 0, autoAlpha: 0, y: '100%', scale: 0, width: '10%' });
 
@@ -1774,7 +1857,6 @@ async function animateControlsIn() {
 
   document.querySelector('#opensplinemodal').addEventListener('click', () => {
     showSplineAnimation();
-    animateControlsOut();
   });
   document.querySelector('#splinePseudo').addEventListener('click', () => {
     hideSplineAnimation();
