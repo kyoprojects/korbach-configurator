@@ -3336,3 +3336,144 @@ document.querySelectorAll('[w-el="control-navigation-step"]').forEach(control =>
     Wized.data.v.navigationStep = controlValue;
   });
 });
+
+// Tilt Screen Overlay Functionality
+(function initializeTiltOverlay() {
+  function createTiltOverlay() {
+    const overlay = document.createElement('div');
+    overlay.className = 'tilt-overlay';
+    overlay.id = 'tiltOverlay';
+
+    const content = document.createElement('div');
+    content.className = 'tilt-overlay-content';
+
+    const closeBtn = document.createElement('div');
+    closeBtn.className = 'close-btn';
+
+    const closeImg = document.createElement('img');
+    closeImg.src = 'https://cdn.prod.website-files.com/675364fc6bb8d63cafd2bf42/68ab0675c435e679478c3366_Cancel%20Icon%20(1).svg';
+    closeImg.loading = 'lazy';
+    closeImg.alt = '';
+    closeImg.className = 'image-32';
+
+    closeBtn.appendChild(closeImg);
+    closeBtn.addEventListener('click', closeTiltOverlay);
+
+    const imagesContainer = document.createElement('div');
+    imagesContainer.className = 'tilt-overlay-images';
+
+    const carImg = document.createElement('img');
+    carImg.className = 'tilt-overlay-car';
+    carImg.alt = 'Car configuration';
+
+    const wheelImg = document.createElement('img');
+    wheelImg.className = 'tilt-overlay-wheel';
+    wheelImg.alt = 'Wheel configuration';
+
+    imagesContainer.appendChild(carImg);
+    imagesContainer.appendChild(wheelImg);
+    content.appendChild(closeBtn);
+    content.appendChild(imagesContainer);
+    overlay.appendChild(content);
+
+    document.body.appendChild(overlay);
+
+    return overlay;
+  }
+
+  function getCurrentConfigurationImages() {
+    const data = Wized.data.r.get_renders?.data;
+    if (!data) return { carImage: null, wheelImage: null };
+
+    const carData = data.find(item => item.model === Wized.data.v.carModel);
+    if (!carData) return { carImage: null, wheelImage: null };
+
+    const carImage = carData.renders?.find(render => render.view === Wized.data.v.view && render.color === Wized.data.v.carColor && render.car_model === Wized.data.v.carModel)?.image;
+
+    const wheelImage = carData.renders?.find(render => render.view === Wized.data.v.view && render.model === Wized.data.v.wheelModel && render.color === Wized.data.v.wheelColor)?.image;
+
+    return { carImage, wheelImage };
+  }
+
+  function openTiltOverlay() {
+    const overlay = document.getElementById('tiltOverlay') || createTiltOverlay();
+    const { carImage, wheelImage } = getCurrentConfigurationImages();
+
+    if (!carImage && !wheelImage) {
+      console.warn('Could not load configuration images for tilt overlay');
+      return;
+    }
+
+    const carImg = overlay.querySelector('.tilt-overlay-car');
+    const wheelImg = overlay.querySelector('.tilt-overlay-wheel');
+
+    // Set images with fallback handling
+    if (carImage) {
+      carImg.src = carImage;
+      carImg.style.display = 'block';
+    } else {
+      carImg.style.display = 'none';
+    }
+
+    if (wheelImage) {
+      wheelImg.src = wheelImage;
+      wheelImg.style.display = 'block';
+    } else {
+      wheelImg.style.display = 'none';
+    }
+
+    overlay.classList.add('active');
+    document.body.style.overflow = 'hidden';
+
+    // Prevent scrolling on mobile when overlay is open
+    document.addEventListener('touchmove', preventScroll, { passive: false });
+
+    // Add escape key listener
+    document.addEventListener('keydown', handleEscapeKey);
+  }
+
+  function preventScroll(e) {
+    if (document.getElementById('tiltOverlay')?.classList.contains('active')) {
+      e.preventDefault();
+    }
+  }
+
+  function handleEscapeKey(e) {
+    if (e.key === 'Escape' && document.getElementById('tiltOverlay')?.classList.contains('active')) {
+      closeTiltOverlay();
+    }
+  }
+
+  function closeTiltOverlay() {
+    const overlay = document.getElementById('tiltOverlay');
+    if (overlay) {
+      overlay.classList.remove('active');
+      document.body.style.overflow = '';
+      // Remove event listeners
+      document.removeEventListener('touchmove', preventScroll);
+      document.removeEventListener('keydown', handleEscapeKey);
+    }
+  }
+
+  // Connect to tilt button
+  function connectTiltButton() {
+    const tiltButton = document.getElementById('tiltButton');
+    if (tiltButton) {
+      tiltButton.addEventListener('click', openTiltOverlay);
+    }
+  }
+
+  // Initialize when DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', connectTiltButton);
+  } else {
+    connectTiltButton();
+  }
+
+  // Also try to connect after a small delay in case the button is added dynamically
+  setTimeout(connectTiltButton, 1000);
+
+  // Expose functions globally for potential external access
+  window.openTiltOverlay = openTiltOverlay;
+  window.closeTiltOverlay = closeTiltOverlay;
+})();
