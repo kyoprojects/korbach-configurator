@@ -497,6 +497,10 @@ class VehicleSelectorWidget {
     colorOptionsContainer.innerHTML = wheelColorOptions;
   }
 
+  isDesktop() {
+    return window.innerWidth >= 768 && !('ontouchstart' in window);
+  }
+
   setupDropdowns() {
     document.querySelectorAll('.custom-select').forEach(select => {
       const header = select.querySelector('.select-header');
@@ -521,9 +525,9 @@ class VehicleSelectorWidget {
             options.classList.add('active');
           });
 
-          // Auto focus search input if exists
+          // Auto focus search input if exists, but only on desktop
           const searchInput = options.querySelector('.search-input');
-          if (searchInput) {
+          if (searchInput && this.isDesktop()) {
             searchInput.focus();
             searchInput.select();
           }
