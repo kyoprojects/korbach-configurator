@@ -1310,6 +1310,11 @@ window.initializeData = async function () {
               onComplete: () => {
                 // Always ensure logo-loader is hidden
                 gsap.set('[logo-loader]', { display: 'none' });
+                // Hide preselect loading text
+                const loadingText = document.querySelector('#preselect-loading-text');
+                if (loadingText) {
+                  gsap.to('#preselect-loading-text', { autoAlpha: 0, y: -10, duration: 0.4, ease: 'power2.out' });
+                }
               }
             })
             .to(
@@ -1349,6 +1354,11 @@ window.initializeData = async function () {
               onComplete: () => {
                 // Hide the logo-loader again
                 gsap.set('[logo-loader]', { display: 'none' });
+                // Hide preselect loading text
+                const loadingText = document.querySelector('#preselect-loading-text');
+                if (loadingText) {
+                  gsap.to('#preselect-loading-text', { autoAlpha: 0, y: -10, duration: 0.4, ease: 'power2.out' });
+                }
               }
             }).to(
               '#images-wrapper',
@@ -1494,12 +1504,22 @@ window.defineEnterFunctions = async function () {
       gsap
         .timeline()
         .set('[control="bottom"]', { autoAlpha: 0, y: 40, scale: 0.9 })
+        .to(
+          '#preselect-loading-text',
+          {
+            autoAlpha: 0,
+            y: -10,
+            duration: 0.5,
+            ease: 'power2.out'
+          },
+          '-=0.4'
+        )
         .fromTo(
           '[overlay="white"]',
           { autoAlpha: 1 },
           {
             autoAlpha: 0,
-            duration: 1,
+            duration: 0.3,
             ease: 'power2.out',
             onComplete: () => {
               resolve();
@@ -3306,6 +3326,74 @@ async function switchCar(model) {
     } else {
       gsap.set('#search-modal', { display: 'none' });
 
+      // Create loading text element
+      let loadingText = document.querySelector('#preselect-loading-text');
+      if (!loadingText) {
+        loadingText = document.createElement('div');
+        loadingText.id = 'preselect-loading-text';
+        loadingText.textContent = 'Loading configuration';
+        loadingText.style.cssText = `
+          position: fixed;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, calc(-50% + 100px));
+          color: #666;
+          font-size: 14px;
+          font-weight: 400;
+          letter-spacing: 1px;
+          text-align: center;
+          z-index: 9999999998;
+          pointer-events: none;
+          margin-top: 44px;
+        `;
+        document.body.appendChild(loadingText);
+      }
+
+      // Set initial state and animate in
+      gsap.set('[overlay="white"]', {
+        autoAlpha: 0,
+        zIndex: 999999999
+      });
+      gsap.set('[logo-loader]', {
+        display: 'block',
+        autoAlpha: 0,
+        scale: 0.5,
+        zIndex: 9999999999
+      });
+      gsap.set('#preselect-loading-text', {
+        autoAlpha: 0,
+        y: 10
+      });
+
+      // Animate in the white overlay and logo loader with smoother timing
+      const tl = gsap.timeline();
+      tl.to('[overlay="white"]', {
+        autoAlpha: 1,
+        opacity: 1,
+        duration: 0.5,
+        ease: 'power2.out'
+      })
+        .to(
+          '[logo-loader]',
+          {
+            autoAlpha: 1,
+            scale: 1,
+            duration: 0.6,
+            ease: 'back.out(1.4)'
+          },
+          '-=0.2'
+        )
+        .to(
+          '#preselect-loading-text',
+          {
+            autoAlpha: 1,
+            y: 0,
+            duration: 0.5,
+            ease: 'power2.out'
+          },
+          '-=0.3'
+        );
+
       await window.initializeData();
       await window.defineEnterFunctions();
       window.initializeShareModal(); // Initialize share modal
@@ -3425,7 +3513,10 @@ document.querySelectorAll('[w-el="control-navigation-step"]').forEach(control =>
     overlay.classList.add('active');
     document.body.style.overflow = 'hidden';
 
-    // Prevent scrolling on mobile when overlay is open
+    // Enable zoom for the overlay
+    enableZoomForOverlay();
+
+    // Prevent scrolling on mobile when overlay is open (but allow zoom)
     document.addEventListener('touchmove', preventScroll, { passive: false });
 
     // Add escape key listener
@@ -3434,7 +3525,10 @@ document.querySelectorAll('[w-el="control-navigation-step"]').forEach(control =>
 
   function preventScroll(e) {
     if (document.getElementById('zoomOverlay')?.classList.contains('active')) {
-      e.preventDefault();
+      // Allow pinch-to-zoom gestures (multi-touch) but prevent single-touch scrolling
+      if (e.touches && e.touches.length === 1) {
+        e.preventDefault();
+      }
     }
   }
 
@@ -3444,11 +3538,41 @@ document.querySelectorAll('[w-el="control-navigation-step"]').forEach(control =>
     }
   }
 
+  let originalViewportContent = null;
+
+  function enableZoomForOverlay() {
+    const viewportMeta = document.querySelector('meta[name="viewport"]');
+    if (viewportMeta) {
+      // Store original viewport
+      originalViewportContent = viewportMeta.getAttribute('content');
+
+      // Enable zoom by removing restrictions
+      const zoomEnabledContent = originalViewportContent
+        .replace(/maximum-scale=[^,\s]*/g, '')
+        .replace(/user-scalable=no/g, 'user-scalable=yes')
+        .replace(/,\s*,/g, ',') // Clean up double commas
+        .replace(/^,|,$/g, ''); // Clean up leading/trailing commas
+
+      viewportMeta.setAttribute('content', zoomEnabledContent);
+    }
+  }
+
+  function disableZoomForOverlay() {
+    const viewportMeta = document.querySelector('meta[name="viewport"]');
+    if (viewportMeta && originalViewportContent) {
+      // Restore original viewport
+      viewportMeta.setAttribute('content', originalViewportContent);
+    }
+  }
+
   function closeZoomOverlay() {
     const overlay = document.getElementById('zoomOverlay');
     if (overlay) {
       overlay.classList.remove('active');
       document.body.style.overflow = '';
+
+      // Restore original zoom settings
+      disableZoomForOverlay();
 
       // Remove event listeners
       document.removeEventListener('touchmove', preventScroll);

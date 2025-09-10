@@ -1214,6 +1214,7 @@ html {
 
 [logo-loader] {
   animation: logoZoom 1s infinite ease-in-out;
+  max-height: 100svh;
 }
 
 /* Car color swatch with subtle mesh overlay effect */
@@ -1249,6 +1250,8 @@ html {
   left: 0;
   width: 100vw;
   height: 100vh;
+  height: 100svh; /* Small viewport height for mobile */
+  height: 100dvh; /* Dynamic viewport height - fallback for newer browsers */
   background: rgba(0, 0, 0, 0.37);
   z-index: 9999;
   display: flex;
