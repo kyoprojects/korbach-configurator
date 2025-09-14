@@ -3363,7 +3363,7 @@ async function switchCar(model) {
         position: 'fixed',
         top: '50%',
         left: '50%',
-        transform: 'translate(-50%, -50%) scale(0.5)',
+        transform: 'translate(-50%, -50%)',
         justifyContent: 'center',
         alignItems: 'center'
       });
