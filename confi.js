@@ -3358,7 +3358,8 @@ async function switchCar(model) {
         display: 'block',
         autoAlpha: 0,
         scale: 0.5,
-        zIndex: 9999999999
+        zIndex: 9999999999,
+        maxHeight: '100svh'
       });
       gsap.set('#preselect-loading-text', {
         autoAlpha: 0,
