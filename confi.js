@@ -3355,11 +3355,17 @@ async function switchCar(model) {
         zIndex: 999999999
       });
       gsap.set('[logo-loader]', {
-        display: 'block',
+        display: 'flex',
         autoAlpha: 0,
         scale: 0.5,
         zIndex: 9999999999,
-        maxHeight: '100svh'
+        maxHeight: '100svh',
+        position: 'fixed',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%) scale(0.5)',
+        justifyContent: 'center',
+        alignItems: 'center'
       });
       gsap.set('#preselect-loading-text', {
         autoAlpha: 0,
@@ -3378,7 +3384,7 @@ async function switchCar(model) {
           '[logo-loader]',
           {
             autoAlpha: 1,
-            scale: 1,
+            transform: 'translate(-50%, -50%) scale(1)',
             duration: 0.6,
             ease: 'back.out(1.4)'
           },
