@@ -3554,9 +3554,6 @@ document.querySelectorAll('[w-el="control-navigation-step"]').forEach(control =>
     overlay.classList.add('active');
     document.body.style.overflow = 'hidden';
 
-    // Enable zoom for the overlay
-    enableZoomForOverlay();
-
     // Prevent scrolling on mobile when overlay is open (but allow zoom)
     document.addEventListener('touchmove', preventScroll, { passive: false });
 
@@ -3579,41 +3576,11 @@ document.querySelectorAll('[w-el="control-navigation-step"]').forEach(control =>
     }
   }
 
-  let originalViewportContent = null;
-
-  function enableZoomForOverlay() {
-    const viewportMeta = document.querySelector('meta[name="viewport"]');
-    if (viewportMeta) {
-      // Store original viewport
-      originalViewportContent = viewportMeta.getAttribute('content');
-
-      // Enable zoom by removing restrictions
-      const zoomEnabledContent = originalViewportContent
-        .replace(/maximum-scale=[^,\s]*/g, '')
-        .replace(/user-scalable=no/g, 'user-scalable=yes')
-        .replace(/,\s*,/g, ',') // Clean up double commas
-        .replace(/^,|,$/g, ''); // Clean up leading/trailing commas
-
-      viewportMeta.setAttribute('content', zoomEnabledContent);
-    }
-  }
-
-  function disableZoomForOverlay() {
-    const viewportMeta = document.querySelector('meta[name="viewport"]');
-    if (viewportMeta && originalViewportContent) {
-      // Restore original viewport
-      viewportMeta.setAttribute('content', originalViewportContent);
-    }
-  }
-
   function closeZoomOverlay() {
     const overlay = document.getElementById('zoomOverlay');
     if (overlay) {
       overlay.classList.remove('active');
       document.body.style.overflow = '';
-
-      // Restore original zoom settings
-      disableZoomForOverlay();
 
       // Remove event listeners
       document.removeEventListener('touchmove', preventScroll);
