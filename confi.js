@@ -2,6 +2,11 @@
 
 const isMobile = window.innerWidth < 768;
 
+// Function to check if device is in landscape orientation
+function isLandscapeOrientation() {
+  return window.innerHeight < window.innerWidth;
+}
+
 function preloader() {
   const audioUrl = new Audio('https://zneejoqfgrqzvutkituy.supabase.co/storage/v1/object/public/Video/preloader/Tension%20Background%20Music%20Compilation.mp3');
   let videoPlayed = false;
@@ -1041,16 +1046,26 @@ window.initializeData = async function () {
 
       // For mobile devices, position tooltips on top
       if (isMobile) {
-        // Position tooltip above the element instead of to the right
-        tooltip.style.left = '50%';
-        tooltip.style.top = 'auto';
-        tooltip.style.bottom = '100%';
-        tooltip.style.transform = 'translateX(-50%) translateY(-5px)';
-        tooltip.style.marginLeft = '0';
-        tooltip.style.marginBottom = '5px';
+        if (isLandscapeOrientation()) {
+          // In landscape, use desktop-like horizontal positioning
+          tooltip.style.left = '100%';
+          tooltip.style.top = '50%';
+          tooltip.style.bottom = 'auto';
+          tooltip.style.transform = 'translateY(-50%) translateX(-10px)';
+          tooltip.style.marginLeft = '12px';
+          tooltip.style.marginBottom = '0';
+        } else {
+          // In portrait, position tooltip above the element instead of to the right
+          tooltip.style.left = '50%';
+          tooltip.style.top = 'auto';
+          tooltip.style.bottom = '100%';
+          tooltip.style.transform = 'translateX(-50%) translateY(-5px)';
+          tooltip.style.marginLeft = '0';
+          tooltip.style.marginBottom = '5px';
 
-        // Modify the arrow to point down instead of left
-        tooltip.style.setProperty('--tooltip-arrow-position', 'bottom');
+          // Modify the arrow to point down instead of left
+          tooltip.style.setProperty('--tooltip-arrow-position', 'bottom');
+        }
 
         // We no longer add mobile-visible class here
         // This is now handled in the changeNavTabs callback
@@ -1088,6 +1103,28 @@ window.initializeData = async function () {
       }
     });
   };
+
+  // Handle orientation changes for mobile tooltips
+  if (isMobile) {
+    window.addEventListener('orientationchange', () => {
+      // Wait for orientation change to complete
+      setTimeout(() => {
+        // Update tooltips with new orientation
+        updateControlTooltips();
+      }, 100);
+    });
+
+    // Also handle resize events as a fallback
+    window.addEventListener('resize', () => {
+      if (isMobile) {
+        // Debounce resize events
+        clearTimeout(window.tooltipResizeTimer);
+        window.tooltipResizeTimer = setTimeout(() => {
+          updateControlTooltips();
+        }, 150);
+      }
+    });
+  }
 
   // updateControlTooltips();tool
 
@@ -3361,9 +3398,6 @@ async function switchCar(model) {
         zIndex: 9999999999,
         maxHeight: '100svh',
         position: 'fixed',
-        top: '50%',
-        left: '50%',
-        transform: 'translate(-50%, -50%)',
         justifyContent: 'center',
         alignItems: 'center'
       });
@@ -3384,7 +3418,7 @@ async function switchCar(model) {
           '[logo-loader]',
           {
             autoAlpha: 1,
-            transform: 'translate(-50%, -50%) scale(1)',
+            scale: 1,
             duration: 0.6,
             ease: 'back.out(1.4)'
           },
