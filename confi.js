@@ -2690,9 +2690,99 @@ async function switchCar(model) {
 })();
 
 (async function closeUpTransitions() {
-  function showCloseUpAnimation() {
+  // Function to resolve the first two close-up images before showing the modal
+  function resolveCloseUpImages() {
+    return new Promise(resolve => {
+      const closeUps = Wized.data.v.closeUps;
+      if (!closeUps || closeUps.length === 0) {
+        resolve();
+        return;
+      }
+
+      // Get the first close-up (or first two if available)
+      const firstCloseUp = closeUps[0];
+      const secondCloseUp = closeUps.length > 1 ? closeUps[1] : null;
+
+      // Pre-load images in memory first
+      const carImg1 = new Image();
+      const wheelImg1 = new Image();
+      const carImg2 = secondCloseUp ? new Image() : null;
+      const wheelImg2 = secondCloseUp ? new Image() : null;
+
+      let carLoaded1 = false;
+      let wheelLoaded1 = false;
+      let carLoaded2 = !secondCloseUp; // If no second closeup, consider it loaded
+      let wheelLoaded2 = !secondCloseUp; // If no second closeup, consider it loaded
+
+      // Function to check if all required images are loaded
+      const checkAllLoaded = () => {
+        if (carLoaded1 && wheelLoaded1 && carLoaded2 && wheelLoaded2) {
+          resolve();
+        }
+      };
+
+      // Load first close-up car image
+      carImg1.onload = () => {
+        carLoaded1 = true;
+        checkAllLoaded();
+      };
+
+      carImg1.onerror = () => {
+        carLoaded1 = true;
+        checkAllLoaded();
+      };
+
+      // Load first close-up wheel image
+      wheelImg1.onload = () => {
+        wheelLoaded1 = true;
+        checkAllLoaded();
+      };
+
+      wheelImg1.onerror = () => {
+        wheelLoaded1 = true;
+        checkAllLoaded();
+      };
+
+      // Load second close-up images if they exist
+      if (secondCloseUp) {
+        carImg2.onload = () => {
+          carLoaded2 = true;
+          checkAllLoaded();
+        };
+
+        carImg2.onerror = () => {
+          carLoaded2 = true;
+          checkAllLoaded();
+        };
+
+        wheelImg2.onload = () => {
+          wheelLoaded2 = true;
+          checkAllLoaded();
+        };
+
+        wheelImg2.onerror = () => {
+          wheelLoaded2 = true;
+          checkAllLoaded();
+        };
+      }
+
+      // Start loading all images
+      carImg1.src = firstCloseUp.carImage;
+      wheelImg1.src = firstCloseUp.wheelImage;
+
+      if (secondCloseUp) {
+        carImg2.src = secondCloseUp.carImage;
+        wheelImg2.src = secondCloseUp.wheelImage;
+      }
+    });
+  }
+
+  async function showCloseUpAnimation() {
     // Only show if we have closeup renders
     if (!Wized.data.v.closeUps || Wized.data.v.closeUps.length === 0) return;
+
+    // Resolve the first two close-up images before showing the modal
+    await resolveCloseUpImages();
 
     gsap.set('#closeupOverlay', { display: 'flex', opacity: 0, autoAlpha: 0 });
     gsap.set('#closeupContainer', { display: 'flex', opacity: 0, autoAlpha: 0, width: '5%' });
