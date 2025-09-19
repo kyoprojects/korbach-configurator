@@ -1559,6 +1559,10 @@ window.defineEnterFunctions = async function () {
             duration: 0.3,
             ease: 'power2.out',
             onComplete: () => {
+              // Add disclaimer animation after dock animates in
+              setTimeout(() => {
+                animateDisclaimer();
+              }, 800); // Wait for dock animation to complete
               resolve();
             }
           }
@@ -1749,6 +1753,38 @@ async function animateControlsIn() {
     if (dir === 'top' || dir === 'bottom') props.y = '0%';
     gsap.to(el, props);
   });
+}
+
+function animateDisclaimer() {
+  const disclaimer = document.querySelector('#disclaimer');
+  if (!disclaimer) return;
+
+  gsap.fromTo(
+    disclaimer,
+    {
+      display: 'flex',
+      autoAlpha: 0,
+      y: 30
+    },
+    {
+      autoAlpha: 1,
+      y: 0,
+      duration: 0.6,
+      ease: 'power2.out',
+      onComplete: () => {
+        gsap.to(disclaimer, {
+          autoAlpha: 0,
+          y: -20,
+          duration: 0.4,
+          ease: 'power2.in',
+          delay: 10,
+          onComplete: () => {
+            gsap.set(disclaimer, { display: 'none' });
+          }
+        });
+      }
+    }
+  );
 }
 
 (async function splineTransitions() {
