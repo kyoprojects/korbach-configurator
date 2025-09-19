@@ -847,7 +847,7 @@ function createShareModal() {
           
           <div class="share-link-section" id="linkSection">
             <div class="share-link-box">
-              <span class="share-link-text" id="shareLinkText">configurator.korbachforged.com/?car-model=taycan-turbo&wh...</span>
+              <span class="share-link-text" id="shareLinkText">Loading...</span>
               <button class="copy-icon-btn" id="copyIconBtn">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
@@ -1559,9 +1559,10 @@ window.defineEnterFunctions = async function () {
             duration: 0.3,
             ease: 'power2.out',
             onComplete: () => {
-              // Add disclaimer animation after dock animates in
+              // Add disclaimer animations after dock animates in
               setTimeout(() => {
-                animateDisclaimer();
+                animateMobileDisclaimer();
+                animateDesktopDisclaimer();
               }, 800); // Wait for dock animation to complete
               resolve();
             }
@@ -1755,36 +1756,99 @@ async function animateControlsIn() {
   });
 }
 
-function animateDisclaimer() {
-  const disclaimer = document.querySelector('#disclaimer');
-  if (!disclaimer) return;
+// Flag to prevent multiple disclaimer animations
+let disclaimerAnimated = false;
 
-  gsap.fromTo(
-    disclaimer,
-    {
-      display: 'flex',
-      autoAlpha: 0,
-      y: 30
-    },
-    {
-      autoAlpha: 1,
-      y: 0,
-      duration: 0.6,
-      ease: 'power2.out',
+function animateDesktopDisclaimer() {
+  console.log('animateDesktopDisclaimer called, isMobile:', isMobile);
+
+  // Only show disclaimer on desktop devices
+  if (isMobile) {
+    console.log('Mobile device, skipping desktop disclaimer');
+    return;
+  }
+
+  // Prevent multiple animations
+  if (disclaimerAnimated) {
+    console.log('Desktop disclaimer already animated, skipping');
+    return;
+  }
+
+  const disclaimer = document.querySelector('#disclaimer');
+  console.log('Found desktop disclaimer element:', disclaimer);
+
+  if (!disclaimer) {
+    console.log('No disclaimer element found with ID #disclaimer');
+    return;
+  }
+
+  console.log('Starting desktop disclaimer animation');
+  disclaimerAnimated = true;
+
+  // Show and animate the existing disclaimer
+  disclaimer.style.display = 'block';
+  gsap.fromTo(disclaimer, { opacity: 0, y: 50 }, { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out' });
+
+  // Hide after 5 seconds
+  setTimeout(() => {
+    console.log('Hiding desktop disclaimer after timeout');
+    gsap.to(disclaimer, {
+      opacity: 0,
+      y: 50,
+      duration: 0.5,
+      ease: 'power2.in',
       onComplete: () => {
-        gsap.to(disclaimer, {
-          autoAlpha: 0,
-          y: -20,
-          duration: 0.4,
-          ease: 'power2.in',
-          delay: 10,
-          onComplete: () => {
-            gsap.set(disclaimer, { display: 'none' });
-          }
-        });
+        disclaimer.style.display = 'none';
+        console.log('Desktop disclaimer hidden');
       }
-    }
-  );
+    });
+  }, 5000);
+}
+
+function animateMobileDisclaimer() {
+  console.log('animateMobileDisclaimer called, isMobile:', isMobile);
+
+  // Only show disclaimer on mobile devices
+  if (!isMobile) {
+    console.log('Not mobile device, skipping disclaimer');
+    return;
+  }
+
+  // Prevent multiple animations
+  if (disclaimerAnimated) {
+    console.log('Disclaimer already animated, skipping');
+    return;
+  }
+
+  const disclaimer = document.querySelector('#disclaimermobile');
+  console.log('Found disclaimer element:', disclaimer);
+
+  if (!disclaimer) {
+    console.log('No disclaimer element found with ID #disclaimermobile');
+    return;
+  }
+
+  console.log('Starting disclaimer animation');
+  disclaimerAnimated = true;
+
+  // Show and animate the existing disclaimer
+  disclaimer.style.display = 'block';
+  gsap.fromTo(disclaimer, { opacity: 0, y: 50 }, { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out' });
+
+  // Hide after 5 seconds
+  setTimeout(() => {
+    console.log('Hiding disclaimer after timeout');
+    gsap.to(disclaimer, {
+      opacity: 0,
+      y: 50,
+      duration: 0.5,
+      ease: 'power2.in',
+      onComplete: () => {
+        disclaimer.style.display = 'none';
+        console.log('Disclaimer hidden');
+      }
+    });
+  }, 5000);
 }
 
 (async function splineTransitions() {
@@ -1994,6 +2058,9 @@ function animateDisclaimer() {
 
     // Create composed thumbnail with car + wheel overlay
     createComposedThumbnail(carData);
+
+    // Update the share link with current configuration
+    updateShareLink();
   }
 
   function createComposedThumbnail(carData) {
@@ -2066,15 +2133,24 @@ function animateDisclaimer() {
     const baseUrl = 'https://configurator.korbachforged.com/';
 
     let shareUrl = baseUrl;
+    const params = new URLSearchParams();
+
+    // Add configuration parameters if enabled
     if (includeConfig) {
-      const params = new URLSearchParams();
       if (Wized.data.v.carModel) params.set('car-model', Wized.data.v.carModel);
       if (Wized.data.v.wheelModel) params.set('wheel-model', Wized.data.v.wheelModel);
       if (Wized.data.v.wheelColor) params.set('wheel-color', Wized.data.v.wheelColor);
       if (Wized.data.v.carColor) params.set('car-color', Wized.data.v.carColor);
       if (Wized.data.v.view) params.set('view', Wized.data.v.view);
-      shareUrl = `${baseUrl}?${params.toString()}`;
     }
+
+    // Add UTM parameters for tracking
+    params.set('utm_source', 'configurator');
+    params.set('utm_medium', 'share');
+    params.set('utm_campaign', 'configuration_sharing');
+    params.set('utm_content', 'share_modal');
+
+    shareUrl = `${baseUrl}?${params.toString()}`;
 
     // Truncate display text but keep full URL for copying
     const displayText = shareUrl.length > 60 ? shareUrl.substring(0, 57) + '...' : shareUrl;
@@ -2101,6 +2177,7 @@ function animateDisclaimer() {
 
   function showShareModal() {
     updateShareModalContent();
+    updateShareLink();
     gsap.set('#shareOverlay', { display: 'flex', opacity: 0, autoAlpha: 0 });
 
     let tl = gsap.timeline();
@@ -2237,7 +2314,28 @@ function animateDisclaimer() {
 
       const recipientEmail = document.getElementById('recipientEmail').value;
       const personalMessage = document.getElementById('emailMessage').value;
-      const fullUrl = document.getElementById('shareLinkText').getAttribute('data-full-url');
+
+      // Construct the current URL with all query parameters and UTM tracking
+      const includeConfig = document.getElementById('includeConfigToggle').checked;
+      const baseUrl = 'https://configurator.korbachforged.com/';
+      const params = new URLSearchParams();
+
+      // Add configuration parameters if enabled
+      if (includeConfig) {
+        if (Wized.data.v.carModel) params.set('car-model', Wized.data.v.carModel);
+        if (Wized.data.v.wheelModel) params.set('wheel-model', Wized.data.v.wheelModel);
+        if (Wized.data.v.wheelColor) params.set('wheel-color', Wized.data.v.wheelColor);
+        if (Wized.data.v.carColor) params.set('car-color', Wized.data.v.carColor);
+        if (Wized.data.v.view) params.set('view', Wized.data.v.view);
+      }
+
+      // Add email-specific UTM parameters for tracking
+      params.set('utm_source', 'email');
+      params.set('utm_medium', 'share');
+      params.set('utm_campaign', 'configuration_sharing');
+      params.set('utm_content', 'email_share');
+
+      const fullUrl = `${baseUrl}?${params.toString()}`;
 
       // Get current configuration details
       const carData = Wized.data.r.get_renders?.data?.find(item => item.model === Wized.data.v.carModel);
@@ -2263,14 +2361,31 @@ function animateDisclaimer() {
       body += `View the full configuration here: ${fullUrl}\n\n`;
       body += `Best regards,\nKorbach Forged Configurator`;
 
-      // In a real implementation, this would send via a backend API
-      // For now, we'll simulate success and show the success message
       const sendButton = e.target.querySelector('.email-send-btn');
       sendButton.textContent = 'Sending...';
       sendButton.disabled = true;
 
-      // Simulate API call
-      setTimeout(() => {
+      try {
+        // Send to n8n webhook
+        const webhookData = {
+          currentUrl: fullUrl,
+          emailToSendTo: recipientEmail,
+          personalMessage: personalMessage
+        };
+
+        const response = await fetch('https://n8n.srv865019.hstgr.cloud/webhook/configurator-sharing', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(webhookData)
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        // Show success message
         document.getElementById('shareEmailForm').style.display = 'none';
         document.getElementById('emailSuccess').style.display = 'flex';
 
@@ -2285,12 +2400,44 @@ function animateDisclaimer() {
           // Switch back to copy link view
           document.getElementById('copyLinkBtn').click();
         }, 3000);
-      }, 1000);
+      } catch (error) {
+        console.error('Error sending email:', error);
+
+        // Show error message
+        sendButton.textContent = 'Error - Try Again';
+        sendButton.disabled = false;
+
+        // Reset button text after 3 seconds
+        setTimeout(() => {
+          sendButton.textContent = 'Send Email';
+        }, 3000);
+      }
     });
 
     // WhatsApp share button functionality
     document.getElementById('whatsappShareButton').addEventListener('click', () => {
-      const fullUrl = document.getElementById('shareLinkText').getAttribute('data-full-url');
+      // Construct WhatsApp-specific URL with UTM parameters
+      const includeConfig = document.getElementById('includeConfigToggle').checked;
+      const baseUrl = 'https://configurator.korbachforged.com/';
+      const params = new URLSearchParams();
+
+      // Add configuration parameters if enabled
+      if (includeConfig) {
+        if (Wized.data.v.carModel) params.set('car-model', Wized.data.v.carModel);
+        if (Wized.data.v.wheelModel) params.set('wheel-model', Wized.data.v.wheelModel);
+        if (Wized.data.v.wheelColor) params.set('wheel-color', Wized.data.v.wheelColor);
+        if (Wized.data.v.carColor) params.set('car-color', Wized.data.v.carColor);
+        if (Wized.data.v.view) params.set('view', Wized.data.v.view);
+      }
+
+      // Add WhatsApp-specific UTM parameters
+      params.set('utm_source', 'whatsapp');
+      params.set('utm_medium', 'share');
+      params.set('utm_campaign', 'configuration_sharing');
+      params.set('utm_content', 'whatsapp_share');
+
+      const whatsappUrl = `${baseUrl}?${params.toString()}`;
+
       const carData = Wized.data.r.get_renders?.data?.find(item => item.model === Wized.data.v.carModel);
       const carName = `${carData.brand} ${carData.name}`;
       const carColor = (Wized.data.v.carColor || '')
@@ -2300,7 +2447,7 @@ function animateDisclaimer() {
         .join(' ');
       const wheelModel = (Wized.data.v.wheelModel || '').toUpperCase();
 
-      const message = `Check out this Korbach Forged configuration:\n\n🚗 Car: ${carName} in ${carColor}\n🛞 Wheels: ${wheelModel}\n\nView here: ${fullUrl}`;
+      const message = `Check out this Korbach Forged configuration:\n\n🚗 Car: ${carName} in ${carColor}\n🛞 Wheels: ${wheelModel}\n\nView here: ${whatsappUrl}`;
       window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
     });
 
