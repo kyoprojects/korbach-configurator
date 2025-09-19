@@ -696,6 +696,10 @@ class VehicleSelectorWidget {
 
       // When moving to step 2, we can destroy the slider since it's not needed
       if (this.wheelSwiper) {
+        // Store the selected wheel model before destroying the swiper
+        const activeSlide = this.wheelSwiper.slides[this.wheelSwiper.activeIndex];
+        this.selectedWheelModel = activeSlide.getAttribute('data-model');
+
         this.wheelSwiper.destroy();
         this.wheelSwiper = null;
         const sliderWrapper = this.container.querySelector('.swiper-wrapper');
@@ -720,9 +724,8 @@ class VehicleSelectorWidget {
       e.preventDefault();
       const formData = new FormData(form);
 
-      // Get the selected wheel model from the active swiper slide
-      const activeSlide = this.wheelSwiper.slides[this.wheelSwiper.activeIndex];
-      const selectedWheelModel = activeSlide.getAttribute('data-model');
+      // Get the selected wheel model (stored when moving to step 2)
+      const selectedWheelModel = this.selectedWheelModel;
 
       const data = {
         vehicle: {
