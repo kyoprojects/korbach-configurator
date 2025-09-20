@@ -905,22 +905,19 @@ let hasQueryParams;
 
 // Add at the top with other window functions
 window.updateUrlParams = async function () {
-  // Use requestAnimationFrame to ensure this runs after other UI updates
-  requestAnimationFrame(() => {
-    const params = new URLSearchParams(window.location.search);
-
-    // Update params only if values exist
-    if (Wized.data.v.carModel) params.set('car-model', Wized.data.v.carModel);
-    if (Wized.data.v.wheelModel) params.set('wheel-model', Wized.data.v.wheelModel);
-    if (Wized.data.v.wheelColor) params.set('wheel-color', Wized.data.v.wheelColor);
-    if (Wized.data.v.carColor) params.set('car-color', Wized.data.v.carColor);
-    if (Wized.data.v.view) params.set('view', Wized.data.v.view);
-
-    console.log('params', JSON.stringify(params, null, 2));
-
-    // Update URL without reloading the page
-    window.history.replaceState({}, '', `${window.location.pathname}?${params.toString()}`);
-  });
+  // // Use requestAnimationFrame to ensure this runs after other UI updates
+  // requestAnimationFrame(() => {
+  //   const params = new URLSearchParams(window.location.search);
+  //   // Update params only if values exist
+  //   if (Wized.data.v.carModel) params.set('car-model', Wized.data.v.carModel);
+  //   if (Wized.data.v.wheelModel) params.set('wheel-model', Wized.data.v.wheelModel);
+  //   if (Wized.data.v.wheelColor) params.set('wheel-color', Wized.data.v.wheelColor);
+  //   if (Wized.data.v.carColor) params.set('car-color', Wized.data.v.carColor);
+  //   if (Wized.data.v.view) params.set('view', Wized.data.v.view);
+  //   console.log('params', JSON.stringify(params, null, 2));
+  //   // Update URL without reloading the page
+  //   window.history.replaceState({}, '', `${window.location.pathname}?${params.toString()}`);
+  // });
 };
 
 // Define createHotspots in the global scope at the very top
