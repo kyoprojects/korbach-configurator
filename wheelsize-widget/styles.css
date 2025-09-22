@@ -347,7 +347,7 @@ select {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 30px 16px 0px 16px;
+  padding: 30px 16px 400px 16px;
   box-sizing: border-box;
   -webkit-overflow-scrolling: touch;
 }
