@@ -835,7 +835,7 @@ function createShareModal() {
               <div class="share-toggle-content">
                 <div class="share-toggle-text">
                   <label class="share-toggle-label">Include current configuration</label>
-                  <p class="share-toggle-text">Lorem ipsum dolor amit lorem ipsum</p>
+                  <p class="share-toggle-text">Copy your configuration and share it with your friends</p>
                 </div>
                 <label class="share-toggle">
                   <input type="checkbox" id="includeConfigToggle" checked>
