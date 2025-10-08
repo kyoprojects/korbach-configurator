@@ -175,6 +175,10 @@ class VehicleSelectorWidget {
               <label class="form-label" for="phone">Phone</label>
               <input type="tel" id="phone" name="phone" class="form-input" required />
             </div>
+
+            <div class="hiddeninputs" style="display: none;">
+              <input tracking-input type="hidden" id="tracking_data" name="tracking_data" />
+            </div>
           </div>
           
           <div class="form-buttons">
@@ -727,6 +731,9 @@ class VehicleSelectorWidget {
       // Get the selected wheel model (stored when moving to step 2)
       const selectedWheelModel = this.selectedWheelModel;
 
+      // Collect tracking data from hidden input
+      const trackingData = JSON.parse(document.getElementById('tracking_data')?.value || '{}');
+
       const data = {
         vehicle: {
           make: this.selectedMake || 'Sample Make',
@@ -741,7 +748,8 @@ class VehicleSelectorWidget {
           lastName: formData.get('last_name'),
           email: formData.get('email'),
           phone: formData.get('phone')
-        }
+        },
+        tracking: trackingData
       };
 
       try {

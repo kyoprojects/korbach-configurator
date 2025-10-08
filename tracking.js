@@ -53,4 +53,32 @@
   document.querySelectorAll('a[href*="typeform.com"]').forEach(link => {
     link.href = updateTypeformUrl(link.href);
   });
+
+  // Handle configurator.korbachforged.com links
+  document.querySelectorAll('[tracking-input]').forEach(link => {
+    console.log('configurator link', link);
+    link.href = updateTypeformUrl(link.href);
+  });
+})();
+
+(function handleHiddenTrackingInput() {
+  function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    return parts.length === 2 ? parts.pop().split(';').shift() : '';
+  }
+
+  // Check if hidden tracking input exists
+  const hiddenInput = document.getElementById('tracking_data');
+  if (hiddenInput) {
+    const params = ['utm_source', 'utm_medium', 'utm_campaign', 'gclid', 'fbclid', 'gad_source', 'gbraid', 'wbraid', 'fbc', 'referrer', 'ad_id', 'campaign_id', 'adset_id', 'utm_content'];
+    const trackingData = {};
+
+    params.forEach(param => {
+      const value = getCookie(param);
+      trackingData[param] = value || null;
+    });
+
+    hiddenInput.value = JSON.stringify(trackingData);
+  }
 })();
