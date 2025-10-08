@@ -12,3 +12,4 @@ records_generator/add_new_config.js
 records_generator/*
 node_modules/*
 node_modules
+records_generator/*

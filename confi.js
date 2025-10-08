@@ -1539,7 +1539,7 @@ window.defineEnterFunctions = async function () {
         .timeline()
         .set('[control="bottom"]', { autoAlpha: 0, y: 40, scale: 0.9 })
         .to(
-          '#preselect-loading-text',
+          document.querySelector('#preselect-loading-text') || {},
           {
             autoAlpha: 0,
             y: -10,
@@ -1557,10 +1557,16 @@ window.defineEnterFunctions = async function () {
             ease: 'power2.out',
             onComplete: () => {
               // Add disclaimer animations after dock animates in
-              setTimeout(() => {
-                animateMobileDisclaimer();
-                animateDesktopDisclaimer();
-              }, 800); // Wait for dock animation to complete
+              if (!disclaimerAnimationTriggered) {
+                console.log('Triggering disclaimer animations for the first time');
+                disclaimerAnimationTriggered = true;
+                setTimeout(() => {
+                  animateMobileDisclaimer();
+                  animateDesktopDisclaimer();
+                }, 800); // Wait for dock animation to complete
+              } else {
+                console.log('Disclaimer animations already triggered, skipping');
+              }
               resolve();
             }
           }
@@ -1753,8 +1759,10 @@ async function animateControlsIn() {
   });
 }
 
-// Flag to prevent multiple disclaimer animations
-let disclaimerAnimated = false;
+// Flags to prevent multiple disclaimer animations
+let desktopDisclaimerAnimated = false;
+let mobileDisclaimerAnimated = false;
+let disclaimerAnimationTriggered = false;
 
 function animateDesktopDisclaimer() {
   console.log('animateDesktopDisclaimer called, isMobile:', isMobile);
@@ -1766,7 +1774,7 @@ function animateDesktopDisclaimer() {
   }
 
   // Prevent multiple animations
-  if (disclaimerAnimated) {
+  if (desktopDisclaimerAnimated) {
     console.log('Desktop disclaimer already animated, skipping');
     return;
   }
@@ -1780,7 +1788,7 @@ function animateDesktopDisclaimer() {
   }
 
   console.log('Starting desktop disclaimer animation');
-  disclaimerAnimated = true;
+  desktopDisclaimerAnimated = true;
 
   // Show and animate the existing disclaimer
   disclaimer.style.display = 'block';
@@ -1803,7 +1811,7 @@ function animateDesktopDisclaimer() {
 }
 
 function animateMobileDisclaimer() {
-  console.log('animateMobileDisclaimer called, isMobile:', isMobile);
+  console.log('animateMobileDisclaimer called, isMobile:', isMobile, 'mobileDisclaimerAnimated:', mobileDisclaimerAnimated);
 
   // Only show disclaimer on mobile devices
   if (!isMobile) {
@@ -1812,8 +1820,8 @@ function animateMobileDisclaimer() {
   }
 
   // Prevent multiple animations
-  if (disclaimerAnimated) {
-    console.log('Disclaimer already animated, skipping');
+  if (mobileDisclaimerAnimated) {
+    console.log('Mobile disclaimer already animated, skipping');
     return;
   }
 
@@ -1825,11 +1833,18 @@ function animateMobileDisclaimer() {
     return;
   }
 
-  console.log('Starting disclaimer animation');
-  disclaimerAnimated = true;
+  console.log('Starting mobile disclaimer animation');
+  mobileDisclaimerAnimated = true;
 
   // Show and animate the existing disclaimer
   disclaimer.style.display = 'block';
+
+  // Disable any CSS transitions that might interfere with GSAP
+  disclaimer.style.transition = 'none';
+
+  // Clear any existing GSAP animations on this element
+  gsap.killTweensOf(disclaimer);
+
   gsap.fromTo(disclaimer, { opacity: 0, y: 50 }, { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out' });
 
   // Hide after 5 seconds
