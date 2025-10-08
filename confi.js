@@ -394,12 +394,16 @@ function preloader() {
                     }
 
                     // start configurator
+                    console.log('Preloader: starting configurator initialization');
                     window.initializeData();
                     window.defineEnterFunctions();
                     window.initializeShareModal(); // Initialize share modal
                     // open search modal
                     if (!hasQueryParams) {
+                      console.log('Preloader: opening search modal');
                       window.openSearchModal();
+                    } else {
+                      console.log('Preloader: has query params, skipping search modal');
                     }
                   }
                 });
@@ -1507,7 +1511,7 @@ window.defineEnterFunctions = async function () {
   window.hideStartScreen = function () {
     return new Promise(resolve => {
       let tl = gsap.timeline();
-      console.log('hideStartScreen');
+      console.log('hideStartScreen called');
       tl.to('#search-modal', {
         opacity: 0,
         y: 160,
@@ -1525,7 +1529,9 @@ window.defineEnterFunctions = async function () {
           '-=0.08'
         )
         .add(() => {
+          console.log('hideStartScreen: calling startConfig');
           startConfig().then(() => {
+            console.log('hideStartScreen: startConfig completed');
             resolve();
           });
         });
@@ -1533,6 +1539,7 @@ window.defineEnterFunctions = async function () {
   };
 
   function startConfig() {
+    console.log('startConfig called');
     return new Promise(resolve => {
       // const tl = gsap.timeline();
       gsap
@@ -1556,17 +1563,13 @@ window.defineEnterFunctions = async function () {
             duration: 0.3,
             ease: 'power2.out',
             onComplete: () => {
+              console.log('startConfig: overlay animation completed, triggering disclaimer');
               // Add disclaimer animations after dock animates in
-              if (!disclaimerAnimationTriggered) {
-                console.log('Triggering disclaimer animations for the first time');
-                disclaimerAnimationTriggered = true;
-                setTimeout(() => {
-                  animateMobileDisclaimer();
-                  animateDesktopDisclaimer();
-                }, 800); // Wait for dock animation to complete
-              } else {
-                console.log('Disclaimer animations already triggered, skipping');
-              }
+              setTimeout(() => {
+                console.log('startConfig: calling disclaimer animations');
+                animateMobileDisclaimer();
+                animateDesktopDisclaimer();
+              }, 800); // Wait for dock animation to complete
               resolve();
             }
           }
@@ -1762,7 +1765,6 @@ async function animateControlsIn() {
 // Flags to prevent multiple disclaimer animations
 let desktopDisclaimerAnimated = false;
 let mobileDisclaimerAnimated = false;
-let disclaimerAnimationTriggered = false;
 
 function animateDesktopDisclaimer() {
   console.log('animateDesktopDisclaimer called, isMobile:', isMobile);
@@ -2659,6 +2661,7 @@ window.changeNavTabs = async function (transitionType) {
 };
 
 async function switchCar(model) {
+  console.log('switchCar called with model:', model, 'firstSearchModalInteraction:', firstSearchModalInteraction);
   if (Wized.data.v.soundEnabled) clickSound2.play();
 
   closeSearchModal();
@@ -2678,8 +2681,6 @@ async function switchCar(model) {
   }
 
   updateUrlParams();
-
-  if (firstSearchModalInteraction == true) await hideStartScreen();
 
   // set flag to false after first time
   if (firstSearchModalInteraction == true) firstSearchModalInteraction = false;
@@ -3671,10 +3672,12 @@ async function switchCar(model) {
     }
 
     if (!hasQueryParams) {
+      console.log('No preloader: initializing without query params');
       await window.initializeData();
       await window.defineEnterFunctions();
       window.initializeShareModal(); // Initialize share modal
     } else {
+      console.log('No preloader: has query params, skipping initialization');
       gsap.set('#search-modal', { display: 'none' });
 
       // Create loading text element
