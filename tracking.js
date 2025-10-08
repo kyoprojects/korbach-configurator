@@ -3,7 +3,7 @@
 
   function setCookie(key, value) {
     if (value) {
-      document.cookie = `${key}=${value}; path=/; max-age=${60 * 60 * 24 * 30}`;
+      document.cookie = `${key}=${value}; path=/; domain=.${window.location.hostname.split('.').slice(-2).join('.')}; max-age=${60 * 60 * 24 * 30}`;
     }
   }
 
