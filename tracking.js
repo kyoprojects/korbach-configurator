@@ -68,17 +68,26 @@
     return parts.length === 2 ? parts.pop().split(';').shift() : '';
   }
 
-  // Check if hidden tracking input exists
-  const hiddenInput = document.getElementById('tracking_data');
-  if (hiddenInput) {
-    const params = ['utm_source', 'utm_medium', 'utm_campaign', 'gclid', 'fbclid', 'gad_source', 'gbraid', 'wbraid', 'fbc', 'referrer', 'ad_id', 'campaign_id', 'adset_id', 'utm_content'];
-    const trackingData = {};
+  function populateTrackingData() {
+    const hiddenInput = document.getElementById('tracking_data');
+    if (hiddenInput) {
+      const params = ['utm_source', 'utm_medium', 'utm_campaign', 'gclid', 'fbclid', 'gad_source', 'gbraid', 'wbraid', 'fbc', 'referrer', 'ad_id', 'campaign_id', 'adset_id', 'utm_content'];
+      const trackingData = {};
 
-    params.forEach(param => {
-      const value = getCookie(param);
-      trackingData[param] = value || null;
-    });
+      params.forEach(param => {
+        const value = getCookie(param);
+        trackingData[param] = value || null;
+      });
 
-    hiddenInput.value = JSON.stringify(trackingData);
+      hiddenInput.value = JSON.stringify(trackingData);
+      console.log('Tracking data populated:', trackingData);
+    }
   }
+
+  // Try immediately
+  populateTrackingData();
+
+  // Also try after a delay to catch dynamically created inputs
+  setTimeout(populateTrackingData, 1000);
+  setTimeout(populateTrackingData, 3000);
 })();

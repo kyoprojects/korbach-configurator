@@ -732,7 +732,22 @@ class VehicleSelectorWidget {
       const selectedWheelModel = this.selectedWheelModel;
 
       // Collect tracking data from hidden input
-      const trackingData = JSON.parse(document.getElementById('tracking_data')?.value || '{}');
+      let trackingData = JSON.parse(document.getElementById('tracking_data')?.value || '{}');
+
+      // Fallback: if tracking data is empty, populate it now
+      if (Object.keys(trackingData).length === 0) {
+        const params = ['utm_source', 'utm_medium', 'utm_campaign', 'gclid', 'fbclid', 'gad_source', 'gbraid', 'wbraid', 'fbc', 'referrer', 'ad_id', 'campaign_id', 'adset_id', 'utm_content'];
+        trackingData = {};
+
+        params.forEach(param => {
+          const value =
+            document.cookie
+              .split('; ')
+              .find(row => row.startsWith(param + '='))
+              ?.split('=')[1] || null;
+          trackingData[param] = value;
+        });
+      }
 
       const data = {
         vehicle: {
