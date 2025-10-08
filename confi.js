@@ -2002,7 +2002,36 @@ function animateMobileDisclaimer() {
       .to('#splineOverlay', { duration: 0.2, opacity: 1, autoAlpha: 1, ease: 'power2.expo' }, '<')
       .fromTo('#splineContainer', { y: '100%', scale: 0, autoAlpha: 0 }, { duration: 0.1, y: '0%', scale: 1, autoAlpha: 1, ease: 'power2.inOut' })
       .fromTo('#splineContainer', { width: '5%' }, { duration: 0.2, width: '100%', ease: 'power2.inOut' })
-      .fromTo('#splineScene', { scale: 0.3, y: 200, autoAlpha: 0 }, { duration: 0.3, scale: 1, y: 0, autoAlpha: 1, ease: 'power4.out' }, '-=0.3');
+      .fromTo('#splineScene', { scale: 0.3, y: 200, autoAlpha: 0 }, { duration: 0.3, scale: 1, y: 0, autoAlpha: 1, ease: 'power4.out' }, '-=0.3')
+      .call(() => {
+        // Show thumbs up animation only once per page load
+        if (!sessionStorage.getItem('splineThumbsUpShown')) {
+          const thumbsUp = document.getElementById('spline-thumbsup');
+          if (thumbsUp) {
+            gsap.set(thumbsUp, { display: 'block', opacity: 0, y: 20 });
+            gsap.to(thumbsUp, {
+              opacity: 1,
+              y: 0,
+              duration: 0.5,
+              ease: 'power2.out',
+              onComplete: () => {
+                gsap.delayedCall(3, () => {
+                  gsap.to(thumbsUp, {
+                    opacity: 0,
+                    y: -20,
+                    duration: 0.5,
+                    ease: 'power2.in',
+                    onComplete: () => {
+                      gsap.set(thumbsUp, { display: 'none', opacity: 0, y: 20 });
+                    }
+                  });
+                });
+              }
+            });
+            sessionStorage.setItem('splineThumbsUpShown', 'true');
+          }
+        }
+      });
   }
 
   function hideSplineAnimation() {
