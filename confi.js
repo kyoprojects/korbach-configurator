@@ -2578,7 +2578,7 @@ function animateMobileDisclaimer() {
     }).to('#images-wrapper', { scale: 1.08, duration: 0.2, ease: 'expo.out' }, '<');
   }
 
-  document.querySelectorAll('#openQuoteForm').forEach(el => {
+  document.querySelectorAll('[openQuoteForm]').forEach(el => {
     el.addEventListener('click', () => {
       showQuoteForm();
       animateControlsOut();
