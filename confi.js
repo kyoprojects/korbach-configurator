@@ -2,6 +2,12 @@
 
 const isMobile = window.innerWidth < 768;
 
+// Hide quote form on page load
+const quoteForm = document.getElementById('openQuoteForm');
+if (quoteForm) {
+  gsap.set(quoteForm, { opacity: 0, y: 20 });
+}
+
 // Function to check if device is in landscape orientation
 function isLandscapeOrientation() {
   return window.innerHeight < window.innerWidth;
@@ -1805,6 +1811,14 @@ function animateDesktopDisclaimer() {
       onComplete: () => {
         disclaimer.style.display = 'none';
         console.log('Desktop disclaimer hidden');
+
+        // Animate in quote form 0.5s after disclaimer is hidden
+        setTimeout(() => {
+          const quoteForm = document.getElementById('openQuoteForm');
+          if (quoteForm) {
+            gsap.fromTo(quoteForm, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.2, ease: 'back.out(1.2)' });
+          }
+        }, 500);
       }
     });
   }, 5000);
@@ -1858,6 +1872,14 @@ function animateMobileDisclaimer() {
       onComplete: () => {
         disclaimer.style.display = 'none';
         console.log('Disclaimer hidden');
+
+        // Animate in quote form 0.5s after disclaimer is hidden
+        setTimeout(() => {
+          const quoteForm = document.getElementById('openQuoteForm');
+          if (quoteForm) {
+            gsap.fromTo(quoteForm, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.2, ease: 'back.out(1.2)' });
+          }
+        }, 500);
       }
     });
   }, 5000);
@@ -2549,6 +2571,12 @@ function animateMobileDisclaimer() {
 
 (async function quoteFormTransitions() {
   function showQuoteForm() {
+    // Hide quote form button
+    const quoteForm = document.getElementById('openQuoteForm');
+    if (quoteForm) {
+      gsap.to(quoteForm, { opacity: 0, y: -20, duration: 0.15, ease: 'power3.in' });
+    }
+
     gsap.set('#quoteOverlay', { display: 'flex', opacity: 0, autoAlpha: 0 });
 
     // Mobile scroll disabler has been removed
@@ -2574,15 +2602,19 @@ function animateMobileDisclaimer() {
         if (typeof MobileScrollDisabler !== 'undefined') {
           MobileScrollDisabler.enable();
         }
+
+        // Show quote form button back
+        const quoteForm = document.getElementById('openQuoteForm');
+        if (quoteForm) {
+          gsap.to(quoteForm, { opacity: 1, y: 0, duration: 0.2, ease: 'power2.in' });
+        }
       }
     }).to('#images-wrapper', { scale: 1.08, duration: 0.2, ease: 'expo.out' }, '<');
   }
 
-  document.querySelectorAll('[openQuoteForm]').forEach(el => {
-    el.addEventListener('click', () => {
-      showQuoteForm();
-      animateControlsOut();
-    });
+  document.querySelector('#openQuoteForm').addEventListener('click', () => {
+    showQuoteForm();
+    animateControlsOut();
   });
   document.querySelectorAll('#quotePseudo').forEach(el => {
     el.addEventListener('click', () => {
