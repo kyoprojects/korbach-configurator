@@ -1791,7 +1791,7 @@ function animateDesktopDisclaimer() {
   desktopDisclaimerAnimated = true;
 
   // Show and animate the existing disclaimer
-  disclaimer.style.display = 'block';
+  disclaimer.style.display = 'flex';
   gsap.fromTo(disclaimer, { opacity: 0, y: 50 }, { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out' });
 
   // Hide after 5 seconds
@@ -1837,7 +1837,7 @@ function animateMobileDisclaimer() {
   mobileDisclaimerAnimated = true;
 
   // Show and animate the existing disclaimer
-  disclaimer.style.display = 'block';
+  disclaimer.style.display = 'flex';
 
   // Disable any CSS transitions that might interfere with GSAP
   disclaimer.style.transition = 'none';
@@ -1992,6 +1992,12 @@ function animateMobileDisclaimer() {
   function startSplineModalAnimation() {
     animateControlsOut();
 
+    // Hide thumbs up before opening modal
+    const thumbsUp = document.getElementById('spline-thumbsup');
+    if (thumbsUp) {
+      gsap.set(thumbsUp, { y: 30, opacity: 0 });
+    }
+
     gsap.set('#splineOverlay', { display: 'flex', opacity: 0, autoAlpha: 0 });
     gsap.set('#splineContainer', { display: 'flex', opacity: 0, autoAlpha: 0, y: '100%', scale: 0, width: '10%' });
 
@@ -2004,32 +2010,52 @@ function animateMobileDisclaimer() {
       .fromTo('#splineContainer', { width: '5%' }, { duration: 0.2, width: '100%', ease: 'power2.inOut' })
       .fromTo('#splineScene', { scale: 0.3, y: 200, autoAlpha: 0 }, { duration: 0.3, scale: 1, y: 0, autoAlpha: 1, ease: 'power4.out' }, '-=0.3')
       .call(() => {
+        console.log('Spline animation call triggered');
         // Show thumbs up animation only once per page load
-        if (!sessionStorage.getItem('splineThumbsUpShown')) {
+        if (!window.splineThumbsUpShown) {
+          console.log('Thumbs up not shown yet, checking for element...');
           const thumbsUp = document.getElementById('spline-thumbsup');
+          console.log('Thumbs up element found:', thumbsUp);
           if (thumbsUp) {
-            gsap.set(thumbsUp, { display: 'block', opacity: 0, y: 20 });
+            console.log('Starting thumbs up animation...');
+            // Reset and show
+            gsap.set(thumbsUp, { y: 30, opacity: 0 });
+            console.log('GSAP set applied');
+
+            // Animate in up
             gsap.to(thumbsUp, {
-              opacity: 1,
               y: 0,
+              opacity: 1,
               duration: 0.5,
               ease: 'power2.out',
               onComplete: () => {
+                console.log('Thumbs up fade in complete');
+                // Wait 3 seconds then animate out down
                 gsap.delayedCall(3, () => {
+                  console.log('Starting thumbs up fade out...');
                   gsap.to(thumbsUp, {
+                    y: -30,
                     opacity: 0,
-                    y: -20,
                     duration: 0.5,
                     ease: 'power2.in',
                     onComplete: () => {
-                      gsap.set(thumbsUp, { display: 'none' });
+                      console.log('Thumbs up animation complete');
+                      // Reset for next time
+                      gsap.set(thumbsUp, { y: 30, opacity: 0 });
+                      // Set flag only after animation completes
+                      window.splineThumbsUpShown = true;
+                      console.log('Page flag set after animation completion');
                     }
                   });
                 });
               }
             });
-            sessionStorage.setItem('splineThumbsUpShown', 'true');
+            console.log('Animation started, will set flag after completion');
+          } else {
+            console.log('Thumbs up element not found!');
           }
+        } else {
+          console.log('Thumbs up already shown this page load');
         }
       });
   }
@@ -2552,9 +2578,11 @@ function animateMobileDisclaimer() {
     }).to('#images-wrapper', { scale: 1.08, duration: 0.2, ease: 'expo.out' }, '<');
   }
 
-  document.querySelector('#openQuoteForm').addEventListener('click', () => {
-    showQuoteForm();
-    animateControlsOut();
+  document.querySelectorAll('#openQuoteForm').forEach(el => {
+    el.addEventListener('click', () => {
+      showQuoteForm();
+      animateControlsOut();
+    });
   });
   document.querySelectorAll('#quotePseudo').forEach(el => {
     el.addEventListener('click', () => {

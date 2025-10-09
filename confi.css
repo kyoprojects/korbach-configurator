@@ -1881,12 +1881,3 @@ html {
 #splineSpinner {
   animation: spin 1s linear infinite;
 }
-
-#spline-thumbsup {
-  display: none;
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  z-index: 1000;
-  pointer-events: none;
-}
