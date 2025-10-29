@@ -1171,21 +1171,24 @@ window.initializeData = async function () {
     });
   }
 
-  window.initConfigurator = async function () {
+  window.initConfigurator = async function (preserveExistingValues = false) {
     const carData = Wized.data.r.get_renders.data.find(item => item.model == Wized.data.v.carModel);
 
     // Set initial colors/models
     const newCarColor = carData.renders.find(render => render.model == null).color;
-    Wized.data.v.carColor = newCarColor;
     const newWheelModel = carData.renders.find(render => render.model !== null).model;
-    Wized.data.v.wheelModel = newWheelModel;
+
+    if (!preserveExistingValues) {
+      Wized.data.v.carColor = newCarColor;
+      Wized.data.v.wheelModel = newWheelModel;
+    }
 
     // Get only the critical images we need right now
     const criticalImages = [
       // Current car render
-      carData.renders.find(render => render.view === Wized.data.v.view && render.color === newCarColor && render.car_model === Wized.data.v.carModel)?.image,
+      carData.renders.find(render => render.view === Wized.data.v.view && render.color === Wized.data.v.carColor && render.car_model === Wized.data.v.carModel)?.image,
       // Current wheel render
-      carData.renders.find(render => render.view === Wized.data.v.view && render.model === newWheelModel)?.image
+      carData.renders.find(render => render.view === Wized.data.v.view && render.model === Wized.data.v.wheelModel)?.image
     ].filter(Boolean);
 
     // Preload only critical images
@@ -2647,7 +2650,7 @@ if (!isMobile) {
   });
 }
 
-window.changeNavTabs = async function (transitionType) {
+window.changeNavTabs = async function (transitionType, preserveExistingValues = false) {
   if (transitionType === 'car') {
     // Start request immediately
     Wized.requests.execute('get_renders');
@@ -2662,7 +2665,7 @@ window.changeNavTabs = async function (transitionType) {
             Wized.requests
               .waitFor('get_renders')
               .then(() => {
-                return initConfigurator(); // Return the promise from initConfigurator
+                return initConfigurator(preserveExistingValues); // Return the promise from initConfigurator
               })
               .then(() => {
                 return window.updateAllLayers(transitionType);
@@ -2718,7 +2721,7 @@ window.changeNavTabs = async function (transitionType) {
   });
 };
 
-async function switchCar(model) {
+async function switchCar(model, preserveExistingValues = false) {
   if (Wized.data.v.soundEnabled) clickSound2.play();
 
   closeSearchModal();
@@ -2726,7 +2729,7 @@ async function switchCar(model) {
   if (firstSearchModalInteraction == false) animateControlsOut();
 
   Wized.data.v.carModel = model;
-  await changeNavTabs('car');
+  await changeNavTabs('car', preserveExistingValues);
 
   // We no longer update tooltips here
   // Tooltips are now updated in the changeNavTabs callback
@@ -3731,10 +3734,12 @@ async function switchCar(model) {
     }
 
     if (!hasQueryParams) {
+      console.log('no query params');
       await window.initializeData();
       await window.defineEnterFunctions();
       window.initializeShareModal(); // Initialize share modal
     } else {
+      console.log('query params');
       gsap.set('#search-modal', { display: 'none' });
 
       // Create loading text element
@@ -3819,7 +3824,15 @@ async function switchCar(model) {
       Wized.data.v.carColor = hasCarColorQueryParam;
       Wized.data.v.view = hasViewQueryParam;
 
-      switchCar(Wized.data.v.carModel);
+      console.log('values = ', {
+        carModel: Wized.data.v.carModel,
+        wheelModel: Wized.data.v.wheelModel,
+        wheelColor: Wized.data.v.wheelColor,
+        carColor: Wized.data.v.carColor,
+        view: Wized.data.v.view
+      });
+
+      switchCar(Wized.data.v.carModel, true);
     }
   }
 })();
