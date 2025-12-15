@@ -93,6 +93,12 @@ select {
   object-fit: contain;
 }
 
+.select-header svg {
+  width: 20px;
+  height: 15px;
+  border-radius: 3px;
+}
+
 .color-option {
   display: flex;
   align-items: center;
@@ -239,6 +245,12 @@ select {
   object-fit: contain;
 }
 
+.option-item svg {
+  width: 20px;
+  height: 15px;
+  border-radius: 3px;
+}
+
 .disabled {
   opacity: 0.5;
   pointer-events: none;
@@ -378,6 +390,60 @@ select {
   transition: border-color 0.2s;
   box-sizing: border-box;
   box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.08);
+}
+
+.phone-input-container {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.phone-country-select {
+  width: 140px !important;
+  min-width: 140px !important;
+  max-width: 140px !important;
+  flex-shrink: 0 !important;
+}
+
+.phone-country-select .select-options {
+  min-width: 425px;
+}
+
+.phone-number-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.country-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.country-flag {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.country-flag svg {
+  width: 20px;
+  height: 15px;
+  border-radius: 3px;
+}
+
+.country-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.country-dial-code {
+  color: #666;
+  flex-shrink: 0;
 }
 
 .form-input:hover {
@@ -834,5 +900,16 @@ select {
 
   .swiper-slide-active .wheel-slide {
     transform: scale(1.1);
+  }
+
+  .phone-country-select {
+    width: 130px !important;
+    min-width: 130px !important;
+    max-width: 130px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .phone-country-select .select-options {
+    min-width: 400px;
   }
 }

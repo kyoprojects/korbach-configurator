@@ -54,14 +54,11 @@ class VehicleSelectorWidget {
                 <label class="select-label">Inch size</label>
                 <div class="custom-select" id="inch-select">
                   <div class="select-header">
-                    <span>I don't know</span>
+                    <span>18"</span>
                   </div>
                   <div class="select-options">
                     <div class="options-container">
-                      <div class="option-item selected" data-value="unknown">
-                        <span>I don't know</span>
-                      </div>
-                      <div class="option-item" data-value="18">
+                      <div class="option-item selected" data-value="18">
                         <span>18"</span>
                       </div>
                       <div class="option-item" data-value="19">
@@ -173,7 +170,25 @@ class VehicleSelectorWidget {
 
             <div class="form-group">
               <label class="form-label" for="phone">Phone</label>
-              <input type="tel" id="phone" name="phone" class="form-input" required />
+              <div class="phone-input-container">
+                <div class="custom-select phone-country-select" id="phone-country-select">
+                  <div class="select-header">
+                    <span class="country-option">
+                      <span class="country-flag"></span>
+                      <span class="country-dial-code">+31</span>
+                    </span>
+                  </div>
+                  <div class="select-options">
+                    <div class="search-container">
+                      <input type="text" class="search-input" placeholder="Search country..." />
+                    </div>
+                    <div class="options-container">
+                      <!-- Country options will be populated by JavaScript -->
+                    </div>
+                  </div>
+                </div>
+                <input type="tel" id="phone" name="phone" class="form-input phone-number-input" required placeholder="6 12345678" />
+              </div>
             </div>
 
             <div class="hiddeninputs" style="display: none;">
@@ -463,11 +478,15 @@ class VehicleSelectorWidget {
     this.makeSelect = document.getElementById('make-select');
     this.modelSelect = document.getElementById('model-select');
     this.yearSelect = document.getElementById('year-select');
+    this.phoneCountrySelect = document.getElementById('phone-country-select');
   }
 
   setupBasicEventListeners() {
     // Populate wheel colors first
     this.populateWheelColors();
+
+    // Populate country codes
+    this.populateCountryCodes();
 
     // Setup dropdown functionality
     this.setupDropdowns();
@@ -499,6 +518,71 @@ class VehicleSelectorWidget {
 
     const colorOptionsContainer = this.colorSelect.querySelector('.options-container');
     colorOptionsContainer.innerHTML = wheelColorOptions;
+  }
+
+  populateCountryCodes() {
+    if (typeof CountryList === 'undefined' || typeof CountryFlagSvg === 'undefined') {
+      console.error('Country list library not loaded');
+      return;
+    }
+
+    const countries = CountryList.getAll();
+    this.selectedCountryDialCode = '+31';
+
+    const countryOptions = countries
+      .map(country => {
+        const flagSvg = CountryFlagSvg[country.code] || country.flag;
+        const isNL = country.dialCode === '+31';
+        return `
+        <div class="option-item${isNL ? ' selected' : ''}" data-value="${country.dialCode}" data-code="${country.code}" data-name="${country.name}">
+          <span class="country-option">
+            <span class="country-flag">${flagSvg}</span>
+            <span class="country-name">${country.name}</span>
+            <span class="country-dial-code">${country.dialCode}</span>
+          </span>
+        </div>
+      `;
+      })
+      .join('');
+
+    const countryOptionsContainer = this.phoneCountrySelect.querySelector('.options-container');
+    countryOptionsContainer.innerHTML = countryOptions;
+
+    const nlCountry = countries.find(c => c.dialCode === '+31');
+    if (nlCountry) {
+      const nlFlagSvg = CountryFlagSvg[nlCountry.code] || nlCountry.flag;
+      const header = this.phoneCountrySelect.querySelector('.select-header');
+      header.innerHTML = `
+        <span class="country-option">
+          <span class="country-flag">${nlFlagSvg}</span>
+          <span class="country-dial-code">${nlCountry.dialCode}</span>
+        </span>
+      `;
+    }
+
+    this.phoneCountrySelect.querySelectorAll('.option-item').forEach(option => {
+      option.addEventListener('click', () => {
+        const dialCode = option.dataset.value;
+        const code = option.dataset.code;
+        const flagSvg = CountryFlagSvg[code];
+
+        this.selectedCountryDialCode = dialCode;
+
+        this.phoneCountrySelect.querySelectorAll('.option-item').forEach(opt => opt.classList.remove('selected'));
+        option.classList.add('selected');
+
+        this.phoneCountrySelect.querySelector('.select-header').innerHTML = `
+          <span class="country-option">
+            <span class="country-flag">${flagSvg}</span>
+            <span class="country-dial-code">${dialCode}</span>
+          </span>
+        `;
+
+        const options = this.phoneCountrySelect.querySelector('.select-options');
+        options.classList.remove('active');
+        options.style.display = 'none';
+      });
+    });
   }
 
   isDesktop() {
@@ -762,7 +846,7 @@ class VehicleSelectorWidget {
           firstName: formData.get('first_name'),
           lastName: formData.get('last_name'),
           email: formData.get('email'),
-          phone: formData.get('phone')
+          phone: `${this.selectedCountryDialCode}${formData.get('phone')}`
         },
         tracking: trackingData
       };
@@ -819,6 +903,7 @@ class VehicleSelectorWidget {
         const value = option.dataset.value;
         const name = option.querySelector('span').textContent;
         const image = option.querySelector('img')?.src;
+        const flag = option.dataset.flag;
 
         // Update selected state
         select.querySelectorAll('.option-item').forEach(opt => opt.classList.remove('selected'));
@@ -830,7 +915,7 @@ class VehicleSelectorWidget {
         options.style.display = 'none';
 
         // Execute callback if provided
-        if (callback) callback(value, name, image);
+        if (callback) callback(value, name, image || flag);
       });
     });
   }
