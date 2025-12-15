@@ -2751,6 +2751,7 @@ async function switchCar(model, preserveExistingValues = false) {
 (async function modalEventListening() {
   window.addEventListener('message', event => {
     if (event.origin === 'https://prismatic-phoenix-e7fbdb.netlify.app' || event.origin === 'http://localhost:8080') {
+      console.log('message received', event.data);
       if (event.data.type == 'selectCar') {
         // console.log('Received message:', event);
         if (event.data.type === 'selectCar') {
