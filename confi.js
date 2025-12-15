@@ -2756,6 +2756,8 @@ async function switchCar(model, preserveExistingValues = false) {
         if (event.data.type === 'selectCar') {
           const model = event.data.data.model;
           switchCar(model);
+        } else if (event.data.type === 'openChatWidget') {
+          window.openChatWidget();
         }
       }
     }
