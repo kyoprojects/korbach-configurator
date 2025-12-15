@@ -2757,7 +2757,17 @@ async function switchCar(model, preserveExistingValues = false) {
           const model = event.data.data.model;
           switchCar(model);
         } else if (event.data.type === 'openChatWidget') {
-          window.openChatWidget();
+          console.log('openChatWidget message received');
+          if (searchModalOpen) {
+            closeSearchModal();
+          }
+          if (firstSearchModalInteraction === true) {
+            hideStartScreen().then(() => {
+              window.openChatWidget();
+            });
+          } else {
+            window.openChatWidget();
+          }
         }
       }
     }
