@@ -2753,23 +2753,11 @@ async function switchCar(model, preserveExistingValues = false) {
     if (event.origin === 'https://prismatic-phoenix-e7fbdb.netlify.app' || event.origin === 'http://localhost:8080') {
       console.log('message received', event.data);
       if (event.data.type == 'selectCar') {
-        // console.log('Received message:', event);
-        if (event.data.type === 'selectCar') {
-          const model = event.data.data.model;
-          switchCar(model);
-        } else if (event.data.type === 'openChatWidget') {
-          console.log('openChatWidget message received');
-          if (searchModalOpen) {
-            closeSearchModal();
-          }
-          if (firstSearchModalInteraction === true) {
-            hideStartScreen().then(() => {
-              window.openChatWidget();
-            });
-          } else {
-            window.openChatWidget();
-          }
-        }
+        const model = event.data.data.model;
+        switchCar(model);
+      } else if (event.data.type == 'openChatWidget') {
+        window.openChatWidget();
+        console.log('openChatWidget message sent');
       }
     }
   });
