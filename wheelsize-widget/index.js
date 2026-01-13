@@ -1089,7 +1089,7 @@ if (!container) {
 // Function to initialize widget
 function initializeWidget() {
   try {
-    const widget = new VehicleSelectorWidget('multistep-form', 'ac48b4044e72f0cdd6ba0ab955047049');
+    const widget = new VehicleSelectorWidget('multistep-form', '356cb4f3bda777e2164ded667b0f486b');
     // console.log('Widget instance created successfully');
 
     // Example of listening to form submission
